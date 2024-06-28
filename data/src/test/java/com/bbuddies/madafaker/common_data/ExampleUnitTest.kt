@@ -1,4 +1,4 @@
-package com.bbuddies.gotogether.presentation
+package com.bbuddies.madafaker.common_data
 
 import org.junit.Assert.assertEquals
 import org.junit.Test

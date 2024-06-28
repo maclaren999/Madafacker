@@ -1,14 +1,16 @@
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
+    id(libs.plugins.daggerHilt.get().pluginId)
+    id(libs.plugins.kapt.get().pluginId)
 }
 
 android {
-    namespace = "com.bbuddies.gotogether"
+    namespace = "com.bbuddies.madafaker"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.bbuddies.gotogether"
+        applicationId = "com.bbuddies.madafaker"
         minSdk = 27
         targetSdk = 34
         versionCode = 1
@@ -63,4 +65,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(libs.hilt)
+    kapt(libs.hilt.compiler)
+}
+
+kapt {
+    correctErrorTypes = true
 }

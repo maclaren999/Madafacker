@@ -1,24 +1,24 @@
 [versions]
 agp = "8.5.0"
-kotlin = "1.9.22"
+kotlin = "1.9.0"
+jetbrainsKotlinJvm = "1.9.0"
+activityCompose = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.8.2"
-activityCompose = "1.9.0"
 composeBom = "2024.06.00"
 appcompat = "1.7.0"
 material = "1.12.0"
 materialComponents = "1.5.0-alpha04"
-jetbrainsKotlinJvm = "1.9.22"
 coroutines = "1.5.2"
-hilt = "2.40.5"
+hilt = "2.44"
 retrofit = "2.9.0"
 okhttp = "4.9.1"
 room = "2.6.1"
 navigation = "2.7.7"
-firebaseBom = "33.1.0"
+firebaseBom = "33.1.1"
 glide = "4.12.0"
 onesignal = "4.6.3"
 mockito = "3.11.2"
@@ -80,4 +80,5 @@ androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 jetbrainsKotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
-daggerHilt = { id = "dagger.hilt.android.plugin", version.ref = "hilt" }
+daggerHilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+kapt = { id = "kotlin-kapt"}
