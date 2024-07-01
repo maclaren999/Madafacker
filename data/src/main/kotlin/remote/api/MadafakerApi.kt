@@ -1,4 +1,4 @@
-package remote
+package remote.api
 
 import com.bbuddies.gotogether.common_domain.model.Message
 import com.bbuddies.gotogether.common_domain.model.Reply
