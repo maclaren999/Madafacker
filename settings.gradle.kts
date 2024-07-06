@@ -19,7 +19,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "GoTogether"
+rootProject.name = "Madafaker"
 include(":app")
 include(":data")
 include(":domain")

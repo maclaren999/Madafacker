@@ -1,4 +1,4 @@
-package com.bbuddies.gotogether
+package com.bbuddies.madafaker
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,13 +10,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.bbuddies.gotogether.ui.theme.GoTogetherTheme
+import com.bbuddies.madafaker.ui.theme.MadafakerTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            GoTogetherTheme {
+            MadafakerTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     Greeting("Android")
@@ -37,7 +39,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    GoTogetherTheme {
+    MadafakerTheme {
         Greeting("Android")
     }
 }

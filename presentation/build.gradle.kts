@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.bbuddies.gotogether.presentation"
+    namespace = "com.bbuddies.madafaker.presentation"
     compileSdk = 34
 
     defaultConfig {

@@ -1,4 +1,4 @@
-package com.bbuddies.gotogether.presentation
+package com.bbuddies.madafaker.common_data
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -17,6 +17,6 @@ class ExampleInstrumentedTest {
     fun useAppContext() {
         // Context of the app under test.
         val appContext = InstrumentationRegistry.getInstrumentation().targetContext
-        assertEquals("com.bbuddies.gotogether.presentation.test", appContext.packageName)
+        assertEquals("com.bbuddies.madafaker.common_data.test", appContext.packageName)
     }
 }
