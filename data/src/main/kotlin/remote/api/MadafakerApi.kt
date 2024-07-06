@@ -39,7 +39,7 @@ interface MadafakerApi {
 
     @Headers(CONTENT_TYPE)
     @PATCH("/api/user/current")
-    fun updateCurrentUser(@Body name: String)
+    fun updateCurrentUser(@Body name: String): User
 
     @Headers(CONTENT_TYPE)
     @PATCH("/api/reply")
@@ -49,7 +49,7 @@ interface MadafakerApi {
 
     @Headers(CONTENT_TYPE)
     @POST("/api/user")
-    fun createUser(@Body name: String)
+    fun createUser(@Body name: String): User
 
     @Headers(CONTENT_TYPE)
     @POST("/api/message")
