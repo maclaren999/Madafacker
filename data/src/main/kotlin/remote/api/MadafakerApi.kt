@@ -24,11 +24,11 @@ interface MadafakerApi {
 
     @Headers(CONTENT_TYPE)
     @GET("/api/message/current/incoming")
-    fun getIncomingMassage(): Message
+    fun getIncomingMassage(): List<Message>
 
     @Headers(CONTENT_TYPE)
     @GET("/api/message/current/outcoming")
-    fun getOutcomingMassage(): Message
+    fun getOutcomingMassage(): List<Message>
 
     @Headers(CONTENT_TYPE)
     @GET("/api/reply/:{id}")
@@ -53,7 +53,7 @@ interface MadafakerApi {
 
     @Headers(CONTENT_TYPE)
     @POST("/api/message")
-    fun createMessage(@Body body: String, mode: String)
+    fun createMessage(@Body body: String, mode: String):Message
 
     @Headers(CONTENT_TYPE)
     @POST("/api/reply")
