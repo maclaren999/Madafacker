@@ -52,6 +52,8 @@ kotlin-coroutines = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutine
 hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-convert-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }
+converter-gson = { group = "com.squareup.retrofit2",name = "converter-gson",version.ref = "retrofit"  }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
@@ -67,7 +69,6 @@ mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 leakcanary = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
 coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
-moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi" }
 permissions-dispatcher = { group = "org.permissionsdispatcher", name = "permissionsdispatcher", version.ref = "permissionsDispatcher" }
 robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
 truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
