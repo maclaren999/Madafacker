@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChatHistory">
+    <accountData>
+      <list>
+        <AccountData>
+          <accountId value="VXNlcjo1MTU4Mzg=" />
+          <chats>
+            <list>
+              <chat>
+                <internalId value="5398dc81-4962-4fcb-9ca0-2249339861ad" />
+              </chat>
+              <chat>
+                <internalId value="b40222ff-4cd5-47d6-bfbb-8c3766822504" />
+                <messages>
+                  <list>
+                    <message>
+                      <speaker value="HUMAN" />
+                      <text value="Please review and analyze @d:\Artem\dev\ReposNew\nowinandroid\README.md:1 ( @d:\Artem\dev\ReposNew\nowinandroid\README.md ) and identify potential areas for improvement related to code smells, readability, maintainability, performance, security, etc. Do not list issues already addressed in the given code. Focus on providing up to 5 constructive suggestions that could make the code more robust, efficient, or align with best practices. For each suggestion, provide a brief explanation of the potential benefits. After listing any recommendations, summarize if you found notable opportunities to enhance the code quality overall or if the code generally follows sound design principles. If no issues found, reply 'There are no errors.'" />
+                    </message>
+                    <message>
+                      <speaker value="ASSISTANT" />
+                      <text value="&lt;html&gt;&lt;b&gt;&amp;#9888; Error performing this action&lt;/b&gt;&lt;br&gt;&lt;br&gt;Please retry sending your message. If you tried to run a command, try it again.&lt;br&gt;If the issue persists, please &lt;a href=&quot;https://github.com/sourcegraph/jetbrains/issues/new?template=bug_report.yml&amp;labels=bug&amp;projects=sourcegraph/381&amp;title=bug%3A+socket+hang+up&amp;about=Android+Studio+Koala+Feature+Drop+%7C+2024.1.2+Beta+1%0ABuild+%23AI-241.18034.62.2412.12048879%2C+built+on+July+4%2C+2024%0ARuntime+version%3A+17.0.11%2B0--11852314+amd64%0AVM%3A+OpenJDK+64-Bit+Server+VM+by+JetBrains+s.r.o.%0AWindows+10.0%0AGC%3A+G1+Young+Generation%2C+G1+Old+Generation%0AMemory%3A+2048M%0ACores%3A+8%0ARegistry%3A%0A++ide.instant.shutdown%3Dfalse%0A++ide.balloon.shadow.size%3D0%0A++ide.browser.jcef.gpu.disable%3Dtrue%0A++debugger.new.tool.window.layout%3Dtrue%0A++ide.intellij.laf.enable.animation%3Dtrue%0A++ide.experimental.ui%3Dtrue%0ANon-Bundled+Plugins%3A%0A++com.intellij.marketplace+%28241.17890.43%29%0A++com.jetbrains.grayTheme+%281.3%29%0A++com.berzanmikaili.intellij.monokai_pro+%282.0.2c%29%0A++solarized+%281.5%29%0A++com.mallowigi.idea+%2823.0.0%29%0A++com.jetbrains.CyanTheme+%281.3%29%0A++dev.polek.adbwifi+%281.2.6%29%0A++de.netnexus.camelcaseplugin+%283.0.12%29%0A++monokai-pro+%281.10%29%0A++com.developerphil.adbidea+%281.6.15%29%0A++com.sourcegraph.jetbrains+%286.0.16%29%0A++com.gitlab.msciachero.intellij-gitlab-plugin+%2811.5.1%29%0A&amp;logs=Stacktrace%3A+%60%60%60socket+hang+up%60%60%60&quot;&gt;create a support ticket&lt;/a&gt;.&lt;br&gt;&lt;br&gt;&lt;sub&gt;Error: socket hang up&lt;/sub&gt;&lt;/html&gt;" />
+                    </message>
+                  </list>
+                </messages>
+                <updatedAt value="2024-07-26T17:09:05.6070888" />
+              </chat>
+              <chat>
+                <internalId value="58fa9906-4f35-46c6-8768-3bed66cfdf2b" />
+              </chat>
+              <chat>
+                <internalId value="747e0720-c0c9-457f-8c6c-ac7b17df2bba" />
+              </chat>
+            </list>
+          </chats>
+        </AccountData>
+      </list>
+    </accountData>
+  </component>
+</project>
