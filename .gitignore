@@ -1,5 +1,6 @@
 *.iml
 .gradle
+.kotlin
 .idea/vcs.xml
 .idea/misc.xml
 /local.properties
@@ -9,6 +10,7 @@
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
+.idea/cody_history.xml
 .DS_Store
 /build
 /captures
