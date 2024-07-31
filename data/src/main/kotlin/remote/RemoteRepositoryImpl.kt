@@ -1,9 +1,9 @@
 package remote
 
-import com.bbuddies.gotogether.common_domain.model.Message
-import com.bbuddies.gotogether.common_domain.model.Reply
-import com.bbuddies.gotogether.common_domain.model.User
-import com.bbuddies.gotogether.common_domain.repository.RemoteRepository
+import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.Reply
+import com.bbuddies.madafaker.common_domain.model.User
+import com.bbuddies.madafaker.common_domain.repository.RemoteRepository
 import remote.api.RetrofitInstance
 
 class RemoteRepositoryImpl() : RemoteRepository {

@@ -1,4 +1,4 @@
-package com.bbuddies.gotogether.common_domain.model
+package com.bbuddies.madafaker.common_domain.model
 
 data class Message(  val id: String,
                      val body: String,

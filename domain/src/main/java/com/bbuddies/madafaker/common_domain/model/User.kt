@@ -1,4 +1,4 @@
-package com.bbuddies.gotogether.common_domain.model
+package com.bbuddies.madafaker.common_domain.model
 
 data class User( val id: String,
                  val name: String,

@@ -1,8 +1,8 @@
 package remote.api
 
-import com.bbuddies.gotogether.common_domain.model.Message
-import com.bbuddies.gotogether.common_domain.model.Reply
-import com.bbuddies.gotogether.common_domain.model.User
+import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.Reply
+import com.bbuddies.madafaker.common_domain.model.User
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
@@ -53,7 +53,7 @@ interface MadafakerApi {
 
     @Headers(CONTENT_TYPE)
     @POST("/api/message")
-    fun createMessage(@Body body: String, mode: String):Message
+    fun createMessage(@Body body: String, mode: String): Message
 
     @Headers(CONTENT_TYPE)
     @POST("/api/reply")

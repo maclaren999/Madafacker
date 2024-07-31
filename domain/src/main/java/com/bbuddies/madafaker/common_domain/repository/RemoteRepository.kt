@@ -1,8 +1,8 @@
-package com.bbuddies.gotogether.common_domain.repository
+package com.bbuddies.madafaker.common_domain.repository
 
-import com.bbuddies.gotogether.common_domain.model.Message
-import com.bbuddies.gotogether.common_domain.model.Reply
-import com.bbuddies.gotogether.common_domain.model.User
+import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.Reply
+import com.bbuddies.madafaker.common_domain.model.User
 
 interface RemoteRepository {
     suspend fun getCurrentUser(): User
