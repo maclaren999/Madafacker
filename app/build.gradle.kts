@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id(libs.plugins.daggerHilt.get().pluginId)
     id(libs.plugins.kapt.get().pluginId)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
