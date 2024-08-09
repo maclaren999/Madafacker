@@ -29,6 +29,8 @@ permissionsDispatcher = "4.9.1"
 robolectric = "4.12.2"
 truth = "1.4.2"
 kotlinxSerialization = "1.6.3"
+navigationRuntimeKtx = "2.7.7"
+navigation-compose = "2.7.1"
 
 [libraries]
 
@@ -59,6 +61,8 @@ androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit
 
 # Jetpack Compose - Material Design 3
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-navigation = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation-compose" }
+
 
 # UI - Classic Android Views
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
