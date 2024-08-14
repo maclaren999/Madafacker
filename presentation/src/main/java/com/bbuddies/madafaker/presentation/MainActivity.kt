@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker
+package com.bbuddies.madafaker.presentation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,8 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
-import com.bbuddies.madafaker.presentation.AppNavHost
-import com.bbuddies.madafaker.ui.theme.MadafakerTheme
+import com.bbuddies.madafaker.presentation.ui.theme.MadafakerTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
