@@ -4,11 +4,12 @@ import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.repository.RemoteRepository
-import remote.api.RetrofitInstance
 
 class RemoteRepositoryImpl() : RemoteRepository {
-    private val webService = RetrofitInstance.madafakerWebService
+//TODO: Inject wevService with DI
+//    private val webService = RetrofitInstance.madafakerWebService
 
+    //TODO: Move to UserRepo...
     override suspend fun getCurrentUser(): User {
         return webService.getCurrentUser()
     }
