@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.ui.theme
+package com.bbuddies.madafaker.presentation.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

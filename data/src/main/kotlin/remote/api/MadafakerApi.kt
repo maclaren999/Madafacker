@@ -61,7 +61,7 @@ interface MadafakerApi {
 }
 
 object RetrofitInstance {
-    private const val BASE_URL = ""
+    private const val BASE_URL = "https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app/"
 
     private val retrofit: Retrofit by lazy {
         Retrofit.Builder()

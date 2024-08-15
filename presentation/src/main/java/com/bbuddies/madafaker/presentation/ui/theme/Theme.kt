@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.ui.theme
+package com.bbuddies.madafaker.presentation.ui.theme
 
 import android.app.Activity
 import android.os.Build
