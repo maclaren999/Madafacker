@@ -4,6 +4,7 @@ plugins {
     id(libs.plugins.daggerHilt.get().pluginId)
     id(libs.plugins.kapt.get().pluginId)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -61,6 +62,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation)
     implementation(project(":presentation"))
+    implementation(libs.firebase.messaging)
+    implementation(libs.androidx.ui.desktop)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
