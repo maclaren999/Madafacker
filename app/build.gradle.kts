@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.bbuddies.madafaker"
-    compileSdk = 34
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "com.bbuddies.madafaker"
         minSdk = 27
-        targetSdk = 34
+        targetSdk = libs.versions.compileSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
 
