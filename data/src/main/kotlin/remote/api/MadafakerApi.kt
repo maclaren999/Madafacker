@@ -3,8 +3,6 @@ package remote.api
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Headers
@@ -17,7 +15,6 @@ const val CONTENT_TYPE = "Content-Type: application/json"
 interface MadafakerApi {
 
     ///GET
-
     @Headers(CONTENT_TYPE)
     @GET("/api/user/current")
     fun getCurrentUser(): User
@@ -36,7 +33,6 @@ interface MadafakerApi {
 
 
     ///UPDATE
-
     @Headers(CONTENT_TYPE)
     @PATCH("/api/user/current")
     fun updateCurrentUser(@Body name: String): User
@@ -46,7 +42,6 @@ interface MadafakerApi {
     fun updateReply(@Body id: String, isPublic: Boolean)
 
     ////CREATE
-
     @Headers(CONTENT_TYPE)
     @POST("/api/user")
     fun createUser(@Body name: String): User
@@ -58,19 +53,4 @@ interface MadafakerApi {
     @Headers(CONTENT_TYPE)
     @POST("/api/reply")
     fun createReply(@Body body: String? = null, isPublic: Boolean, parentId: String? = null)//TODO
-}
-
-object RetrofitInstance {
-    private const val BASE_URL = "https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app/"
-
-    private val retrofit: Retrofit by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(MoshiConverterFactory.create())
-            .build()
-    }
-
-    val madafakerWebService: MadafakerApi by lazy {
-        retrofit.create(MadafakerApi::class.java)
-    }
 }

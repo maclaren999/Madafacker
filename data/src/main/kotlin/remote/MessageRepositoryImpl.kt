@@ -3,11 +3,12 @@ package remote
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
-import com.bbuddies.madafaker.common_domain.repository.RemoteRepository
+import com.bbuddies.madafaker.common_domain.repository.MessageRepository
+import remote.api.MadafakerApi
+import javax.inject.Inject
 
-class RemoteRepositoryImpl() : RemoteRepository {
-//TODO: Inject wevService with DI
-//    private val webService = RetrofitInstance.madafakerWebService
+class MessageRepositoryImpl @Inject internal constructor(private val webService: MadafakerApi) :
+    MessageRepository {
 
     //TODO: Move to UserRepo...
     override suspend fun getCurrentUser(): User {
