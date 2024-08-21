@@ -1,5 +1,6 @@
 [versions]
 compileSdk = "34"
+minSdk = "27"
 agp = "8.5.2"
 kotlin = "2.0.0"
 jetbrainsKotlinJvm = "2.0.0"
@@ -13,7 +14,7 @@ composeBom = "2024.06.00"
 appcompat = "1.7.0"
 material = "1.12.0"
 coroutines = "1.8.1"
-hilt = "2.51.1"
+hilt = "2.52"
 retrofit = "2.9.0"
 okhttp = "4.12.0"
 room = "2.6.1"
@@ -30,6 +31,9 @@ robolectric = "4.12.2"
 truth = "1.4.2"
 kotlinxSerialization = "1.6.3"
 material3Android = "1.2.1"
+googleGmsGoogleServices = "4.4.2"
+firebaseMessagingKtx = "24.0.0"
+composeRuntime = "1.6.8"
 
 [libraries]
 # Core Android libraries
@@ -46,6 +50,7 @@ androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecyc
 # Jetpack Compose
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "composeRuntime" }
 androidx-compose-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
@@ -84,9 +89,11 @@ navigation-ui = { group = "androidx.navigation", name = "navigation-ui-ktx", ver
 # Firebase
 firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx" }
-firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging", version.ref = "firebaseMessagingKtx" }
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
+firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
+
 
 # Push notifications
 onesignal = { group = "com.onesignal", name = "OneSignal", version.ref = "onesignal" }
@@ -123,3 +130,4 @@ jetbrainsKotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrains
 daggerHilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+google-gms-google-services = { id = "com.google.gms.google-services", version.ref = "googleGmsGoogleServices" }

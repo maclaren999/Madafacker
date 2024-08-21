@@ -4,6 +4,7 @@ plugins {
     id(libs.plugins.daggerHilt.get().pluginId)
     id(libs.plugins.kotlin.kapt.get().pluginId)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.google.gms.google.services)
 }
 
 android {
@@ -12,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.bbuddies.madafaker"
-        minSdk = 27
+        minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.compileSdk.get().toInt()
         versionCode = 1
         versionName = "1.0"
@@ -39,9 +40,7 @@ android {
     buildFeatures {
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
-    }
+
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -53,14 +52,15 @@ dependencies {
     implementation(project(":presentation"))
     implementation(project(":domain"))
     implementation(project(":data"))
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.firebase.messaging)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.hilt)
     kapt(libs.hilt.compiler)
+    implementation(libs.androidx.compose.runtime)
 }
 
 kapt {
