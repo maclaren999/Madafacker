@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.google.gms.google.services)
+    id(libs.plugins.daggerHilt.get().pluginId)
+    id(libs.plugins.kotlin.kapt.get().pluginId)
 }
 
 android {
@@ -33,7 +35,7 @@ android {
 
 dependencies {
     implementation(project(":domain"))
-
+    kapt(libs.hilt.compiler)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.ui)
@@ -43,6 +45,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.hilt)
+    implementation(libs.hilt.navigation.compose)
     implementation(libs.material)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.android)
