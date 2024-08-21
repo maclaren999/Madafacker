@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.presentation.ui.base
+package com.bbuddies.madafaker.presentation.base
 
 import androidx.lifecycle.ViewModel
 

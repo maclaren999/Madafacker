@@ -31,16 +31,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 
 @Preview
 @Composable
-fun SettingsScreenPreview() {
-    SettingsScreen(SettingsViewModel())
+fun AccountScreenPreview() {
+//    val viewModel: AccountViewModel = hiltViewModel()
+//    AccountScreen(navController =  ,AccountViewModel(viewModel))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel) {
+fun AccountScreen(navController: NavController, viewModel: AccountViewModel) {
     val nickname by viewModel.nickname.collectAsState()
     val fullName by viewModel.fullName.collectAsState()
 
@@ -81,7 +83,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         TextField(
             value = nickname,
             onValueChange = { viewModel.updateNickname(it) },
-            label = { Text("Nickname") },
+            label = { Text(nickname) },
             trailingIcon = {
                 Text(
                     text = "${nickname.length}/100",

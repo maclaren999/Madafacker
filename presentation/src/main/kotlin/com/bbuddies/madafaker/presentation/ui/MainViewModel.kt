@@ -1,10 +1,11 @@
 package com.bbuddies.madafaker.presentation.ui
 
-import com.bbuddies.madafaker.presentation.ui.base.BaseViewModel
+import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 @HiltViewModel
-class MainViewModel : BaseViewModel(
+class MainViewModel @Inject constructor() : BaseViewModel(
 //Inject repositories here
 ) {
 
