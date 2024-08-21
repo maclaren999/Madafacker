@@ -4,12 +4,12 @@ import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
 
-interface RemoteRepository {
+interface MessageRepository {
+
     suspend fun getCurrentUser(): User
     suspend fun getIncomingMassage(): List<Message>
     suspend fun getOutcomingMassage(): List<Message>
     suspend fun getReplyById(id: String): Reply
-
 
     suspend fun updateCurrentUser(name: String): User
     suspend fun updateReply(id: String, isPublic: Boolean)
@@ -17,6 +17,5 @@ interface RemoteRepository {
     suspend fun createUser(name: String): User
     suspend fun createMessage(body: String, mode: String): Message
     suspend fun createReply(body: String? = null, isPublic: Boolean, parentId: String? = null)//TODO
-
 
 }

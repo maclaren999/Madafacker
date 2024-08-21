@@ -28,6 +28,7 @@ class NetworkModule {
     fun provideMadafakerApi(): MadafakerApi =
         baseRetrofitBuilder
             .client(okHttpClientBuilder.build())
+//            .addCallAdapterFactory(CoroutineCallAdapterFactory()) //TODO: resolve if needed
             .build()
             .create(MadafakerApi::class.java)
 
