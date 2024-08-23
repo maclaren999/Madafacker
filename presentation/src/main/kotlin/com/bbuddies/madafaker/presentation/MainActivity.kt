@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
-import com.bbuddies.madafaker.presentation.ui.theme.MadafakerTheme
+import com.bbuddies.madafaker.presentation.theme.MadafakerTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

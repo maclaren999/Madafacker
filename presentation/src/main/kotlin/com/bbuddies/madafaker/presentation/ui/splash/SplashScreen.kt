@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.presentation
+package com.bbuddies.madafaker.presentation.ui.splash
 
 
 import androidx.compose.animation.AnimatedVisibility
@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavHostController
+import com.bbuddies.madafaker.presentation.NavigationItem
 
 
 @Composable
@@ -58,7 +59,7 @@ fun SplashScreen(navController: NavHostController) {
         }
         if (!animationState.targetState && !animationState.currentState) {
             //navigate to another route in NavHost
-            navController.navigate(NavigationItem.Main.route)
+            navController.navigate(NavigationItem.Account.route)
 
         }
     }
