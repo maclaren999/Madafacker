@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.presentation.ui
+package com.bbuddies.madafaker.presentation.ui.splash
 
 
 import androidx.compose.animation.AnimatedVisibility

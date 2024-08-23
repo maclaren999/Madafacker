@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.presentation.ui
+package com.bbuddies.madafaker.presentation.ui.main
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

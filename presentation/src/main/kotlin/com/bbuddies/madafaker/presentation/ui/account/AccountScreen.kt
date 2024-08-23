@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.presentation.ui
+package com.bbuddies.madafaker.presentation.ui.account
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

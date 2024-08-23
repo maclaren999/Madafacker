@@ -6,9 +6,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.bbuddies.madafaker.presentation.ui.AccountScreen
-import com.bbuddies.madafaker.presentation.ui.MainScreen
-import com.bbuddies.madafaker.presentation.ui.SplashScreen
+import com.bbuddies.madafaker.presentation.ui.account.AccountScreen
+import com.bbuddies.madafaker.presentation.ui.main.MainScreen
+import com.bbuddies.madafaker.presentation.ui.splash.SplashScreen
 
 enum class MadafakerScreen() {
     SplashScreen,

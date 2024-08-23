@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.presentation.ui
+package com.bbuddies.madafaker.presentation.ui.account
 
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.model.User
