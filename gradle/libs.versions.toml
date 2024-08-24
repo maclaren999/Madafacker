@@ -35,6 +35,7 @@ material3Android = "1.2.1"
 googleGmsGoogleServices = "4.4.2"
 firebaseMessagingKtx = "24.0.0"
 composeRuntime = "1.6.8"
+datastorePreferencesCoreJvm = "1.1.1"
 
 [libraries]
 # Core Android libraries
@@ -123,6 +124,7 @@ truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 
 # Kotlin serialization
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+androidx-datastore-preferences-core-jvm = { group = "androidx.datastore", name = "datastore-preferences-core-jvm", version.ref = "datastorePreferencesCoreJvm" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
