@@ -9,7 +9,6 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,15 +30,13 @@ class PreferenceManagerImpl @Inject constructor(
         private val AUTH_TOKEN = stringPreferencesKey("auth_token")
     }
 
-    override val authToken: Flow<String> = dataStore.data.map { preferences ->
-        preferences[AUTH_TOKEN] ?: ""
+    override val authToken: Flow<String?> = dataStore.data.map { preferences ->
+        preferences[AUTH_TOKEN]
     }
 
-    override fun updateAuthToken(authToken: String) {
-        runBlocking {
-            dataStore.edit { preferences ->
-                preferences[AUTH_TOKEN] = authToken
-            }
+    override suspend fun updateAuthToken(authToken: String) {
+        dataStore.edit { preferences ->
+            preferences[AUTH_TOKEN] = authToken
         }
     }
 

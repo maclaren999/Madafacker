@@ -10,6 +10,6 @@ interface PreferenceManager {
 
     val authToken: Flow<String?>
 
-    fun updateAuthToken(authToken: String)
+    suspend fun updateAuthToken(authToken: String)
 
 }

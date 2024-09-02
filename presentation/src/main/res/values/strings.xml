@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="account_nickname_is_available">Nickname is available</string>
+    <string name="account_nickname_is_not_available">This name is taken</string>
+    <string name="account_nickname_cannot_be_empty">Nickname cannot be empty</string>
+    <string name="account_characters_max_length">" characters - max length"</string>
+    <string name="network_error">Network error. Check your connection</string>
+</resources>
