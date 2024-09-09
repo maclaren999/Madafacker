@@ -36,9 +36,12 @@ dependencies {
 
     api(libs.retrofit)
     api(libs.moshi)
+    api(libs.room.runtime)
+    api(libs.room.compiler)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     api(libs.hilt)
+    implementation(libs.androidx.room.common)
     kapt(libs.hilt.compiler)
 
     testImplementation(libs.junit)
