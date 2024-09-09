@@ -1,6 +1,5 @@
 package remote
 
-import android.util.Log
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
@@ -33,10 +32,7 @@ class UserRepositoryImpl @Inject internal constructor(
         user
     }
 
-    override suspend fun isNameAvailable(): Boolean = withContext(Dispatchers.IO) {
-        //TODO("Not yet implemented")
-        Log.w("isNameAvailable", "NOT IMPLEMENTED")
-        true
+    override suspend fun isNameAvailable(name: String): Boolean = withContext(Dispatchers.IO) {
+        webService.checkNameAvailability(name)
     }
-
 }

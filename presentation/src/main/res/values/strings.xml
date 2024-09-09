@@ -5,4 +5,6 @@
     <string name="account_nickname_cannot_be_empty">Nickname cannot be empty</string>
     <string name="account_characters_max_length">" characters - max length"</string>
     <string name="network_error">Network error. Check your connection</string>
+    <string name="account_nickname_is_too_long">\"Your nickname is too long. Max length is %d\"</string>
+    <string name="error_generic">Unexpected error. Our programer is dumb.</string>
 </resources>

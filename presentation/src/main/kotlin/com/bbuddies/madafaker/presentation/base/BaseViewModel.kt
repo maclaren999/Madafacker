@@ -1,15 +1,13 @@
 package com.bbuddies.madafaker.presentation.base
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 abstract class BaseViewModel : ViewModel() {
 
-    val warningsFlow = MutableStateFlow<String?>(null)
-
-    protected suspend fun warnUser(message: String, duration: Int = Snackbar.LENGTH_SHORT) {
-        warningsFlow.emit(message)
-    }
+    protected val _warningsFlow: MutableStateFlow<((context: Context) -> String?)?> = MutableStateFlow(null)
+    val warningsFlow: StateFlow<((context: Context) -> String?)?> = _warningsFlow // TODO: Investigate NPE
 
 }

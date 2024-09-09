@@ -15,6 +15,7 @@ interface UserRepository {
      * Returns null if user is not found.
      * */
     suspend fun getCurrentUser(): User?
+
     suspend fun updateUserName(name: String): User
 
     /**

@@ -1,7 +1,6 @@
 package com.bbuddies.madafaker.presentation.ui.account
 
 import android.content.Context
-import androidx.compose.runtime.mutableStateOf
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.MfResult
@@ -9,60 +8,93 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * Validates nickname drafts for user accounts.
+ *
+ * @property userRepository Repository for user-related operations.
+ * @property coroutineScope Scope for managing coroutines.
+ */
 class NicknameDraftValidator(
     private val userRepository: UserRepository,
     private val coroutineScope: CoroutineScope
 ) {
 
-    private var validationJob: Job? = null
-    val validationResult = mutableStateOf<MfResult<(Context) -> String>>(MfResult.Success({ _ -> "" }))
+    /** Current validation result. */
+    val validationResult: MutableStateFlow<MfResult<Unit>?> =
+        MutableStateFlow(null)
 
+    private var validationJob: Job? = null
+
+    /**
+     * Validates a new nickname draft.
+     *
+     * @param newNickname The nickname to validate.
+     */
     fun onDraftNickChanged(
         newNickname: String
     ) {
         validationJob?.cancel()
         validationJob = coroutineScope.launch(Dispatchers.IO) {
+            val formatResult = hasCorrectFormat(newNickname)
+
+            if (formatResult is MfResult.Error) {
+                validationResult.value = formatResult
+                return@launch
+            }
+
             delay(500) // Wait for user to stop typing
             validationResult.value = MfResult.Loading()
             delay(500)
-            val hasCorrectFormat = hasCorrectFormat(newNickname)
-            if (hasCorrectFormat is MfResult.Success) {
-                validationResult.value = runCatching {
-                    val isAvailable = userRepository.isNameAvailable(newNickname)
-                    if (isAvailable)
-                        MfResult.Success { context: Context ->
-                            context.getString(R.string.account_nickname_is_available)
-                        }
-                    else
-                        MfResult.Error { context: Context ->
-                            context.getString(R.string.account_nickname_is_not_available)
-                        }
-                }.getOrElse { _ ->
-                    MfResult.Error({ context: Context ->
-                        context.getString(R.string.network_error)
-                    })
-                }
-            } else if (hasCorrectFormat is MfResult.Error) {
-                validationResult.value = hasCorrectFormat
-            }
+
+            validationResult.value = checkNameAvailability(newNickname)
         }
     }
 
-    val MAX_NICKNAME_LENGTH = 100
-    fun hasCorrectFormat(nickname: String): MfResult<(Context) -> String> =
-        when {
-            nickname.isEmpty() -> MfResult.Error(
-                { context: Context -> context.getString(R.string.account_nickname_cannot_be_empty) }
-            )
+    /**
+     * Checks if the nickname is available.
+     *
+     * @param nickname The nickname to check.
+     * @return Result of the availability check.
+     */
+    private suspend fun checkNameAvailability(nickname: String): MfResult<Unit> =
+        runCatching {
+            val isAvailable = userRepository.isNameAvailable(nickname)
+            if (isAvailable) {
+                MfResult.Success(Unit)
+            } else {
+                MfResult.Error({ context: Context ->
+                    context.getString(R.string.account_nickname_is_not_available)
+                }, Unit)
+            }
+        }.getOrElse { _ ->
+            MfResult.Error({ context: Context ->
+                context.getString(R.string.network_error)
+            })
+        }
 
-            nickname.length > MAX_NICKNAME_LENGTH -> MfResult.Error({ context: Context ->
-                context.getString(
-                    R.string.account_characters_max_length
-                )
+
+    /** Maximum allowed length for a nickname. */
+    val MAX_NICKNAME_LENGTH = 100
+
+    /**
+     * Checks if the nickname has the correct format.
+     *
+     * @param nickname The nickname to check.
+     * @return Result of the format check.
+     */
+    fun hasCorrectFormat(nickname: String): MfResult<Unit> =
+        when {
+            nickname.isEmpty() -> MfResult.Error({ context: Context ->
+                context.getString(R.string.account_nickname_cannot_be_empty)
             })
 
-            else -> MfResult.Success({ _ -> "" })
+            nickname.length > MAX_NICKNAME_LENGTH -> MfResult.Error({ context: Context ->
+                context.getString(R.string.account_nickname_is_too_long, MAX_NICKNAME_LENGTH)
+            })
+
+            else -> MfResult.Success(Unit)
         }
 }
