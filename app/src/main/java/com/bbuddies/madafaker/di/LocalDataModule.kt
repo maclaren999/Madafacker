@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.room.Room
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import dagger.Module
 import dagger.Provides
