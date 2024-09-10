@@ -7,6 +7,7 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import remote.api.BASE_URL.API_BASE_URL
 import remote.api.MadafakerApi
+import remote.api.interceptors.AuthInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
@@ -18,19 +19,16 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 class NetworkModule {
 
-    /**
-     * Retrofit builder configured with the base URL and Moshi converter factory.
-     */
-    private val baseRetrofitBuilder: Retrofit.Builder =
-        Retrofit.Builder()
-            .baseUrl(API_BASE_URL)
-            .addConverterFactory(MoshiConverterFactory.create())
 
     /**
-     * OkHttpClient builder for creating OkHttpClient instances.
+     * OkHttpClient instance.
      */
-    private val okHttpClientBuilder: OkHttpClient.Builder =
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient =
         OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
+            .build()
 
     /**
      * Provides a singleton instance of [MadafakerApi].
@@ -39,9 +37,11 @@ class NetworkModule {
      */
     @Provides
     @Singleton
-    fun provideMadafakerApi(): MadafakerApi =
-        baseRetrofitBuilder
-            .client(okHttpClientBuilder.build())
+    fun provideMadafakerApi(okHttpClient: OkHttpClient): MadafakerApi =
+        Retrofit.Builder()
+            .baseUrl(API_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create(MadafakerApi::class.java)
 

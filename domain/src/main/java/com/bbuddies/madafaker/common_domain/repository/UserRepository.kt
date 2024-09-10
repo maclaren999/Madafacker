@@ -8,8 +8,24 @@ import com.bbuddies.madafaker.common_domain.model.User
  */
 interface UserRepository {
 
-    suspend fun getCurrentUser(): User
-    suspend fun updateCurrentUser(name: String): User
+    /**
+     * Checks local storage for User entity.
+     * If User is not found, it will fetch from the server.
+     *
+     * Returns null if user is not found.
+     * */
+    suspend fun getCurrentUser(): User?
+
+    suspend fun updateUserName(name: String): User
+
+    /**
+     * Creates User on the server and saves User model and auth token in local storage.
+     * */
     suspend fun createUser(name: String): User
+
+    /**
+     * Requests server to check if name is available, not taken.
+     * */
+    suspend fun isNameAvailable(name: String): Boolean
 
 }
