@@ -24,7 +24,6 @@ class PreferenceManagerImpl @Inject constructor(
      * If not found in the server it will create a new user.
      * */
 
-
     companion object {
         private val USER_NAME = stringPreferencesKey("user_name")
         private val AUTH_TOKEN = stringPreferencesKey("auth_token")
@@ -38,6 +37,7 @@ class PreferenceManagerImpl @Inject constructor(
         dataStore.edit { preferences ->
             preferences[AUTH_TOKEN] = authToken
         }
+
     }
 
 }

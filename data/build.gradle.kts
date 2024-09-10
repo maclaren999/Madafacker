@@ -35,6 +35,8 @@ dependencies {
     implementation(project(":domain"))
 
     api(libs.retrofit)
+    api(libs.okhttp.logging.interceptor)
+    api(libs.timber)
     api(libs.moshi)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
