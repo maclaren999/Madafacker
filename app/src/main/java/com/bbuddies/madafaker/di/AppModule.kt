@@ -12,5 +12,6 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 interface AppModule {
-    // Define your dependencies here
+
+
 }

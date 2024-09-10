@@ -53,4 +53,9 @@ interface MadafakerApi {
     @Headers(CONTENT_TYPE)
     @POST("/api/reply")
     suspend fun createReply(@Body body: String? = null, isPublic: Boolean, parentId: String? = null)//TODO
+
+    @Headers(CONTENT_TYPE)
+    @GET("/api/user/check-name/{name}")
+    suspend fun checkNameAvailability(@Path("name") name: String): Boolean
+
 }

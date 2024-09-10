@@ -38,10 +38,11 @@ dependencies {
     api(libs.moshi)
     api(libs.room.runtime)
     api(libs.room.compiler)
+    implementation(libs.androidx.room.common)
+    api(libs.androidx.datastore.preferences)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     api(libs.hilt)
-    implementation(libs.androidx.room.common)
     kapt(libs.hilt.compiler)
 
     testImplementation(libs.junit)
