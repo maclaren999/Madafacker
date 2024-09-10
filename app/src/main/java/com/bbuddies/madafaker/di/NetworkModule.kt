@@ -37,8 +37,8 @@ class NetworkModule {
         @ApplicationContext context: Context
     ): OkHttpClient =
         OkHttpClient.Builder()
-            .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor())
+            .addInterceptor(authInterceptor)
             .addInterceptor(ChuckerInterceptor(context))
             .build()
 

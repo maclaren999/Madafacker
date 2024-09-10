@@ -3,12 +3,14 @@ package remote.api
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
+import remote.api.response.NameAvailabilityResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Headers
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 const val CONTENT_TYPE = "Content-Type: application/json"
 
@@ -55,7 +57,6 @@ interface MadafakerApi {
     suspend fun createReply(@Body body: String? = null, isPublic: Boolean, parentId: String? = null)//TODO
 
     @Headers(CONTENT_TYPE)
-    @GET("/api/user/check-name/{name}")
-    suspend fun checkNameAvailability(@Path("name") name: String): Boolean
-
+    @GET("/api/user/check-name-availability")
+    suspend fun checkNameAvailability(@Query("name") name: String): NameAvailabilityResponse
 }

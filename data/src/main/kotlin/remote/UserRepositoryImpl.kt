@@ -20,7 +20,6 @@ class UserRepositoryImpl @Inject internal constructor(
             webService.getCurrentUser() //authToken is been added to the header inside [AuthInterceptor]
         }
     }
-//        getLocalUser()?.let { return it } //TODO: Impl local db
 
     override suspend fun updateUserName(name: String): User {
         return webService.updateCurrentUser(name)
@@ -33,6 +32,6 @@ class UserRepositoryImpl @Inject internal constructor(
     }
 
     override suspend fun isNameAvailable(name: String): Boolean = withContext(Dispatchers.IO) {
-        webService.checkNameAvailability(name)
+        webService.checkNameAvailability(name).nameIsAvailable
     }
 }

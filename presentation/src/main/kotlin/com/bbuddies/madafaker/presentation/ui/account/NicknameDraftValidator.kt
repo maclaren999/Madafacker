@@ -10,6 +10,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 /**
  * Validates nickname drafts for user accounts.
@@ -69,7 +70,8 @@ class NicknameDraftValidator(
                     context.getString(R.string.account_nickname_is_not_available)
                 }, Unit)
             }
-        }.getOrElse { _ ->
+        }.getOrElse { it ->
+            Timber.e(it)
             MfResult.Error({ context: Context ->
                 context.getString(R.string.network_error)
             })
