@@ -49,9 +49,11 @@ class NicknameDraftValidator(
             }
 
             delay(500) // Wait for user to stop typing
-            checkNameAvailability(newNickname)?.let { // Call the server
-                validationResult.value = it
-                return@launch
+            launch {
+                checkNameAvailability(newNickname)?.let { // Call the server
+                    validationResult.value = it
+                    validationJob?.cancel()
+                }
             }
             delay(500)
             validationResult.value = MfResult.Loading() // Show loading if it takes too long
