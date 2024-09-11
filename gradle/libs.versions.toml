@@ -37,6 +37,7 @@ firebaseMessagingKtx = "24.0.0"
 composeRuntime = "1.6.8"
 datastore = "1.1.1"
 roomCommon = "2.6.1"
+datastoreCoreAndroid = "1.1.1"
 
 [libraries]
 # Core Android libraries
@@ -127,6 +128,7 @@ truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 
 # Kotlin serialization
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+androidx-datastore-core-android = { group = "androidx.datastore", name = "datastore-core-android", version.ref = "datastoreCoreAndroid" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

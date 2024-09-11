@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.preferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -16,7 +18,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "MF
 
 @Singleton
 class PreferenceManagerImpl @Inject constructor(
-    private val dataStore: DataStore<Preferences>
+    private val dataStore: DataStore<Preferences>,
 ) : PreferenceManager {
     /**
      * Returns the current user.
@@ -28,15 +30,27 @@ class PreferenceManagerImpl @Inject constructor(
     companion object {
         private val USER_NAME = stringPreferencesKey("user_name")
         private val AUTH_TOKEN = stringPreferencesKey("auth_token")
+        private val CURRENT_MODE = stringPreferencesKey("current_mode")
+
     }
 
     override val authToken: Flow<String?> = dataStore.data.map { preferences ->
         preferences[AUTH_TOKEN]
     }
+    override val currentMode: Flow<String?>
+        get() = dataStore.data.map { preferences->
+            preferences[CURRENT_MODE]
+        }
 
     override suspend fun updateAuthToken(authToken: String) {
         dataStore.edit { preferences ->
             preferences[AUTH_TOKEN] = authToken
+        }
+    }
+
+    override suspend fun updateCurrentMode(mode: Mode) {
+        dataStore.edit { preferences->
+            preferences[CURRENT_MODE]=mode.name
         }
     }
 
