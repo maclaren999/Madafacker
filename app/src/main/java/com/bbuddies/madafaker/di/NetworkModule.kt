@@ -1,17 +1,17 @@
 package com.bbuddies.madafaker.di
 
 import android.content.Context
-import com.chuckerteam.chucker.api.ChuckerInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import remote.api.BASE_URL.API_BASE_URL
 import remote.api.MadafakerApi
 import remote.api.interceptors.AuthInterceptor
+import remote.api.logging.createChuckerInterceptor
+import remote.api.logging.loggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
@@ -22,10 +22,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class NetworkModule {
-
-    fun loggingInterceptor() = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
 
     /**
      * OkHttpClient instance.
@@ -39,7 +35,7 @@ class NetworkModule {
         OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor())
             .addInterceptor(authInterceptor)
-            .addInterceptor(ChuckerInterceptor(context))
+            .addInterceptor(createChuckerInterceptor(context))
             .build()
 
     /**

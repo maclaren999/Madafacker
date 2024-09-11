@@ -37,6 +37,8 @@ dependencies {
     api(libs.retrofit)
     api(libs.okhttp.logging.interceptor)
     api(libs.timber)
+    debugImplementation(libs.chucker)
+    releaseImplementation(libs.chuckerNoOp)
     api(libs.moshi)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
