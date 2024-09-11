@@ -39,7 +39,7 @@ class NicknameDraftValidator(
         newNickname: String
     ) {
         validationJob?.cancel()
-        validationJob = coroutineScope.launch(Dispatchers.IO) {
+        validationJob = coroutineScope.launch(Dispatchers.Default) {
             validationResult.value = null
             val formatResult = hasCorrectFormat(newNickname)
 
