@@ -1,6 +1,6 @@
 package com.bbuddies.madafaker.common_domain.preference
 
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 
 
 /**
@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
  */
 interface PreferenceManager {
 
-    val authToken: Flow<String?>
+    val authToken: StateFlow<String?>
 
     suspend fun updateAuthToken(authToken: String)
 

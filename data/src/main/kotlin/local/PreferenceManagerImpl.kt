@@ -7,8 +7,12 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,9 +33,9 @@ class PreferenceManagerImpl @Inject constructor(
         private val AUTH_TOKEN = stringPreferencesKey("auth_token")
     }
 
-    override val authToken: Flow<String?> = dataStore.data.map { preferences ->
-        preferences[AUTH_TOKEN]
-    }
+    override val authToken: StateFlow<String?> = dataStore.data
+        .map { preferences -> preferences[AUTH_TOKEN] }
+        .stateIn(scope = CoroutineScope(Dispatchers.IO), started = SharingStarted.Lazily, initialValue = null)
 
     override suspend fun updateAuthToken(authToken: String) {
         dataStore.edit { preferences ->

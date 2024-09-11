@@ -1,8 +1,6 @@
 package remote.api.interceptors
 
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
-import kotlinx.coroutines.flow.lastOrNull
-import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import javax.inject.Inject
@@ -12,7 +10,7 @@ class AuthInterceptor @Inject constructor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
-        val authToken = runBlocking { preferenceManager.authToken.lastOrNull() }
+        val authToken = preferenceManager.authToken.value
 
         val newRequest =
             if (authToken != null)
