@@ -3,6 +3,7 @@ package remote.api
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
+import remote.api.request.CreateUserRequest
 import remote.api.response.NameAvailabilityResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -46,7 +47,7 @@ interface MadafakerApi {
     ////CREATE
     @Headers(CONTENT_TYPE)
     @POST("/api/user")
-    suspend fun createUser(@Body name: String): User
+    suspend fun createUser(@Body request: CreateUserRequest): User
 
     @Headers(CONTENT_TYPE)
     @POST("/api/message")

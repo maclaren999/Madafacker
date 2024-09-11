@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.withContext
 import remote.api.MadafakerApi
+import remote.api.request.CreateUserRequest
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject internal constructor(
@@ -26,7 +27,7 @@ class UserRepositoryImpl @Inject internal constructor(
     }
 
     override suspend fun createUser(name: String): User = withContext(Dispatchers.IO) {
-        val user = webService.createUser(name)
+        val user = webService.createUser(CreateUserRequest(name))
         preferenceManager.updateAuthToken(user.id)
         user
     }
