@@ -48,6 +48,6 @@ fun createChuckerInterceptor(context: Context, decoder: BodyDecoder? = null): Ch
 /**
  * Logging interceptor for OkHttp.
  * */
-fun loggingInterceptor() = HttpLoggingInterceptor().apply {
+fun HttpLoggingInterceptor() = HttpLoggingInterceptor().apply {
     level = HttpLoggingInterceptor.Level.BODY
 }

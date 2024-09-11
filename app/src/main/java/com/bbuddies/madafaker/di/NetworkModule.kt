@@ -10,8 +10,8 @@ import okhttp3.OkHttpClient
 import remote.api.BASE_URL.API_BASE_URL
 import remote.api.MadafakerApi
 import remote.api.interceptors.AuthInterceptor
+import remote.api.logging.HttpLoggingInterceptor
 import remote.api.logging.createChuckerInterceptor
-import remote.api.logging.loggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
@@ -33,7 +33,7 @@ class NetworkModule {
         @ApplicationContext context: Context
     ): OkHttpClient =
         OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor())
+            .addInterceptor(HttpLoggingInterceptor())
             .addInterceptor(authInterceptor)
             .addInterceptor(createChuckerInterceptor(context))
             .build()
