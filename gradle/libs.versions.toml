@@ -37,6 +37,7 @@ googleGmsGoogleServices = "4.4.2"
 firebaseMessagingKtx = "24.0.0"
 composeRuntime = "1.6.8"
 datastore = "1.1.1"
+roomCommon = "2.6.1"
 
 [libraries]
 # Core Android libraries
@@ -86,6 +87,8 @@ okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-i
 # Local database
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" } # Annotation processor
+androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 # Navigation
 navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment-ktx", version.ref = "navigation" }
@@ -124,9 +127,6 @@ truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 
 # Kotlin serialization
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
-
-#New
-androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
