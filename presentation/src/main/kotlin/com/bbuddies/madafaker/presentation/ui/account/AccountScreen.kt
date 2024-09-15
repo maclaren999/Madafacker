@@ -19,18 +19,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Snackbar
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,8 +35,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.bbuddies.madafaker.presentation.NavigationItem
-import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.MfResult
+import com.bbuddies.madafaker.presentation.base.WarningSnackbarHost
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -211,28 +206,3 @@ fun DeleteAccountButton(onDeleteAccount: () -> Unit) {
     }
 }
 
-//TODO: Move to a separate file & implement as global instance for the app
-@Composable
-fun WarningSnackbarHost(
-    warningsFlow: StateFlow<((context: Context) -> String?)?>
-) {
-    val context = LocalContext.current
-    val warningMessage by warningsFlow.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
-
-    LaunchedEffect(warningMessage) {
-        warningMessage?.let { getMessage ->
-            val message = getMessage(context) ?: context.getString(R.string.error_generic)
-            snackbarHostState.showSnackbar(message)
-        }
-    }
-
-    SnackbarHost(
-        hostState = snackbarHostState
-    ) { snackbarData ->
-        Snackbar(
-            snackbarData = snackbarData,
-            modifier = Modifier.padding(16.dp)
-        )
-    }
-}

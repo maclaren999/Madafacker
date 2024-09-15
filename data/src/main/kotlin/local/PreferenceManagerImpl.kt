@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.preferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.bbuddies.madafaker.common_domain.enums.Mode
@@ -37,9 +36,9 @@ class PreferenceManagerImpl @Inject constructor(
     override val authToken: Flow<String?> = dataStore.data.map { preferences ->
         preferences[AUTH_TOKEN]
     }
-    override val currentMode: Flow<String?>
-        get() = dataStore.data.map { preferences->
-            preferences[CURRENT_MODE]
+    override val currentMode: Flow<Mode>
+        get() = dataStore.data.map { preferences ->
+            preferences[CURRENT_MODE]?.let { Mode.valueOf(it) } ?: Mode.LIGHT
         }
 
     override suspend fun updateAuthToken(authToken: String) {

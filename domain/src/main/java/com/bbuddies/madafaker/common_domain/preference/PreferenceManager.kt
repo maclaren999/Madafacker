@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 interface PreferenceManager {
 
     val authToken: Flow<String?>
-    val currentMode: Flow<String?>
+    val currentMode: Flow<Mode>
 
 
     suspend fun updateAuthToken(authToken: String)

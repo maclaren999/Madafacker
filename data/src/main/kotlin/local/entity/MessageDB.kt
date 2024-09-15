@@ -12,5 +12,4 @@ data class MessageDB(
     val public: Boolean,
     val createdAt: String,
     val authorId: String,
-    val isIncoming: Boolean
 )

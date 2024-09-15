@@ -10,6 +10,6 @@ interface MessageRepository {
     suspend fun createReply(body: String? = null, isPublic: Boolean, parentId: String? = null)//TODO
     suspend fun getReplyById(id: String): Reply
     suspend fun updateReply(id: String, isPublic: Boolean)
-    suspend fun createMessage(body: String, mode: String): Message
+    suspend fun createMessage(body: String): Message
 
 }

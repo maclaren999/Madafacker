@@ -40,7 +40,7 @@ fun AppNavHost(
             SplashScreen(navController)
         }
         composable(NavigationItem.Main.route) {
-            MainScreen(navController)
+            MainScreen(navController = navController, viewModel = hiltViewModel())
         }
 //        composable(NavigationItem.Message.route) {
 //            MessageScreen(navController)
