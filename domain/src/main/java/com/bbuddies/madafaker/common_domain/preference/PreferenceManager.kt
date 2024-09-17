@@ -1,6 +1,7 @@
 package com.bbuddies.madafaker.common_domain.preference
 
 import com.bbuddies.madafaker.common_domain.enums.Mode
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 
 
