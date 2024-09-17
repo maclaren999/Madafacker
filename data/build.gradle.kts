@@ -43,8 +43,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     api(libs.hilt)
-    implementation(libs.androidx.datastore.core.android)
-    implementation(libs.androidx.preference.ktx)
     kapt(libs.hilt.compiler)
 
     testImplementation(libs.junit)
