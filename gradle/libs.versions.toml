@@ -1,7 +1,7 @@
 [versions]
 compileSdk = "34"
 minSdk = "27"
-agp = "8.5.2"
+agp = "8.6.0-rc01"
 kotlin = "2.0.0"
 jetbrainsKotlinJvm = "2.0.0"
 activityCompose = "1.9.2"
@@ -25,6 +25,7 @@ glide = "4.12.0"
 onesignal = "4.6.3"
 mockito = "4.6.1"
 timber = "4.7.1"
+chucker = "4.0.0"
 leakcanary = "2.7"
 coil = "2.6.0"
 permissionsDispatcher = "4.9.1"
@@ -80,6 +81,7 @@ hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-com
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+okhttp-logging-interceptor = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
 
 # Local database
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
@@ -99,15 +101,13 @@ firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
 
-
-# Push notifications
-onesignal = { group = "com.onesignal", name = "OneSignal", version.ref = "onesignal" }
-
 # Mocking (testing)
 mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
 
 # Logging
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
+chucker = { group = "com.github.chuckerteam.chucker", name = "library", version.ref = "chucker" }
+chuckerNoOp = { group = "com.github.chuckerteam.chucker", name = "library-no-op", version.ref = "chucker" }
 
 # Memory leak detection
 leakcanary = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }

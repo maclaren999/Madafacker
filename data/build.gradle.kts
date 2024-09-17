@@ -35,6 +35,10 @@ dependencies {
     implementation(project(":domain"))
 
     api(libs.retrofit)
+    api(libs.okhttp.logging.interceptor)
+    api(libs.timber)
+    debugImplementation(libs.chucker)
+    releaseImplementation(libs.chuckerNoOp)
     api(libs.moshi)
     api(libs.room.runtime)
     api(libs.room.compiler)

@@ -10,6 +10,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import timber.log.Timber
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Validates nickname drafts for user accounts.
@@ -37,7 +39,8 @@ class NicknameDraftValidator(
         newNickname: String
     ) {
         validationJob?.cancel()
-        validationJob = coroutineScope.launch(Dispatchers.IO) {
+        validationJob = coroutineScope.launch(Dispatchers.Default) {
+            validationResult.value = null
             val formatResult = hasCorrectFormat(newNickname)
 
             if (formatResult is MfResult.Error) {
@@ -46,10 +49,14 @@ class NicknameDraftValidator(
             }
 
             delay(500) // Wait for user to stop typing
-            validationResult.value = MfResult.Loading()
+            launch {
+                checkNameAvailability(newNickname)?.let { // Call the server
+                    validationResult.value = it
+                    validationJob?.cancel()
+                }
+            }
             delay(500)
-
-            validationResult.value = checkNameAvailability(newNickname)
+            validationResult.value = MfResult.Loading() // Show loading if it takes too long
         }
     }
 
@@ -59,7 +66,7 @@ class NicknameDraftValidator(
      * @param nickname The nickname to check.
      * @return Result of the availability check.
      */
-    private suspend fun checkNameAvailability(nickname: String): MfResult<Unit> =
+    private suspend fun checkNameAvailability(nickname: String): MfResult<Unit>? =
         runCatching {
             val isAvailable = userRepository.isNameAvailable(nickname)
             if (isAvailable) {
@@ -69,10 +76,15 @@ class NicknameDraftValidator(
                     context.getString(R.string.account_nickname_is_not_available)
                 }, Unit)
             }
-        }.getOrElse { _ ->
-            MfResult.Error({ context: Context ->
-                context.getString(R.string.network_error)
-            })
+        }.getOrElse { it ->
+            if (it is CancellationException)
+                null
+            else {
+                Timber.e(it)
+                MfResult.Error({ context: Context ->
+                    context.getString(R.string.network_error)
+                })
+            }
         }
 
 

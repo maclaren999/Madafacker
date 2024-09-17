@@ -8,8 +8,12 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -25,7 +29,6 @@ class PreferenceManagerImpl @Inject constructor(
      * If not found in the server it will create a new user.
      * */
 
-
     companion object {
         private val USER_NAME = stringPreferencesKey("user_name")
         private val AUTH_TOKEN = stringPreferencesKey("auth_token")
@@ -33,9 +36,10 @@ class PreferenceManagerImpl @Inject constructor(
 
     }
 
-    override val authToken: Flow<String?> = dataStore.data.map { preferences ->
-        preferences[AUTH_TOKEN]
-    }
+    override val authToken: StateFlow<String?> = dataStore.data
+        .map { preferences -> preferences[AUTH_TOKEN] }
+        .stateIn(scope = CoroutineScope(Dispatchers.IO), started = SharingStarted.Lazily, initialValue = null)
+
     override val currentMode: Flow<Mode>
         get() = dataStore.data.map { preferences ->
             preferences[CURRENT_MODE]?.let { Mode.valueOf(it) } ?: Mode.LIGHT
@@ -45,6 +49,7 @@ class PreferenceManagerImpl @Inject constructor(
         dataStore.edit { preferences ->
             preferences[AUTH_TOKEN] = authToken
         }
+
     }
 
     override suspend fun updateCurrentMode(mode: Mode) {

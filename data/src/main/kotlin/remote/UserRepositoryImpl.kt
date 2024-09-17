@@ -7,6 +7,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.withContext
 import remote.api.MadafakerApi
+import remote.api.request.CreateUserRequest
 import javax.inject.Inject
 
 class UserRepositoryImpl @Inject internal constructor(
@@ -20,19 +21,18 @@ class UserRepositoryImpl @Inject internal constructor(
             webService.getCurrentUser() //authToken is been added to the header inside [AuthInterceptor]
         }
     }
-//        getLocalUser()?.let { return it } //TODO: Impl local db
 
     override suspend fun updateUserName(name: String): User {
         return webService.updateCurrentUser(name)
     }
 
     override suspend fun createUser(name: String): User = withContext(Dispatchers.IO) {
-        val user = webService.createUser(name)
+        val user = webService.createUser(CreateUserRequest(name))
         preferenceManager.updateAuthToken(user.id)
         user
     }
 
     override suspend fun isNameAvailable(name: String): Boolean = withContext(Dispatchers.IO) {
-        webService.checkNameAvailability(name)
+        webService.checkNameAvailability(name).nameIsAvailable
     }
 }
