@@ -41,13 +41,15 @@ dependencies {
     releaseImplementation(libs.chuckerNoOp)
     api(libs.moshi)
     api(libs.room.runtime)
-    annotationProcessor(libs.room.compiler)
-    implementation(libs.androidx.room.common)
-    api(libs.androidx.datastore.preferences)
+
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+    api(libs.androidx.datastore.preferences)
     api(libs.hilt)
     kapt(libs.hilt.compiler)
+    kapt(libs.room.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
