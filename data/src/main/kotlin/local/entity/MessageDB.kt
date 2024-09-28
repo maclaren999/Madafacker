@@ -9,7 +9,7 @@ data class MessageDB(
     @PrimaryKey val id: String,
     val body: String,
     val mode: String,
-    val public: Boolean,
+    val isPublic: Boolean,
     val createdAt: String,
     val authorId: String,
 )

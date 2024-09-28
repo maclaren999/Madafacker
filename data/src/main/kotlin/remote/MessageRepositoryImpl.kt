@@ -54,7 +54,7 @@ fun MessageDB.asMessage() = Message(
     body = body,
     mode = mode,
     createdAt = createdAt,
-    public = public,
+    isPublic = isPublic,
     authorId = authorId
 )
 
@@ -63,7 +63,7 @@ fun Message.asMessageDB() = MessageDB(
     body = body,
     mode = mode,
     createdAt = createdAt,
-    public = public,
+    isPublic = isPublic,
     authorId = authorId
 
 )
