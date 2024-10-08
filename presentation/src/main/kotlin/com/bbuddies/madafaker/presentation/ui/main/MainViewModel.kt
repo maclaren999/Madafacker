@@ -30,5 +30,8 @@ class MainViewModel @Inject constructor(
             }.onSuccess { }
         }
     }
+    fun onDraftMessageChanged(message: String) {
+        _draftMessage.value = message
+    }
 
 }
