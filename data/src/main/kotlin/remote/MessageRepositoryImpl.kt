@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import local.MadafakerDao
 import local.entity.MessageDB
 import remote.api.MadafakerApi
+import remote.api.request.CreateMessageRequest
 import javax.inject.Inject
 
 class MessageRepositoryImpl @Inject internal constructor(
@@ -38,7 +39,7 @@ class MessageRepositoryImpl @Inject internal constructor(
     override suspend fun createMessage(body: String): Message =
         withContext(Dispatchers.IO) {
             val currentMode = preferenceManager.currentMode.last()
-            var newMessage = webService.createMessage(body, currentMode.name)
+            var newMessage = webService.createMessage(CreateMessageRequest( body, currentMode.name))
             localDao.insertMessage(newMessage.asMessageDB())
             newMessage
         }
