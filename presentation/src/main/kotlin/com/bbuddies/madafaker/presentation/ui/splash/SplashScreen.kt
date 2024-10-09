@@ -14,6 +14,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,8 +26,10 @@ import com.bbuddies.madafaker.presentation.NavigationItem
 
 
 @Composable
-fun SplashScreen(navController: NavHostController) {
+fun SplashScreen(navController: NavHostController, splashViewModel: SplashViewModel) {
 
+    val currentUser by splashViewModel.currentUser.collectAsState()
+    val userName = currentUser?.name ?: "Madafaker"
     val animationState by remember {
         mutableStateOf(MutableTransitionState(true))
     }
@@ -49,18 +52,17 @@ fun SplashScreen(navController: NavHostController) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Hi,Madafaker!", textAlign = TextAlign.Center,
+                    text = "Hi,$userName!", textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.headlineLarge
                 )
-
             }
-
-
         }
         if (!animationState.targetState && !animationState.currentState) {
-            //navigate to another route in NavHost
+            if (currentUser != null) {
+                navController.navigate(NavigationItem.Main.route)
+            }
+        } else {
             navController.navigate(NavigationItem.Account.route)
-
         }
     }
 }
