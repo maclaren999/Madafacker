@@ -23,18 +23,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavHostController
 import com.bbuddies.madafaker.presentation.NavigationItem
+import kotlinx.coroutines.delay
 
 
 @Composable
 fun SplashScreen(navController: NavHostController, splashViewModel: SplashViewModel) {
 
     val currentUser by splashViewModel.currentUser.collectAsState()
+    val isUserLocked by splashViewModel.isUserLocked.collectAsState()
     val userName = currentUser?.name ?: "Madafaker"
-    val animationState by remember {
-        mutableStateOf(MutableTransitionState(true))
-    }
-    LaunchedEffect(Unit) {
-        animationState.targetState = false
+    val animationState = splashViewModel.animationState
+    LaunchedEffect(isUserLocked) {
+        when(isUserLocked) {
+            true -> {
+                animationState.targetState = false
+                delay(500)
+                navController.navigate(NavigationItem.Main.route)
+            }
+
+            false -> {
+                animationState.targetState = false
+                delay(500)
+                navController.navigate(NavigationItem.Account.route)
+
+            }
+        }
     }
 
     Surface(
@@ -57,13 +70,7 @@ fun SplashScreen(navController: NavHostController, splashViewModel: SplashViewMo
                 )
             }
         }
-        if (!animationState.targetState && !animationState.currentState) {
-            if (currentUser != null) {
-                navController.navigate(NavigationItem.Main.route)
-            }
-        } else {
-            navController.navigate(NavigationItem.Account.route)
-        }
+
     }
 }
 

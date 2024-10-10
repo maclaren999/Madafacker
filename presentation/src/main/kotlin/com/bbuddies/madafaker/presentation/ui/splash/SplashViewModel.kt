@@ -1,5 +1,6 @@
 package com.bbuddies.madafaker.presentation.ui.splash
 
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
@@ -16,6 +17,9 @@ class SplashViewModel @Inject constructor(
 ) : BaseViewModel() {
     private val _currentUser: MutableStateFlow<User?> = MutableStateFlow(null)
     val currentUser: StateFlow<User?> = _currentUser
+    private val _isUserExsist: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val isUserLocked: StateFlow<Boolean> = _isUserExsist
+    val animationState = MutableTransitionState(false)
 
     init {
         onUserLocked()
@@ -31,6 +35,7 @@ class SplashViewModel @Inject constructor(
                 }
             }.onSuccess { user ->
                 _currentUser.value = user
+                _isUserExsist.value = user != null
             }
         }
     }
