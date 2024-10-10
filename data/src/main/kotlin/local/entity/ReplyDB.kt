@@ -8,7 +8,7 @@ data class ReplyDB(
     @PrimaryKey val id: String,
     val body: String,
     val mode: String,
-    val public: Boolean,
+    val isPublic: Boolean,
     val createdAt: String,//TODO чи потрібні?
     val authorId: String,//TODO чи потрібні?
     val parentId: String?

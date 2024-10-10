@@ -26,8 +26,8 @@ class UserRepositoryImpl @Inject internal constructor(
         return webService.updateCurrentUser(name)
     }
 
-    override suspend fun createUser(name: String): User = withContext(Dispatchers.IO) {
-        val user = webService.createUser(CreateUserRequest(name))
+    override suspend fun createUser(name: String,fcmToken: String): User = withContext(Dispatchers.IO) {
+        val user = webService.createUser(CreateUserRequest(name, fcmToken))
         preferenceManager.updateAuthToken(user.id)
         user
     }

@@ -10,5 +10,5 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 interface AnalyticsModule {
-    // Define your dependencies here
+    // Define your dependencies her
 }
