@@ -35,7 +35,7 @@ class SplashViewModel @Inject constructor(
     val userRepoAwaitTime = 5000L
     private fun fetchCurrentUser() {
         viewModelScope.launch {
-            val user = runBlocking{  userRepository.getCurrentUser()  }
+            val user = runBlocking{  userRepository.getCurrentUser()  } //TODO: add 500ms timeout
             if (user != null) {
                 _currentUser.value = user
                 _navigationEvent.value = NavigationItem.Main
