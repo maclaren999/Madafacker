@@ -17,7 +17,7 @@ class UserRepositoryImpl @Inject internal constructor(
 ) : UserRepository {
 
     override suspend fun getCurrentUser(): User? = withContext(Dispatchers.IO) {
-        preferenceManager.authToken.last()?.let {
+        preferenceManager.authToken.value?.let {
             webService.getCurrentUser() //authToken is been added to the header inside [AuthInterceptor]
         }
     }
@@ -26,7 +26,7 @@ class UserRepositoryImpl @Inject internal constructor(
         return webService.updateCurrentUser(name)
     }
 
-    override suspend fun createUser(name: String,fcmToken: String): User = withContext(Dispatchers.IO) {
+    override suspend fun createUser(name: String, fcmToken: String): User = withContext(Dispatchers.IO) {
         val user = webService.createUser(CreateUserRequest(name, fcmToken))
         preferenceManager.updateAuthToken(user.id)
         user

@@ -35,15 +35,15 @@ class NewUserViewModel @Inject constructor(
 
     fun onSaveNickname(onSuccessfulSave: () -> Unit) {
         if (nicknameDraftValidationResult.value is MfResult.Success) {
-            val token = MutableStateFlow("")
+
 
             FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
                     Timber.w(task.exception, "Fetching FCM registration token failed")
                     return@addOnCompleteListener
                 }
-                token.value = task.result
-                sendUserDataToServer(onSuccessfulSave, token.value)
+                val token = task.result
+                sendUserDataToServer(onSuccessfulSave, token)
             }
         }
     }
