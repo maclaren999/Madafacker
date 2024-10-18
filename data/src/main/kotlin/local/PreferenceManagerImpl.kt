@@ -39,7 +39,7 @@ class PreferenceManagerImpl @Inject constructor(
 
     override val authToken: StateFlow<String?> = dataStore.data
         .map { preferences -> preferences[AUTH_TOKEN] }
-        .stateIn(scope = CoroutineScope(Dispatchers.IO), started = SharingStarted.Lazily, initialValue = null)
+        .stateIn(scope = CoroutineScope(Dispatchers.IO), started = SharingStarted.Eagerly, initialValue = null)
 
     override val currentMode: Flow<Mode>
         get() = dataStore.data.map { preferences ->
@@ -50,7 +50,6 @@ class PreferenceManagerImpl @Inject constructor(
         dataStore.edit { preferences ->
             preferences[AUTH_TOKEN] = authToken
         }
-
     }
 
     override suspend fun updateCurrentMode(mode: Mode) {
