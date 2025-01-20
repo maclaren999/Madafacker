@@ -16,12 +16,13 @@ interface UserRepository {
      * */
     suspend fun getCurrentUser(): User?
 
-    suspend fun updateUserName(name: String): User
-
     /**
-     * Creates User on the server and saves User model and auth token in local storage.
-     * */
-    suspend fun createUser(name: String, fcmToken: String): User
+     * Creates a user on the server, handles FCM token retrieval internally,
+     * and saves the user model and auth token locally.
+     */
+    suspend fun createUser(name: String): User
+
+    suspend fun updateUserName(name: String): User
 
     /**
      * Requests server to check if name is available, not taken.

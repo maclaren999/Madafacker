@@ -1,6 +1,7 @@
 package com.bbuddies.madafaker.di
 
 import android.content.Context
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
