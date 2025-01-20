@@ -12,11 +12,15 @@ import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import local.PreferenceManagerImpl.Companion.PreferenceKey
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -27,54 +31,50 @@ class PreferenceManagerImpl @Inject constructor(
     private val dataStore: DataStore<Preferences>,
 ) : PreferenceManager {
     companion object {
-        private val USER_ID = stringPreferencesKey("user_id")
-        private val USER_NAME = stringPreferencesKey("user_name")
-        private val USER_COINS = intPreferencesKey("user_coins")
-        private val USER_UPDATED_AT = stringPreferencesKey("user_updated_at")
-        private val USER_CREATED_AT = stringPreferencesKey("user_created_at")
-        private val AUTH_TOKEN = stringPreferencesKey("auth_token")
-        private val CURRENT_MODE = stringPreferencesKey("current_mode")
+        sealed class PreferenceKey<T>(val key: Preferences.Key<T>) {
+            object UserId : PreferenceKey<String>(stringPreferencesKey("user_id"))
+            object UserName : PreferenceKey<String>(stringPreferencesKey("user_name"))
+            object UserCoins : PreferenceKey<Int>(intPreferencesKey("user_coins"))
+            object UserUpdatedAt : PreferenceKey<String>(stringPreferencesKey("user_updated_at"))
+            object UserCreatedAt : PreferenceKey<String>(stringPreferencesKey("user_created_at"))
+            object AuthToken : PreferenceKey<String>(stringPreferencesKey("auth_token"))
+            object CurrentMode : PreferenceKey<String>(stringPreferencesKey("current_mode"))
+        }
     }
 
-    override val currentUser: StateFlow<User?> = dataStore.data
-        .map { preferences ->
-            val id = preferences[USER_ID] ?: return@map null
-            val name = preferences[USER_NAME] ?: return@map null
-            val coins = preferences[USER_COINS] ?: return@map null
-            val updatedAt = preferences[USER_UPDATED_AT] ?: return@map null
-            val createdAt = preferences[USER_CREATED_AT] ?: return@map null
-
+    override val currentUser: StateFlow<User?> = combine(
+        dataStore.get(PreferenceKey.UserId),
+        dataStore.get(PreferenceKey.UserName),
+        dataStore.get(PreferenceKey.UserCoins),
+        dataStore.get(PreferenceKey.UserUpdatedAt),
+        dataStore.get(PreferenceKey.UserCreatedAt)
+    ) { id, name, coins, updatedAt, createdAt ->
+        if (id != null && name != null && coins != null && updatedAt != null && createdAt != null) {
             User(id, name, coins, updatedAt, createdAt)
-        }
-        .stateIn(
-            scope = CoroutineScope(Dispatchers.IO),
-            started = SharingStarted.Eagerly,
-            initialValue = null
-        )
+        } else null
+    }.stateIn(
+        scope = CoroutineScope(Dispatchers.IO),
+        started = SharingStarted.Eagerly,
+        initialValue = null
+    )
 
     override suspend fun updateCurrentUser(user: User) {
-        dataStore.edit { preferences ->
-            preferences[USER_ID] = user.id
-            preferences[USER_NAME] = user.name
-            preferences[USER_COINS] = user.coins
-            preferences[USER_UPDATED_AT] = user.updatedAt
-            preferences[USER_CREATED_AT] = user.createdAt
+        coroutineScope {
+            launch { dataStore.set(PreferenceKey.UserId, user.id) }
+            launch { dataStore.set(PreferenceKey.UserName, user.name) }
+            launch { dataStore.set(PreferenceKey.UserCoins, user.coins) }
+            launch { dataStore.set(PreferenceKey.UserUpdatedAt, user.updatedAt) }
+            launch { dataStore.set(PreferenceKey.UserCreatedAt, user.createdAt) }
         }
     }
-
     override val currentMode: Flow<Mode>
-        get() = dataStore.data.map { preferences ->
-            preferences[CURRENT_MODE]?.let { Mode.valueOf(it) } ?: Mode.LIGHT
-        }
+        get() = dataStore.get<String>(PreferenceKey.CurrentMode).map { it?.let { Mode.valueOf(it) } ?: Mode.LIGHT }
 
     override suspend fun updateCurrentMode(mode: Mode) {
-        dataStore.edit { preferences ->
-            preferences[CURRENT_MODE] = mode.name
-        }
+        dataStore.set(PreferenceKey.CurrentMode, mode.name)
     }
 
-    override val authToken: StateFlow<String?> = dataStore.data
-        .map { preferences -> preferences[AUTH_TOKEN] }
+    override val authToken: StateFlow<String?> = dataStore.get<String>(PreferenceKey.AuthToken)
         .stateIn(
             scope = CoroutineScope(Dispatchers.IO),
             started = SharingStarted.Eagerly,
@@ -82,8 +82,22 @@ class PreferenceManagerImpl @Inject constructor(
         )
 
     override suspend fun updateAuthToken(authToken: String) {
-        dataStore.edit { preferences ->
-            preferences[AUTH_TOKEN] = authToken
-        }
+        dataStore.set(PreferenceKey.AuthToken, authToken)
     }
 }
+
+private suspend inline fun <T> DataStore<Preferences>.set(
+    key: PreferenceKey<T>,
+    value: T
+) {
+    edit { preferences ->
+        preferences[key.key] = value
+    }
+}
+
+private fun <T> DataStore<Preferences>.get(
+    key: PreferenceKey<T>
+): Flow<T?> = data.map { preferences ->
+    preferences[key.key]
+}
+
