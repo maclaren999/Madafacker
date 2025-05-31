@@ -42,8 +42,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 @Preview
 @Composable
-fun AccountScreenPreview() {
-    AccountScreen(
+fun SetNicknameScreenPreview() {
+    SetNicknameScreen(
         draftNickname = "Nickname",
         validationResult = MfResult.Success(Unit),
         onNicknameChange = {},
@@ -54,14 +54,14 @@ fun AccountScreenPreview() {
 }
 
 @Composable
-fun AccountScreen(
+fun SetNicknameScreen(
     navController: NavController,
     viewModel: NewUserViewModel
 ) {
     val draftNickname by viewModel.draftNickname.collectAsState()
     val validationResult by viewModel.nicknameDraftValidationResult.collectAsState()
 
-    AccountScreen(
+    SetNicknameScreen(
         draftNickname = draftNickname,
         validationResult = validationResult,
         onNicknameChange = { newDraft ->
@@ -78,7 +78,7 @@ fun AccountScreen(
 }
 
 @Composable
-fun AccountScreen(
+fun SetNicknameScreen(
     draftNickname: String,
     validationResult: MfResult<Unit>?,
     onNicknameChange: (String) -> Unit,
