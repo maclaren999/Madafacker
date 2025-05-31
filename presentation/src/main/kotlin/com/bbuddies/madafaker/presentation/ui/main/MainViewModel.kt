@@ -14,12 +14,12 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val messageRepository: MessageRepository,
     private val userRepository: UserRepository
-) : BaseViewModel() {
+) : BaseViewModel(), MainScreenContract {
 
     private val _draftMessage = MutableStateFlow("")
-    val draftMessage: StateFlow<String> = _draftMessage
+    override val draftMessage: StateFlow<String> = _draftMessage
 
-    fun onSendMessage(message: String) {
+    override fun onSendMessage(message: String) {
         viewModelScope.launch {
             runCatching {
                 messageRepository.createMessage(message)
@@ -30,7 +30,8 @@ class MainViewModel @Inject constructor(
             }.onSuccess { }
         }
     }
-    fun onDraftMessageChanged(message: String) {
+
+    override fun onDraftMessageChanged(message: String) {
         _draftMessage.value = message
     }
 
