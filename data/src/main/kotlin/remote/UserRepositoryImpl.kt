@@ -5,6 +5,7 @@ import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import remote.api.MadafakerApi
 import remote.api.request.CreateUserRequest
@@ -23,12 +24,12 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun updateUserName(name: String): User {
-        return webService.updateCurrentUser(name)
+    override suspend fun updateUserName(name: String): User = withContext(Dispatchers.IO) {
+        webService.updateCurrentUser(name)
     }
 
     override suspend fun createUser(name: String): User = withContext(Dispatchers.IO) {
-        val fcmToken = firebaseMessaging.token.result
+        val fcmToken = firebaseMessaging.token.await()
         val user = webService.createUser(CreateUserRequest(name, fcmToken))
         preferenceManager.updateAuthToken(user.id) //fcmToken = User.id = authToken
         user
