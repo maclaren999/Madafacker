@@ -37,6 +37,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.presentation.base.MfResult
 
 
 /* ----------  SEND MESSAGE VIEW  ---------- */
@@ -62,10 +64,9 @@ fun SendMessageView(viewModel: MainViewModel) {
         )
 
         /* ---------- RECENT MESSAGES CARD ---------- */
-        RecentMessagesCard()
+        RecentMessagesCard(viewModel)
     }
 }
-
 @Composable
 private fun ModeToggleCard() {
     var isShineMode by remember { mutableStateOf(true) }
@@ -268,7 +269,9 @@ private fun SendButton(
 }
 
 @Composable
-private fun RecentMessagesCard() {
+private fun RecentMessagesCard(viewModel: MainViewModel) {
+    val outcomingMessages by viewModel.outcomingMessages.collectAsState()
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -277,7 +280,6 @@ private fun RecentMessagesCard() {
                 drawRect(color = Color.Black.copy(alpha = 0.04f))
             }
     ) {
-        // Left gold stripe
         Box(
             modifier = Modifier
                 .width(4.dp)
@@ -301,19 +303,78 @@ private fun RecentMessagesCard() {
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            // Placeholder for recent messages
-            repeat(3) { index ->
-                RecentMessageItem(
-                    message = "Sample message ${index + 1}...",
-                    status = if (index == 0) "delivered" else "pending"
-                )
-                if (index < 2) {
-                    Spacer(modifier = Modifier.height(8.dp))
+            when (outcomingMessages) {
+                is MfResult.Loading -> {
+                    repeat(3) {
+                        RecentMessageSkeleton()
+                        if (it < 2) Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+
+                is MfResult.Success -> {
+                    val recentMessages = (outcomingMessages as MfResult.Success<List<Message>>).data.take(3)
+                    if (recentMessages.isEmpty()) {
+                        Text(
+                            text = "no messages sent yet",
+                            color = TextSecondary,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    } else {
+                        recentMessages.forEachIndexed { index, message ->
+                            RecentMessageItem(
+                                message = message.body,
+                                status = "delivered"
+                            )
+                            if (index < recentMessages.size - 1) {
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
+                    }
+                }
+
+                is MfResult.Error -> {
+                    Text(
+                        text = "failed to load recent messages",
+                        color = Color(0xFFE53935),
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
             }
         }
     }
 }
+
+@Composable
+private fun RecentMessageSkeleton() {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .height(16.dp)
+                .background(
+                    color = TextSecondary.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(4.dp)
+                )
+        )
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Box(
+            modifier = Modifier
+                .width(60.dp)
+                .height(14.dp)
+                .background(
+                    color = TextSecondary.copy(alpha = 0.3f),
+                    shape = RoundedCornerShape(4.dp)
+                )
+        )
+    }
+}
+
 
 @Composable
 private fun RecentMessageItem(

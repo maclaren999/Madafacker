@@ -25,11 +25,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -40,10 +42,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.presentation.base.MfResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -130,8 +136,8 @@ fun MainScreen(
                 ) { page ->
                     when (page) {
                         0 -> WriteTab(viewModel)
-                        1 -> FeedTab()
-                        2 -> DiscussionsTab()
+                        1 -> FeedTab(viewModel)
+                        2 -> DiscussionsTab(viewModel)
                         3 -> AccountTab()
                     }
                 }
@@ -148,14 +154,265 @@ private fun WriteTab(viewModel: MainViewModel) {
 
 /* ----------  FEED  ---------- */
 @Composable
-private fun FeedTab() {
-    MessageList(dummyMessages)
+private fun FeedTab(viewModel: MainViewModel) {
+    val incomingMessages by viewModel.incomingMessages.collectAsState()
+
+    when (incomingMessages) {
+        is MfResult.Loading -> {
+            LoadingView()
+        }
+
+        is MfResult.Success -> {
+            MessageList((incomingMessages as MfResult.Success<List<Message>>).data.map { it.toFeedMessage() })
+        }
+
+        is MfResult.Error -> {
+            ErrorView(
+                message = (incomingMessages as MfResult.Error<List<Message>>).getErrorString(LocalContext.current),
+                onRetry = { viewModel.refreshMessages() }
+            )
+        }
+    }
 }
 
-/* ----------  DISCUSSIONS  ---------- */
+/* ----------  DISCUSSIONS (MY POSTS)  ---------- */
 @Composable
-private fun DiscussionsTab() {
-    MessageList(dummyMessages.take(2)) // placeholder
+private fun DiscussionsTab(viewModel: MainViewModel) {
+    val outcomingMessages by viewModel.outcomingMessages.collectAsState()
+
+    when (outcomingMessages) {
+        is MfResult.Loading -> {
+            LoadingView()
+        }
+
+        is MfResult.Success -> {
+            MyPostsList((outcomingMessages as MfResult.Success<List<Message>>).data.map { it.toFeedMessage() })
+        }
+
+        is MfResult.Error -> {
+            ErrorView(
+                message = (outcomingMessages as MfResult.Error<List<Message>>).getErrorString(LocalContext.current),
+                onRetry = { viewModel.refreshMessages() }
+            )
+        }
+    }
+}
+
+/* ----------  UI STATE VIEWS  ---------- */
+@Composable
+private fun LoadingView() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator(
+                color = SunBody,
+                modifier = Modifier.size(40.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "loading messages...",
+                color = TextSecondary,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+    }
+}
+
+@Composable
+private fun ErrorView(
+    message: String,
+    onRetry: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "⚠️",
+                fontSize = 48.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            Text(
+                text = "oops!",
+                style = MaterialTheme.typography.headlineSmall,
+                color = TextPrimary,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+
+            // Retry button
+            Box(
+                modifier = Modifier
+                    .clickable { onRetry() }
+                    .background(
+                        color = SunBody,
+                        shape = RoundedCornerShape(20.dp)
+                    )
+                    .padding(horizontal = 24.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    text = "try again",
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold
+                    )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MyPostsList(messages: List<FeedMessage>) {
+    if (messages.isEmpty()) {
+        EmptyStateView(
+            emoji = "💬",
+            title = "no posts yet",
+            subtitle = "your sent messages will appear here once you start sharing"
+        )
+        return
+    }
+
+    LazyColumn(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 16.dp)
+    ) {
+        items(messages) { msg ->
+            MyPostCard(msg)
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun EmptyStateView(
+    emoji: String,
+    title: String,
+    subtitle: String
+) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = emoji,
+                fontSize = 48.sp,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                color = TextPrimary,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun MyPostCard(message: FeedMessage) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .drawWithContent {
+                drawContent()
+                drawRect(color = Color.Black.copy(alpha = 0.04f))
+            }
+    ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .fillMaxHeight()
+                .background(Stripe)
+        )
+
+        Column(
+            modifier = Modifier
+                .background(
+                    color = CardBg,
+                    shape = RoundedCornerShape(10.dp)
+                )
+                .padding(16.dp)
+                .weight(1f)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "my message",
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.labelMedium,
+                )
+
+                // Status indicator
+                Text(
+                    text = "delivered",
+                    color = Color(0xFF4CAF50),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+
+            Text(
+                text = message.body,
+                color = TextPrimary,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
+                maxLines = 6,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(24.dp)
+            ) {
+                Reaction(Icons.Outlined.ThumbUp, message.up, TextSecondary)
+                Reaction(Icons.Outlined.KeyboardArrowDown, message.down, TextSecondary)
+                Reaction(Icons.Outlined.FavoriteBorder, message.hearts, HeartRed)
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Text(
+                    text = "3 replies",
+                    color = TextSecondary,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
+}
+
+/* ----------  EXTENSION FUNCTIONS  ---------- */
+private fun Message.toFeedMessage(): FeedMessage {
+    return FeedMessage(
+        id = id,
+        author = "user_${authorId.take(8)}", // Simplified author display
+        body = body,
+        up = (0..20).random(), // Mock reaction counts for now
+        down = (0..5).random(),
+        hearts = (0..15).random()
+    )
 }
 
 /* ----------  ACCOUNT  ---------- */
@@ -269,32 +526,6 @@ private data class FeedMessage(
     val hearts: Int
 )
 
-private val dummyMessages = listOf(
-    FeedMessage(
-        id = "1",
-        author = "sunny_dev",
-        body = "Every day is a new chance to shine ✨",
-        up = 14,
-        down = 1,
-        hearts = 20
-    ),
-    FeedMessage(
-        id = "2",
-        author = "optimist98",
-        body = "Sending good vibes to whoever needs them right now!",
-        up = 8,
-        down = 0,
-        hearts = 11
-    ),
-    FeedMessage(
-        id = "3",
-        author = "random_thoughts",
-        body = "Why do we park on driveways and drive on parkways?",
-        up = 5,
-        down = 3,
-        hearts = 4
-    )
-)
 
 /* ----------  PREVIEW SETUP  ---------- */
 private class PreviewMainViewModel : MainScreenContract {

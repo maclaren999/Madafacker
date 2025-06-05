@@ -13,7 +13,7 @@ import remote.api.MadafakerApi
 import remote.api.request.CreateMessageRequest
 import javax.inject.Inject
 
-class MessageRepositoryImpl @Inject internal constructor(
+class MessageRepositoryImpl @Inject constructor(
     private val webService: MadafakerApi,
     private val preferenceManager: PreferenceManager,
     private val localDao: MadafakerDao

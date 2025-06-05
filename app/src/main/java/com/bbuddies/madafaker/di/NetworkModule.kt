@@ -1,18 +1,16 @@
 package com.bbuddies.madafaker.di
 
-import android.content.Context
-import com.google.firebase.messaging.FirebaseMessaging
+import com.bbuddies.madafaker.common_domain.AppConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import remote.api.BASE_URL.API_BASE_URL
 import remote.api.MadafakerApi
 import remote.api.interceptors.AuthInterceptor
-import remote.api.logging.HttpLoggingInterceptor
-import remote.api.logging.createChuckerInterceptor
+import remote.api.interceptors.MockInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
@@ -22,7 +20,7 @@ import javax.inject.Singleton
  */
 @Module
 @InstallIn(SingletonComponent::class)
-class NetworkModule {
+object NetworkModule {
 
     /**
      * OkHttpClient instance.
@@ -31,13 +29,26 @@ class NetworkModule {
     @Singleton
     fun provideOkHttpClient(
         authInterceptor: AuthInterceptor,
-        @ApplicationContext context: Context
-    ): OkHttpClient =
-        OkHttpClient.Builder()
-            .addInterceptor(HttpLoggingInterceptor())
+        mockInterceptor: MockInterceptor
+    ): OkHttpClient {
+        val builder = OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
-            .addInterceptor(createChuckerInterceptor(context))
-            .build()
+
+        // Only add mock interceptor if enabled
+        if (AppConfig.USE_MOCK_API) {
+            builder.addInterceptor(mockInterceptor)
+        }
+
+        if (AppConfig.ENABLE_LOGGING) {
+            // Add logging interceptor for debugging
+            val loggingInterceptor = HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            }
+            builder.addInterceptor(loggingInterceptor)
+        }
+
+        return builder.build()
+    }
 
     /**
      * Provides a singleton instance of [MadafakerApi].
@@ -46,12 +57,17 @@ class NetworkModule {
      */
     @Provides
     @Singleton
-    fun provideMadafakerApi(okHttpClient: OkHttpClient): MadafakerApi =
-        Retrofit.Builder()
-            .baseUrl(API_BASE_URL)
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl(API_BASE_URL) // Replace with actual URL
             .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
-            .create(MadafakerApi::class.java)
+    }
 
+    @Provides
+    @Singleton
+    fun provideMadafakerApi(retrofit: Retrofit): MadafakerApi {
+        return retrofit.create(MadafakerApi::class.java)
+    }
 }

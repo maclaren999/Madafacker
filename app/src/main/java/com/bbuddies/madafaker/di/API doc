@@ -1,0 +1,729 @@
+API requests
+This is a collection of the Madafacker application endpoints
+
+﻿
+
+Authorization
+API Key
+Key
+token
+Value
+c4b2c562-b6d7-42f9-819b-d2741dc0751e
+User
+User is a main model of the system. User can create messages, read messages and perform a lot of other actions.
+
+﻿
+
+Authorization
+API Key
+This folder is using an authorization helper from collection API requests
+POST
+Create user
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/user
+This endpoint allows the creation of a new user via an HTTP POST request. This endpoint doesn't require authorization.
+
+Request Body
+name (string, required): The name of the user to be created.
+registrationToken (string, required): FCM registration token, is used to send user notifications.
+Upon a successful creation, the response will have a status code of 201 and a JSON content type. The response body will include the details of the newly created user, including their unique ID, name, and timestamps for when the user was created and last updated.
+
+Response Body
+id (string): The unique identifier of the newly created user.
+name (string): The name of the newly created user.
+registrationToken (string): FCM registration token.
+coins (number): Current number of coins for the user (0 by default).
+updatedAt (string): Timestamp indicating when the user was last updated.
+createdAt (string): Timestamp indicating when the user was created.
+﻿
+
+Authorization
+API Key
+This request is using an authorization helper from collection API requests
+Body
+raw (json)
+json
+{
+    "name": "Test2",
+    "registrationToken": "TEST"
+}
+Example
+Successfully created
+Request
+cURL
+curl --location 'https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/user' \
+--data '{
+    "name": "BestStageUser"
+}'
+201 CREATED
+Response
+Body
+Headers (12)
+json
+{
+    "id": "9f5cdda5-db55-4af0-857d-b9d7f8146bc7",
+    "name": "BestStageUser",
+    "updatedAt": "2024-07-22T18:23:44.904Z",
+    "createdAt": "2024-07-22T18:23:44.904Z"
+}
+GET
+Get current user
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/user/current
+This endpoint is used to retrieve the details of the current user. User is identified based on the token value in Headers.
+
+In case if token is not provided, invalid or user not found all other endpoints will return the same errors like this.
+
+Response Body:
+
+id (string): The unique identifier of the user.
+name (string): The name of the user.
+createdAt (string): The timestamp when the user was created.
+updatedAt (string): The timestamp when the user was last updated.
+﻿
+
+Authorization
+API Key
+This request is using an authorization helper from collection API requests
+Example
+Current user
+Request
+View More
+cURL
+curl --location 'https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/user/current'
+200 OK
+Response
+Body
+Headers (13)
+json
+{
+    "id": "c4b2c562-b6d7-42f9-819b-d2741dc0751e",
+    "name": "Test1",
+    "createdAt": "2024-07-01T21:31:41.190Z",
+    "updatedAt": "2024-07-01T21:31:41.190Z"
+}
+PATCH
+Update current user
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/user/current
+This endpoint is used to update the current user's information. If no data provided, just returns current user data.
+
+Request Body
+name (string, optional): The new name of the user.
+registrationToken (string, optional): new user registration token
+Response
+Returns updated user model
+
+﻿
+
+Authorization
+API Key
+This request is using an authorization helper from collection API requests
+Body
+raw (json)
+json
+{
+    "name": "test_user_bc1a9fbf-e3a3-4a18-be24-bd3b797fd17d"
+}
+Example
+Successfully updated
+Request
+View More
+cURL
+curl --location --request PATCH 'https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/user/current' \
+--data '{
+    "name": "Test2"
+}'
+200 OK
+Response
+Body
+Headers (7)
+json
+{
+    "id": "201e671d-e875-4369-bb8d-1e4eb370e12c",
+    "name": "Test2",
+    "createdAt": "2024-05-06T15:18:46.220Z",
+    "updatedAt": "2024-07-25T11:21:27.415Z"
+}
+GET
+Check user name availability
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/user/check-name-availability
+Check Name Availability
+StartFragmentThis endpoint allows to check is new username is available in the system or not. This endpoint doesn't requires authorization.
+
+Request query parameters:
+name (string, required): The name to be checked for availability.
+Response
+JSON
+{
+    "nameIsAvailable": true
+}
+The response returns a boolean value indicating whether the specified name is available or not.
+
+﻿
+
+Query Params
+name
+Test
+Example
+Successfully checked
+Request
+View More
+cURL
+curl --location 'https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/user/check-name-availability?name=Test'
+200 OK
+Response
+Body
+Headers (7)
+json
+{
+    "nameIsAvailable": true
+}
+Message
+Message is the representation of the thoughts that user want to write
+
+﻿
+
+Authorization
+API Key
+This folder is using an authorization helper from collection API requests
+POST
+Create message
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/message
+This endpoint allows the creation of a new message via an HTTP POST request. The request should include a JSON payload with the message content and mode. This endpoint requires authorization to identify the message author.
+
+Request Body
+body (string, required): Message body that user want to create.
+mode (string, required): Message mode. Now it can be light or dark
+Upon a successful creation, the response will have a status code of 201 and a JSON content type. The response body will include the details of the newly created message, including their unique ID, body, author ID (user ID from headers token), mode, and timestamps for when the user was created and last updated.
+
+Response Body
+id (string): The unique identifier of the newly created message.
+body (string): The body of the newly created message.
+authorId (string): ID of the user who creates a message.
+mode (string): A mode of the newly created message.
+parent: Always null.
+public: Always true.
+updatedAt (string): Timestamp indicating when the user was last updated.
+createdAt (string): Timestamp indicating when the user was created.
+Example Response:
+
+JSON
+{
+    "id": "message_id",
+    "body": "Test message",
+    "authorId": "user_id",
+    "mode": "light",
+    "parent": null,
+    "public": true,
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+}
+﻿
+
+Authorization
+API Key
+This request is using an authorization helper from collection API requests
+Body
+raw (json)
+json
+{
+    "body": "Test message",
+    "mode": "dark"
+}
+Example
+Message created
+Request
+View More
+cURL
+curl --location 'https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/message' \
+--data '{
+    "body": "Test message",
+    "mode": "dark"
+}'
+201 CREATED
+Response
+Body
+Headers (7)
+json
+{
+    "id": "d7e1fd17-c930-4a87-b46f-80b43729ff54",
+    "public": true,
+    "wasSent": false,
+    "body": "Test message",
+    "mode": "dark",
+    "authorId": "201e671d-e875-4369-bb8d-1e4eb370e12c",
+    "updatedAt": "2024-07-25T11:52:10.241Z",
+    "createdAt": "2024-07-25T11:52:10.241Z",
+    "parentId": null
+}
+PATCH
+Rate message
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/message/:id/rate
+This endpoint allows the creation of a new message via an HTTP POST request. The request should include a JSON payload with the message content and mode. This endpoint requires authorization to identify the message author.
+
+Also, it adds message author coins based on rating
+
+Rating	Coins to add
+Dislike
+0
+Like
+1
+Superlike
+2
+Request Body
+body (string, required): Message body that user want to create.
+mode (string, required): Message mode. Now it can be light or dark
+Upon a successful creation, the response will have a status code of 201 and a JSON content type. The response body will include the details of the newly created message, including their unique ID, body, author ID (user ID from headers token), mode, and timestamps for when the user was created and last updated.
+
+Response Body
+id (string): The unique identifier of the newly created message.
+body (string): The body of the newly created message.
+authorId (string): ID of the user who creates a message.
+mode (string): A mode of the newly created message.
+parent: Always null.
+public: Always true.
+updatedAt (string): Timestamp indicating when the user was last updated.
+createdAt (string): Timestamp indicating when the user was created.
+Example Response:
+
+JSON
+{
+    "id": "message_id",
+    "body": "Test message",
+    "authorId": "user_id",
+    "mode": "light",
+    "parent": null,
+    "public": true,
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+}
+﻿
+
+Authorization
+API Key
+This request is using an authorization helper from collection API requests
+Path Variables
+id
+88cfc516-212d-4e20-a8f5-cf559bf60478
+Body
+raw (json)
+json
+{
+    "rating": "like"
+}
+Example
+Successfully rated
+Request
+View More
+cURL
+curl --location --request PATCH 'https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/message/88cfc516-212d-4e20-a8f5-cf559bf60478/rate' \
+--data '{
+    "rating": "like"
+}'
+200 OK
+Response
+Body
+Headers (5)
+No response body
+This request doesn't return any response body.
+GET
+Get incoming messages
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/message/current/incoming
+This endpoint retrieves the current user's incoming messages.
+
+Response
+The response is a JSON array with the following schema:
+
+id (string): The ID of the message.
+body (string): The content of the message.
+mode (string): The mode of the message.
+public (boolean): Indicates whether the message is public.
+createdAt (string): The timestamp when the message was created.
+updatedAt (string): The timestamp when the message was last updated.
+authorId (string): The ID of the message author.
+parentId (string or null): Always null.
+replies (array, optional): An array of replies for the message. Each element here is a reply. Please check reply documentation to know more. If no replies in the message - no field will be provided.
+﻿
+
+Authorization
+API Key
+This request is using an authorization helper from collection API requests
+Example
+Get incoming messages
+Request
+View More
+cURL
+curl --location 'https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/message/current/incoming'
+200 OK
+Response
+Body
+Headers (7)
+View More
+json
+[
+    {
+        "id": "88cfc516-212d-4e20-a8f5-cf559bf60478",
+        "body": "Nice message",
+        "mode": "light",
+        "public": true,
+        "wasSent": true,
+        "createdAt": "2024-06-07T12:00:23.777Z",
+        "updatedAt": "2024-06-28T09:08:12.513Z",
+        "authorId": "109156be-c4fb-41ea-b1b4-efe1671c580f",
+        "parentId": "1847f4be-b784-4d8a-9ad1-025293521675",
+        "replies": [
+            {
+                "id": "1bfcc539-7f7a-4a0a-b429-fd322b6b0ecd",
+                "body": "Nice message 2",
+                "mode": "light",
+                "public": false,
+                "wasSent": true,
+                "createdAt": "2024-06-16T16:07:19.533Z",
+                "updatedAt": "2024-06-28T09:08:12.481Z",
+                "authorId": "109156be-c4fb-41ea-b1b4-efe1671c580f",
+                "parentId": "88cfc516-212d-4e20-a8f5-cf559bf60478"
+            }
+        ]
+    },
+    {
+        "id": "42d0458c-af35-4d65-875c-9a268d0ba943",
+        "body": "Test message",
+        "mode": "light",
+        "public": true,
+        "wasSent": true,
+        "createdAt": "2024-05-14T12:35:43.138Z",
+        "updatedAt": "2024-06-28T09:08:12.080Z",
+        "authorId": "201e671d-e875-4369-bb8d-1e4eb370e12c",
+        "parentId": null,
+        "replies": []
+    }
+]
+GET
+Get outcoming messages
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/message/current/outcoming
+This endpoint retrieves the current user's outgoing messages.
+
+Response
+The response is a JSON array with the following schema:
+
+id (string): The ID of the message.
+body (string): The content of the message.
+mode (string): The mode of the message.
+public (boolean): Indicates whether the message is public.
+createdAt (string): The timestamp when the message was created.
+updatedAt (string): The timestamp when the message was last updated.
+authorId (string): The ID of the message author.
+parentId (null): Always null.
+replies (array, optional): An array of replies for the message. Each element here is a reply. Please check reply documentation to know more. If no replies in the message - no field will be provided.
+﻿
+
+Authorization
+API Key
+This request is using an authorization helper from collection API requests
+Example
+Get outcoming messages
+Request
+View More
+cURL
+curl --location 'https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/message/current/outcoming'
+200 OK
+Response
+Body
+Headers (7)
+View More
+json
+[
+    {
+        "id": "1847f4be-b784-4d8a-9ad1-025293521675",
+        "body": "Test message",
+        "mode": "light",
+        "public": true,
+        "wasSent": false,
+        "createdAt": "2024-05-15T07:29:41.958Z",
+        "updatedAt": "2024-05-15T07:29:41.958Z",
+        "authorId": "201e671d-e875-4369-bb8d-1e4eb370e12c",
+        "parentId": null,
+        "replies": [
+            {
+                "id": "88cfc516-212d-4e20-a8f5-cf559bf60478",
+                "body": "Nice message",
+                "mode": "light",
+                "public": true,
+                "wasSent": true,
+                "createdAt": "2024-06-07T12:00:23.777Z",
+                "updatedAt": "2024-06-28T09:08:12.513Z",
+                "authorId": "109156be-c4fb-41ea-b1b4-efe1671c580f",
+                "parentId": "1847f4be-b784-4d8a-9ad1-025293521675"
+            }
+        ]
+    },
+    {
+        "id": "29fb1744-4545-42fd-bfca-4eb437dbc4c3",
+        "body": "Test message",
+        "mode": "light",
+        "public": true,
+        "wasSent": true,
+        "createdAt": "2024-05-16T08:47:49.760Z",
+        "updatedAt": "2024-06-28T09:08:12.441Z",
+        "authorId": "201e671d-e875-4369-bb8d-1e4eb370e12c",
+        "parentId": null,
+        "replies": []
+    }
+]
+Reply
+Reply is an entity that allow user to create a message on another messages.
+
+﻿
+
+Authorization
+API Key
+This folder is using an authorization helper from collection API requests
+POST
+Create new reply
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/reply
+This endpoint is used to create a new reply.
+
+User can create reply if have enough coins. Is it's not, reply cannot be created. If true - some amount of coins will be taken from the user.
+
+Request
+The request body should be in raw JSON format and include the following parameters:
+
+body (string, required): The body of the reply.
+public (boolean, required): Indicates whether the reply is public.
+parentId (string, required): The ID of the parent reply.
+Response
+id (string): The unique identifier of the reply.
+body (string): The content of the reply.
+mode (string): The mode of the reply.
+public (boolean): Indicates if the reply is public.
+authorId (string): The ID of the user who created the reply.
+parentId (string or null): The ID of the parent reply, if any.
+createdAt (string): The timestamp when the reply was created.
+updatedAt (string): The timestamp when the reply was last updated.
+Example:
+
+JSON
+{
+  "id": "reply_id",
+  "body": "Nice message",
+  "public": false,
+  "mode": "light",
+  "authorId": "author_id",
+  "parentId": "1847f4be-b784-4d8a-9ad1-025293521675",
+  "createdAt": "timestamp",
+  "updatedAt": "timestamp"
+}
+The response will include the ID, body, public status, mode, author ID, parent ID, update timestamp, and creation timestamp of the newly created reply.
+
+﻿
+
+Authorization
+API Key
+This request is using an authorization helper from collection API requests
+Body
+raw (json)
+json
+{
+    "body": "Nice message",
+    "public": false,
+    "parentId": "6e149db8-4e4e-4996-afbb-eaca2bf9e161"
+}
+Example
+Reply created
+Request
+cURL
+curl --location 'https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/reply' \
+--data '{
+    "body": "Nice message",
+    "public": false,
+    "parentId": "1847f4be-b784-4d8a-9ad1-025293521675"
+}'
+201 CREATED
+Response
+Body
+Headers (7)
+json
+{
+    "id": "8b53c683-864c-4612-8430-f13dc5b9a4b4",
+    "wasSent": false,
+    "body": "Nice message",
+    "public": false,
+    "mode": "light",
+    "parentId": "1847f4be-b784-4d8a-9ad1-025293521675",
+    "authorId": "201e671d-e875-4369-bb8d-1e4eb370e12c",
+    "updatedAt": "2024-07-25T11:53:46.202Z",
+    "createdAt": "2024-07-25T11:53:46.202Z"
+}
+PATCH
+Update reply
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/reply
+This endpoint is used to update a reply with the provided payload.
+
+Request Body
+id (string, required): Unique identifier for the reply.
+public (boolean, optional): Indicates if the reply is public.
+Response Body:
+
+id (string): The unique identifier of the reply.
+body (string): The content of the reply.
+mode (string): The mode of the reply.
+public (boolean): Indicates if the reply is public.
+authorId (string): The ID of the user who created the reply.
+parentId (string or null): The ID of the parent reply, if any.
+createdAt (string): The timestamp when the reply was created.
+updatedAt (string): The timestamp when the reply was last updated.
+Example Response:
+
+JSON
+{
+    "id": "reply_id",
+    "body": "Updated message",
+    "public": true,
+    "mode": "light",
+    "authorId": "author_id",
+    "parentId": "parent_reply_id",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+}
+﻿
+
+Authorization
+API Key
+This request is using an authorization helper from collection API requests
+Body
+raw (json)
+json
+{
+    "id": "88cfc516-212d-4e20-a8f5-cf559bf60478",
+    "public": true
+}
+Example
+Successfully updated
+Request
+View More
+cURL
+curl --location --request PATCH 'https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/reply' \
+--data '{
+    "id": "88cfc516-212d-4e20-a8f5-cf559bf60478",
+    "public": true
+}'
+200 OK
+Response
+Body
+Headers (7)
+json
+{
+    "id": "88cfc516-212d-4e20-a8f5-cf559bf60478",
+    "body": "Nice message",
+    "mode": "light",
+    "public": true,
+    "wasSent": true,
+    "createdAt": "2024-06-07T12:00:23.777Z",
+    "updatedAt": "2024-08-09T09:26:28.133Z",
+    "authorId": "109156be-c4fb-41ea-b1b4-efe1671c580f",
+    "parentId": "1847f4be-b784-4d8a-9ad1-025293521675"
+}
+GET
+Get reply by ID
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/reply/:id
+This endpoint retrieves a reply by its unique identifier.
+
+Parameters
+id (string, required): The unique identifier of the reply.
+
+Response Body:
+
+id (string): The unique identifier of the reply.
+body (string): The content of the reply.
+mode (string): The mode of the reply.
+public (boolean): Indicates if the reply is public.
+authorId (string): The ID of the user who created the reply.
+parentId (string or null): The ID of the parent reply, if any.
+createdAt (string): The timestamp when the reply was created.
+updatedAt (string): The timestamp when the reply was last updated.
+The response will be in JSON format and will have the following schema:
+
+JSON
+{
+  "id": "string",
+  "body": "string",
+  "mode": "string",
+  "public": true,
+  "createdAt": "string",
+  "updatedAt": "string",
+  "authorId": "string",
+  "parentId": "string",
+  "replies": [
+    {
+      "id": "string",
+      "body": "string",
+      "mode": "string",
+      "public": true,
+      "createdAt": "string",
+      "updatedAt": "string",
+      "authorId": "string",
+      "parentId": "string"
+    }
+  ]
+}
+The response will have a status code of 200 upon successful execution.
+
+﻿
+
+Authorization
+API Key
+This request is using an authorization helper from collection API requests
+Path Variables
+id
+88cfc516-212d-4e20-a8f5-cf559bf60478
+Example
+Successfully
+Request
+View More
+cURL
+curl --location 'https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/reply/88cfc516-212d-4e20-a8f5-cf559bf60478'
+200 OK
+Response
+Body
+Headers (7)
+View More
+json
+{
+    "id": "88cfc516-212d-4e20-a8f5-cf559bf60478",
+    "body": "Nice message",
+    "mode": "light",
+    "public": true,
+    "wasSent": true,
+    "createdAt": "2024-06-07T12:00:23.777Z",
+    "updatedAt": "2024-08-09T09:27:21.919Z",
+    "authorId": "109156be-c4fb-41ea-b1b4-efe1671c580f",
+    "parentId": "1847f4be-b784-4d8a-9ad1-025293521675",
+    "replies": [
+        {
+            "id": "1bfcc539-7f7a-4a0a-b429-fd322b6b0ecd",
+            "body": "Nice message 2",
+            "mode": "light",
+            "public": false,
+            "wasSent": true,
+            "createdAt": "2024-06-16T16:07:19.533Z",
+            "updatedAt": "2024-06-28T09:08:12.481Z",
+            "authorId": "109156be-c4fb-41ea-b1b4-efe1671c580f",
+            "parentId": "88cfc516-212d-4e20-a8f5-cf559bf60478"
+        }
+    ]
+}
+Cron jobs
+Cron jobs are scheduled tasks that run at specific intervals.
+
+﻿
+
+Authorization
+API Key
+This folder is using an authorization helper from collection API requests
+POST
+Send messages job
+https://madafacker-ilya56-ilya-dolmatovs-projects.vercel.app//api/cron/send-messages
+This endpoint send messages using algo via an HTTP POST request.
+
+Authorization using x-api-key in header is required
+
+﻿
+

@@ -50,7 +50,7 @@ class PreferenceManagerImpl @Inject constructor(
         dataStore.get(PreferenceKey.UserCreatedAt)
     ) { id, name, coins, updatedAt, createdAt ->
         if (id != null && name != null && coins != null && updatedAt != null && createdAt != null) {
-            User(id, name, coins, updatedAt, createdAt)
+            User(id, name, null, coins, updatedAt, createdAt)
         } else null
     }.stateIn(
         scope = CoroutineScope(Dispatchers.IO),
