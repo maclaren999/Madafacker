@@ -2,7 +2,7 @@ package com.bbuddies.madafaker.common_domain
 
 object AppConfig {
     // Toggle this to switch between mock and real API
-    const val USE_MOCK_API = true
+    const val USE_MOCK_API = false
 
     // Other feature flags
     const val ENABLE_LOGGING = true

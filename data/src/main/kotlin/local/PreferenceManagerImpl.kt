@@ -67,8 +67,9 @@ class PreferenceManagerImpl @Inject constructor(
             launch { dataStore.set(PreferenceKey.UserCreatedAt, user.createdAt) }
         }
     }
+
     override val currentMode: Flow<Mode>
-        get() = dataStore.get<String>(PreferenceKey.CurrentMode).map { it?.let { Mode.valueOf(it) } ?: Mode.LIGHT }
+        get() = dataStore.get<String>(PreferenceKey.CurrentMode).map { it?.let { Mode.valueOf(it) } ?: Mode.SHINE }
 
     override suspend fun updateCurrentMode(mode: Mode) {
         dataStore.set(PreferenceKey.CurrentMode, mode.name)
@@ -83,6 +84,12 @@ class PreferenceManagerImpl @Inject constructor(
 
     override suspend fun updateAuthToken(authToken: String) {
         dataStore.set(PreferenceKey.AuthToken, authToken)
+    }
+
+    override suspend fun clearUserData() {
+        dataStore.edit {
+            it.clear()
+        }
     }
 }
 

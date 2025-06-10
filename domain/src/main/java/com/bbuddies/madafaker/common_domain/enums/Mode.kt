@@ -1,5 +1,16 @@
 package com.bbuddies.madafaker.common_domain.enums
 
-enum class Mode {
-    LIGHT,DARK
+enum class Mode(val displayName: String, val apiValue: String) {
+    SHINE("Shine", "LIGHT"),
+    SHADOW("Shadow", "DARK");
+
+    companion object {
+        fun fromApiValue(apiValue: String): Mode {
+            return when (apiValue.uppercase()) {
+                "LIGHT" -> SHINE
+                "DARK" -> SHADOW
+                else -> SHINE // Default fallback
+            }
+        }
+    }
 }

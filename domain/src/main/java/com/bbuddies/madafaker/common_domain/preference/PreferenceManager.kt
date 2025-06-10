@@ -18,5 +18,6 @@ interface PreferenceManager {
     suspend fun updateAuthToken(authToken: String)
     suspend fun updateCurrentMode(mode: Mode)
     suspend fun updateCurrentUser(user: User)
+    suspend fun clearUserData()
 
 }
