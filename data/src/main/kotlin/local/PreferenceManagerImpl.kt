@@ -68,8 +68,13 @@ class PreferenceManagerImpl @Inject constructor(
         }
     }
 
-    override val currentMode: Flow<Mode>
-        get() = dataStore.get<String>(PreferenceKey.CurrentMode).map { it?.let { Mode.valueOf(it) } ?: Mode.SHINE }
+    override val currentMode: StateFlow<Mode> = dataStore.get<String>(PreferenceKey.CurrentMode)
+        .map { it?.let { Mode.valueOf(it) } ?: Mode.SHINE }
+        .stateIn(
+            scope = CoroutineScope(Dispatchers.IO),
+            started = SharingStarted.Eagerly,
+            initialValue = Mode.SHINE
+        )
 
     override suspend fun updateCurrentMode(mode: Mode) {
         dataStore.set(PreferenceKey.CurrentMode, mode.name)
@@ -90,6 +95,10 @@ class PreferenceManagerImpl @Inject constructor(
         dataStore.edit {
             it.clear()
         }
+    }
+
+    override suspend fun updateMode(mode: Mode) {
+        dataStore.set(PreferenceKey.CurrentMode, mode.name)
     }
 }
 

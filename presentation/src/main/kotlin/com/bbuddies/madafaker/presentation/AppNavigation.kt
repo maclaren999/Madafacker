@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.bbuddies.madafaker.presentation.ui.account.SetNicknameScreen
 import com.bbuddies.madafaker.presentation.ui.main.MainScreen
+import com.bbuddies.madafaker.presentation.ui.main.MainViewModel
 import com.bbuddies.madafaker.presentation.ui.splash.SplashScreen
 
 enum class MadafakerScreen() {
@@ -40,7 +41,7 @@ fun AppNavHost(
             SplashScreen(navController, hiltViewModel())
         }
         composable(NavigationItem.Main.route) {
-            MainScreen(navController = navController, viewModel = hiltViewModel())
+            MainScreen(navController = navController, viewModel = hiltViewModel<MainViewModel>())
         }
 //        composable(NavigationItem.Message.route) {
 //            MessageScreen(navController)

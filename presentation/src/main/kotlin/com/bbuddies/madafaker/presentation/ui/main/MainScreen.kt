@@ -48,8 +48,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.model.Message
-import com.bbuddies.madafaker.presentation.base.MfResult
+import com.bbuddies.madafaker.presentation.base.HandleState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -157,21 +158,11 @@ private fun WriteTab(viewModel: MainViewModel) {
 private fun FeedTab(viewModel: MainViewModel) {
     val incomingMessages by viewModel.incomingMessages.collectAsState()
 
-    when (incomingMessages) {
-        is MfResult.Loading -> {
-            LoadingView()
-        }
-
-        is MfResult.Success -> {
-            MessageList((incomingMessages as MfResult.Success<List<Message>>).data.map { it.toFeedMessage() })
-        }
-
-        is MfResult.Error -> {
-            ErrorView(
-                message = (incomingMessages as MfResult.Error<List<Message>>).getErrorString(LocalContext.current),
-                onRetry = { viewModel.refreshMessages() }
-            )
-        }
+    // This is as clean as it gets!
+    incomingMessages.HandleState(
+        onRetry = viewModel::refreshMessages
+    ) { messages ->
+        MessageList(messages.toFeedMessages())
     }
 }
 
@@ -180,21 +171,10 @@ private fun FeedTab(viewModel: MainViewModel) {
 private fun DiscussionsTab(viewModel: MainViewModel) {
     val outcomingMessages by viewModel.outcomingMessages.collectAsState()
 
-    when (outcomingMessages) {
-        is MfResult.Loading -> {
-            LoadingView()
-        }
-
-        is MfResult.Success -> {
-            MyPostsList((outcomingMessages as MfResult.Success<List<Message>>).data.map { it.toFeedMessage() })
-        }
-
-        is MfResult.Error -> {
-            ErrorView(
-                message = (outcomingMessages as MfResult.Error<List<Message>>).getErrorString(LocalContext.current),
-                onRetry = { viewModel.refreshMessages() }
-            )
-        }
+    outcomingMessages.HandleState(
+        onRetry = viewModel::refreshMessages
+    ) { messages ->
+        MessageList(messages.toFeedMessages())
     }
 }
 
@@ -387,9 +367,15 @@ private fun MyPostCard(message: FeedMessage) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Reaction(Icons.Outlined.ThumbUp, message.up, TextSecondary)
-                Reaction(Icons.Outlined.KeyboardArrowDown, message.down, TextSecondary)
-                Reaction(Icons.Outlined.FavoriteBorder, message.hearts, HeartRed)
+                message.up?.let {
+                    Reaction(Icons.Outlined.ThumbUp, it, TextSecondary)
+                }
+                message.down?.let {
+                    Reaction(Icons.Outlined.KeyboardArrowDown, it, TextSecondary)
+                }
+                message.hearts?.let {
+                    Reaction(Icons.Outlined.FavoriteBorder, it, HeartRed)
+                }
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -404,15 +390,20 @@ private fun MyPostCard(message: FeedMessage) {
 }
 
 /* ----------  EXTENSION FUNCTIONS  ---------- */
+@Suppress("KotlinConstantConditions")
 private fun Message.toFeedMessage(): FeedMessage {
     return FeedMessage(
         id = id,
         author = "user_${authorId.take(8)}", // Simplified author display
         body = body,
-        up = (0..20).random(), // Mock reaction counts for now
-        down = (0..5).random(),
-        hearts = (0..15).random()
+        up = if (AppConfig.USE_MOCK_API) (0..20).random() else up, // Mock reaction counts for now
+        down = if (AppConfig.USE_MOCK_API) (0..5).random() else down,
+        hearts = if (AppConfig.USE_MOCK_API) (0..15).random() else hearts
     )
+}
+
+private fun List<Message>.toFeedMessages(): List<FeedMessage> {
+    return map { it.toFeedMessage() }
 }
 
 /* ----------  ACCOUNT  ---------- */
@@ -490,9 +481,9 @@ private fun MessageCard(message: FeedMessage) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(24.dp)
             ) {
-                Reaction(Icons.Outlined.ThumbUp, message.up, TextSecondary)
-                Reaction(Icons.Outlined.KeyboardArrowDown, message.down, TextSecondary)
-                Reaction(Icons.Outlined.FavoriteBorder, message.hearts, HeartRed)
+                message.up?.let { Reaction(Icons.Outlined.ThumbUp, it, TextSecondary) }
+                message.down?.let { Reaction(Icons.Outlined.KeyboardArrowDown, it, TextSecondary) }
+                message.hearts?.let { Reaction(Icons.Outlined.FavoriteBorder, it, HeartRed) }
             }
         }
     }
@@ -521,9 +512,9 @@ private data class FeedMessage(
     val id: String,
     val author: String,
     val body: String,
-    val up: Int,
-    val down: Int,
-    val hearts: Int
+    val up: Int?,
+    val down: Int?,
+    val hearts: Int?
 )
 
 

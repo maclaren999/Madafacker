@@ -1,6 +1,5 @@
 package com.bbuddies.madafaker.presentation.ui.main
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,14 +18,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
@@ -37,14 +34,16 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
-import com.bbuddies.madafaker.presentation.base.MfResult
-
+import com.bbuddies.madafaker.presentation.base.UiState
 
 /* ----------  SEND MESSAGE VIEW  ---------- */
 @Composable
 fun SendMessageView(viewModel: MainViewModel) {
     val draftMessage by viewModel.draftMessage.collectAsState()
+    val currentMode by viewModel.currentMode.collectAsState()
+    val isSending by viewModel.isSending.collectAsState()
 
     Column(
         modifier = Modifier
@@ -54,12 +53,17 @@ fun SendMessageView(viewModel: MainViewModel) {
     ) {
 
         /* ---------- MODE TOGGLE CARD ---------- */
-        ModeToggleCard()
+        ModeToggleCard(
+            currentMode = currentMode,
+            onModeToggle = viewModel::toggleMode
+        )
 
         /* ---------- COMPOSE CARD ---------- */
         ComposeMessageCard(
             draftMessage = draftMessage,
-            onMessageChange = { viewModel.onDraftMessageChanged(it) },
+            isSending = isSending,
+            currentMode = currentMode,
+            onMessageChange = viewModel::onDraftMessageChanged,
             onSend = { viewModel.onSendMessage(draftMessage) }
         )
 
@@ -67,10 +71,12 @@ fun SendMessageView(viewModel: MainViewModel) {
         RecentMessagesCard(viewModel)
     }
 }
-@Composable
-private fun ModeToggleCard() {
-    var isShineMode by remember { mutableStateOf(true) }
 
+@Composable
+private fun ModeToggleCard(
+    currentMode: Mode,
+    onModeToggle: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -101,12 +107,15 @@ private fun ModeToggleCard() {
         ) {
             Column {
                 Text(
-                    text = if (isShineMode) "shine mode" else "shadow mode",
+                    text = "${currentMode.displayName.lowercase()} mode",
                     color = TextPrimary,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
                 Text(
-                    text = if (isShineMode) "positive vibes only" else "uncensored thoughts",
+                    text = when (currentMode) {
+                        Mode.SHINE -> "positive vibes only"
+                        Mode.SHADOW -> "uncensored thoughts"
+                    },
                     color = TextSecondary,
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -116,15 +125,21 @@ private fun ModeToggleCard() {
             Box(
                 modifier = Modifier
                     .size(48.dp)
-                    .clickable { isShineMode = !isShineMode }
+                    .clickable { onModeToggle() }
                     .background(
-                        color = if (isShineMode) SunBody else Color(0xFF424242),
+                        color = when (currentMode) {
+                            Mode.SHINE -> SunBody
+                            Mode.SHADOW -> Color(0xFF424242)
+                        },
                         shape = RoundedCornerShape(24.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (isShineMode) "☀️" else "🌙",
+                    text = when (currentMode) {
+                        Mode.SHINE -> "☀️"
+                        Mode.SHADOW -> "🌙"
+                    },
                     fontSize = 24.sp
                 )
             }
@@ -135,6 +150,8 @@ private fun ModeToggleCard() {
 @Composable
 private fun ComposeMessageCard(
     draftMessage: String,
+    isSending: Boolean,
+    currentMode: Mode,
     onMessageChange: (String) -> Unit,
     onSend: () -> Unit
 ) {
@@ -164,7 +181,10 @@ private fun ComposeMessageCard(
                 .weight(1f)
         ) {
             Text(
-                text = "express yourself",
+                text = when (currentMode) {
+                    Mode.SHINE -> "express your positivity"
+                    Mode.SHADOW -> "express yourself freely"
+                },
                 color = TextSecondary,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(bottom = 12.dp)
@@ -175,6 +195,7 @@ private fun ComposeMessageCard(
                 value = draftMessage,
                 onValueChange = onMessageChange,
                 onSend = onSend,
+                currentMode = currentMode,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -188,12 +209,17 @@ private fun ComposeMessageCard(
             ) {
                 Text(
                     text = "${draftMessage.length}/280",
-                    color = TextSecondary,
+                    color = if (draftMessage.length > 280) {
+                        Color(0xFFE53935)
+                    } else {
+                        TextSecondary
+                    },
                     style = MaterialTheme.typography.labelSmall
                 )
 
                 SendButton(
-                    enabled = draftMessage.isNotBlank(),
+                    enabled = draftMessage.isNotBlank() && draftMessage.length <= 280 && !isSending,
+                    isLoading = isSending,
                     onClick = onSend
                 )
             }
@@ -206,6 +232,7 @@ private fun SunnyTextField(
     value: String,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
+    currentMode: Mode,
     modifier: Modifier = Modifier
 ) {
     BasicTextField(
@@ -227,13 +254,20 @@ private fun SunnyTextField(
             imeAction = ImeAction.Send
         ),
         keyboardActions = KeyboardActions(
-            onSend = { onSend() }
+            onSend = {
+                if (value.isNotBlank() && value.length <= 280) {
+                    onSend()
+                }
+            }
         ),
         decorationBox = { innerTextField ->
             Box(modifier = Modifier.fillMaxWidth()) {
                 if (value.isEmpty()) {
                     Text(
-                        text = "what's on your mind?",
+                        text = when (currentMode) {
+                            Mode.SHINE -> "what positive message do you want to share?"
+                            Mode.SHADOW -> "what's really on your mind?"
+                        },
                         color = TextSecondary,
                         style = MaterialTheme.typography.bodyLarge
                     )
@@ -247,24 +281,38 @@ private fun SunnyTextField(
 @Composable
 private fun SendButton(
     enabled: Boolean,
+    isLoading: Boolean,
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
-            .clickable(enabled = enabled) { onClick() }
+            .clickable(enabled = enabled && !isLoading) { onClick() }
             .background(
-                color = if (enabled) SunBody else TextSecondary,
+                color = when {
+                    isLoading -> TextSecondary
+                    enabled -> SunBody
+                    else -> TextSecondary
+                },
                 shape = RoundedCornerShape(20.dp)
             )
-            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .padding(horizontal = 20.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "send",
-            color = Color.White,
-            style = MaterialTheme.typography.labelMedium.copy(
-                fontWeight = FontWeight.Bold
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(16.dp),
+                strokeWidth = 2.dp,
+                color = Color.White
             )
-        )
+        } else {
+            Text(
+                text = "send",
+                color = Color.White,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
     }
 }
 
@@ -303,45 +351,66 @@ private fun RecentMessagesCard(viewModel: MainViewModel) {
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            when (outcomingMessages) {
-                is MfResult.Loading -> {
-                    repeat(3) {
-                        RecentMessageSkeleton()
-                        if (it < 2) Spacer(modifier = Modifier.height(8.dp))
-                    }
-                }
+            // Using the new UiState approach
+            when (val state = outcomingMessages) {
+                UiState.Loading -> RecentMessagesLoading()
 
-                is MfResult.Success -> {
-                    val recentMessages = (outcomingMessages as MfResult.Success<List<Message>>).data.take(3)
+                is UiState.Success -> {
+                    val recentMessages = state.data.take(3)
                     if (recentMessages.isEmpty()) {
-                        Text(
-                            text = "no messages sent yet",
-                            color = TextSecondary,
-                            style = MaterialTheme.typography.bodySmall
-                        )
+                        RecentMessagesEmpty()
                     } else {
-                        recentMessages.forEachIndexed { index, message ->
-                            RecentMessageItem(
-                                message = message.body,
-                                status = "delivered"
-                            )
-                            if (index < recentMessages.size - 1) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
-                        }
+                        RecentMessagesList(recentMessages)
                     }
                 }
 
-                is MfResult.Error -> {
-                    Text(
-                        text = "failed to load recent messages",
-                        color = Color(0xFFE53935),
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
+                is UiState.Error -> RecentMessagesError(
+                    message = state.message
+                        ?: state.exception.localizedMessage
+                        ?: "Failed to load recent messages"
+                )
             }
         }
     }
+}
+
+@Composable
+private fun RecentMessagesLoading() {
+    repeat(3) { index ->
+        RecentMessageSkeleton()
+        if (index < 2) Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+@Composable
+private fun RecentMessagesEmpty() {
+    Text(
+        text = "no messages sent yet",
+        color = TextSecondary,
+        style = MaterialTheme.typography.bodySmall
+    )
+}
+
+@Composable
+private fun RecentMessagesList(messages: List<Message>) {
+    messages.forEachIndexed { index, message ->
+        RecentMessageItem(
+            message = message.body,
+            status = "delivered" // You might want to add actual status to Message model
+        )
+        if (index < messages.size - 1) {
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+    }
+}
+
+@Composable
+private fun RecentMessagesError(message: String) {
+    Text(
+        text = message,
+        color = Color(0xFFE53935),
+        style = MaterialTheme.typography.bodySmall
+    )
 }
 
 @Composable
@@ -375,7 +444,6 @@ private fun RecentMessageSkeleton() {
     }
 }
 
-
 @Composable
 private fun RecentMessageItem(
     message: String,
@@ -389,17 +457,25 @@ private fun RecentMessageItem(
         Text(
             text = message,
             color = TextPrimary,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodySmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f)
         )
 
+        Spacer(modifier = Modifier.width(8.dp))
+
         Text(
             text = status,
-            color = if (status == "delivered") Color(0xFF4CAF50) else TextSecondary,
-            style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(start = 8.dp)
+            color = when (status) {
+                "delivered" -> Color(0xFF4CAF50)
+                "sending" -> SunBody
+                "failed" -> Color(0xFFE53935)
+                else -> TextSecondary
+            },
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.Medium
+            )
         )
     }
 }

@@ -17,37 +17,43 @@ class MessageRepositoryImpl @Inject constructor(
     private val webService: MadafakerApi,
     private val preferenceManager: PreferenceManager,
     private val localDao: MadafakerDao
-) :
-    MessageRepository {
+) : MessageRepository {
 
-    override suspend fun getIncomingMassage(): List<Message> {
-        return webService.getIncomingMassage()
-    }
+    override suspend fun getIncomingMassage(): List<Message> =
+        withContext(Dispatchers.IO) {
+            webService.getIncomingMassage()
+        }
 
-    override suspend fun getOutcomingMassage(): List<Message> {
-        return webService.getOutcomingMassage()
-    }
+    override suspend fun getOutcomingMassage(): List<Message> =
+        withContext(Dispatchers.IO) {
+            webService.getOutcomingMassage()
+        }
 
-    override suspend fun getReplyById(id: String): Reply {
-        return webService.getReplyById(id)
-    }
+    override suspend fun getReplyById(id: String): Reply =
+        withContext(Dispatchers.IO) {
+            webService.getReplyById(id)
+        }
 
-    override suspend fun updateReply(id: String, isPublic: Boolean) {
-        return webService.updateReply(id, isPublic)
-    }
+    override suspend fun updateReply(id: String, isPublic: Boolean) =
+        withContext(Dispatchers.IO) {
+            webService.updateReply(id, isPublic)
+        }
 
     override suspend fun createMessage(body: String): Message =
         withContext(Dispatchers.IO) {
             val currentMode = preferenceManager.currentMode.last()
-            var newMessage = webService.createMessage(CreateMessageRequest( body, currentMode.name))
+            val newMessage = webService.createMessage(
+                CreateMessageRequest(body, currentMode.apiValue)
+            )
+            // Cache locally
             localDao.insertMessage(newMessage.asMessageDB())
             newMessage
         }
 
-    override suspend fun createReply(body: String?, isPublic: Boolean, parentId: String?) {
-        return webService.createReply(body, isPublic, parentId) //TODO
-    }
-
+    override suspend fun createReply(body: String?, isPublic: Boolean, parentId: String?) =
+        withContext(Dispatchers.IO) {
+            webService.createReply(body, isPublic, parentId)
+        }
 }
 
 fun MessageDB.asMessage() = Message(
