@@ -56,7 +56,8 @@ fun SetNicknameScreenPreview() {
 @Composable
 fun SetNicknameScreen(
     navController: NavController,
-    viewModel: NewUserViewModel
+    viewModel: NewUserViewModel,
+    modifier: Modifier = Modifier
 ) {
     val draftNickname by viewModel.draftNickname.collectAsState()
     val validationResult by viewModel.nicknameDraftValidationResult.collectAsState()
@@ -72,9 +73,9 @@ fun SetNicknameScreen(
             viewModel.onSaveNickname(onSuccessfulSave =
             { navController.navigate(NavigationItem.Main.route) })
         },
-        warningsFlow = viewModel.warningsFlow
+        warningsFlow = viewModel.warningsFlow,
+        modifier = modifier
     )
-
 }
 
 @Composable
@@ -84,10 +85,11 @@ fun SetNicknameScreen(
     onNicknameChange: (String) -> Unit,
     onDeleteAccount: () -> Unit,
     onSaveNickname: () -> Unit,
-    warningsFlow: StateFlow<((context: Context) -> String?)?>
+    warningsFlow: StateFlow<((context: Context) -> String?)?>,
+    modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,

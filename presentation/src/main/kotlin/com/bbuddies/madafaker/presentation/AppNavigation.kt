@@ -1,5 +1,10 @@
 package com.bbuddies.madafaker.presentation
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -11,7 +16,7 @@ import com.bbuddies.madafaker.presentation.ui.main.MainScreen
 import com.bbuddies.madafaker.presentation.ui.main.MainViewModel
 import com.bbuddies.madafaker.presentation.ui.splash.SplashScreen
 
-enum class MadafakerScreen() {
+enum class MadafakerScreen {
     SplashScreen,
     MainScreen,
     MessageScreen,
@@ -38,16 +43,36 @@ fun AppNavHost(
         startDestination = startDestination
     ) {
         composable(NavigationItem.Splash.route) {
-            SplashScreen(navController, hiltViewModel())
+            SplashScreen(
+                navController = navController,
+                splashViewModel = hiltViewModel(),
+                modifier = Modifier.fillMaxSize()
+            )
         }
         composable(NavigationItem.Main.route) {
-            MainScreen(navController = navController, viewModel = hiltViewModel<MainViewModel>())
+            MainScreen(
+                navController = navController,
+                viewModel = hiltViewModel<MainViewModel>(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    // Handle navigation bars and keyboard for main screen
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .windowInsetsPadding(WindowInsets.ime)
+            )
         }
 //        composable(NavigationItem.Message.route) {
 //            MessageScreen(navController)
 //        }
         composable(NavigationItem.Account.route) {
-            SetNicknameScreen(navController, hiltViewModel())
+            SetNicknameScreen(
+                navController = navController,
+                viewModel = hiltViewModel(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    // Handle keyboard insets for input screen
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .windowInsetsPadding(WindowInsets.ime)
+            )
         }
     }
 }

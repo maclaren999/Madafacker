@@ -69,7 +69,8 @@ internal val HeartRed = Color(0xFFE53935)
 @Composable
 fun MainScreen(
     navController: NavHostController,
-    viewModel: MainViewModel
+    viewModel: MainViewModel,
+    modifier: Modifier = Modifier
 ) {
     /* --- TAB SETUP --- */
     val tabs = listOf("write", "feed", "discussions", "account")
@@ -77,7 +78,9 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
 
     /* --- BACKGROUND GRADIENT + SUN --- */
-    Surface(modifier = Modifier.fillMaxSize()) {
+    Surface(
+        modifier = modifier
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()

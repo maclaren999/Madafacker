@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,12 +18,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavHostController
-import com.bbuddies.madafaker.presentation.NavigationItem
 import kotlinx.coroutines.delay
 
 
 @Composable
-fun SplashScreen(navController: NavHostController, splashViewModel: SplashViewModel) {
+fun SplashScreen(navController: NavHostController, splashViewModel: SplashViewModel, modifier: Modifier = Modifier) {
     val currentUser by splashViewModel.currentUser.collectAsState()
     val navigationEvent by splashViewModel.navigationEvent.collectAsState()
     val userName = currentUser?.name ?: "Madafaker"
@@ -39,7 +37,7 @@ fun SplashScreen(navController: NavHostController, splashViewModel: SplashViewMo
     }
 
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier,
         color = MaterialTheme.colorScheme.background
     ) {
         AnimatedVisibility(
