@@ -5,7 +5,6 @@ import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.withContext
 import local.MadafakerDao
 import local.entity.MessageDB
@@ -41,11 +40,10 @@ class MessageRepositoryImpl @Inject constructor(
 
     override suspend fun createMessage(body: String): Message =
         withContext(Dispatchers.IO) {
-            val currentMode = preferenceManager.currentMode.last()
+            val currentMode = preferenceManager.currentMode.value
             val newMessage = webService.createMessage(
                 CreateMessageRequest(body, currentMode.apiValue)
             )
-            // Cache locally
             localDao.insertMessage(newMessage.asMessageDB())
             newMessage
         }
