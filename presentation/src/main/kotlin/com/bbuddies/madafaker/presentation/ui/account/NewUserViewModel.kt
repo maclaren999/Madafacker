@@ -4,6 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import com.bbuddies.madafaker.presentation.base.MfResult
+import com.bbuddies.madafaker.presentation.utils.NotificationPermissionHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +14,7 @@ import javax.inject.Inject
 @HiltViewModel
 class NewUserViewModel @Inject constructor(
     private val userRepository: UserRepository,
+    private val notificationPermissionHelper: NotificationPermissionHelper
 ) : BaseViewModel() {
 
     private val _draftNickname = MutableStateFlow("")
@@ -26,7 +28,7 @@ class NewUserViewModel @Inject constructor(
         draftValidator.onDraftNickChanged(newNickname)
     }
 
-    fun onSaveNickname(onSuccessfulSave: () -> Unit) {
+    fun onSaveNickname(onSuccessfulSave: (NotificationPermissionHelper) -> Unit) {
         if (nicknameDraftValidationResult.value is MfResult.Success) {
             viewModelScope.launch {
                 runCatching {
@@ -36,7 +38,7 @@ class NewUserViewModel @Inject constructor(
                         exception.localizedMessage ?: "An error occurred"
                     }
                 }.onSuccess {
-                    onSuccessfulSave()
+                    onSuccessfulSave(notificationPermissionHelper)
                 }
             }
         }

@@ -23,9 +23,8 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(navController: NavHostController, splashViewModel: SplashViewModel, modifier: Modifier = Modifier) {
-    val currentUser by splashViewModel.currentUser.collectAsState()
     val navigationEvent by splashViewModel.navigationEvent.collectAsState()
-    val userName = currentUser?.name ?: "Madafaker"
+    val userName = "Madafaker"
     val animationState = splashViewModel.animationState
 
     LaunchedEffect(navigationEvent) {

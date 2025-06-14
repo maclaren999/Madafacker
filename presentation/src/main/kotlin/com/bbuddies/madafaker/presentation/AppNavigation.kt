@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import com.bbuddies.madafaker.presentation.ui.account.SetNicknameScreen
 import com.bbuddies.madafaker.presentation.ui.main.MainScreen
 import com.bbuddies.madafaker.presentation.ui.main.MainViewModel
+import com.bbuddies.madafaker.presentation.ui.permission.NotificationPermissionScreen
 import com.bbuddies.madafaker.presentation.ui.splash.SplashScreen
 
 enum class MadafakerScreen {
@@ -21,6 +22,7 @@ enum class MadafakerScreen {
     MainScreen,
     MessageScreen,
     SetNicknameScreen,
+    NotificationPermissionScreen,
 }
 
 sealed class NavigationItem(val route: String) {
@@ -29,6 +31,7 @@ sealed class NavigationItem(val route: String) {
 
     //    object Message : NavigationItem(MadafakerScreen.MessageScreen.name)
     object Account : NavigationItem(MadafakerScreen.SetNicknameScreen.name)
+    object NotificationPermission : NavigationItem(MadafakerScreen.NotificationPermissionScreen.name)
 }
 
 @Composable
@@ -70,6 +73,16 @@ fun AppNavHost(
                 modifier = Modifier
                     .fillMaxSize()
                     // Handle keyboard insets for input screen
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .windowInsetsPadding(WindowInsets.ime)
+            )
+        }
+        composable(NavigationItem.NotificationPermission.route) {
+            NotificationPermissionScreen(
+                navController = navController,
+                viewModel = hiltViewModel(),
+                modifier = Modifier
+                    .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.navigationBars)
                     .windowInsetsPadding(WindowInsets.ime)
             )

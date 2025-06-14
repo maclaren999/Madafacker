@@ -70,8 +70,20 @@ fun SetNicknameScreen(
         },
         onDeleteAccount = { viewModel.handleDeleteAccount() },
         onSaveNickname = {
-            viewModel.onSaveNickname(onSuccessfulSave =
-            { navController.navigate(NavigationItem.Main.route) })
+            viewModel.onSaveNickname(
+                onSuccessfulSave = { notificationPermissionHelper ->
+                    // Check if notification permission is already granted
+                    val nextDestination = if (notificationPermissionHelper.isNotificationPermissionGranted()) {
+                        NavigationItem.Main
+                    } else {
+                        NavigationItem.NotificationPermission
+                    }
+
+                    navController.navigate(nextDestination.route) {
+                        popUpTo(NavigationItem.Account.route) { inclusive = true }
+                    }
+                }
+            )
         },
         warningsFlow = viewModel.warningsFlow,
         modifier = modifier
