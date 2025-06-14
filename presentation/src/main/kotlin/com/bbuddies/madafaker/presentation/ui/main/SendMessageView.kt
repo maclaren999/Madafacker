@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,11 +37,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.UiState
 
 /* ----------  SEND MESSAGE VIEW  ---------- */
 @Composable
-fun SendMessageView(viewModel: MainViewModel) {
+fun SendMessageView(viewModel: MainScreenContract) {
     val draftMessage by viewModel.draftMessage.collectAsState()
     val currentMode by viewModel.currentMode.collectAsState()
     val isSending by viewModel.isSending.collectAsState()
@@ -91,13 +93,13 @@ private fun ModeToggleCard(
             modifier = Modifier
                 .width(4.dp)
                 .height(80.dp)
-                .background(Stripe)
+                .background(MainScreenTheme.Stripe)
         )
 
         Row(
             modifier = Modifier
                 .background(
-                    color = CardBg,
+                    color = MainScreenTheme.CardBg,
                     shape = RoundedCornerShape(10.dp)
                 )
                 .padding(16.dp)
@@ -107,16 +109,19 @@ private fun ModeToggleCard(
         ) {
             Column {
                 Text(
-                    text = "${currentMode.displayName.lowercase()} mode",
-                    color = TextPrimary,
+                    text = when (currentMode) {
+                        Mode.SHINE -> stringResource(R.string.mode_shine)
+                        Mode.SHADOW -> stringResource(R.string.mode_shadow)
+                    },
+                    color = MainScreenTheme.TextPrimary,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
                 Text(
                     text = when (currentMode) {
-                        Mode.SHINE -> "positive vibes only"
-                        Mode.SHADOW -> "uncensored thoughts"
+                        Mode.SHINE -> stringResource(R.string.mode_shine_description)
+                        Mode.SHADOW -> stringResource(R.string.mode_shadow_description)
                     },
-                    color = TextSecondary,
+                    color = MainScreenTheme.TextSecondary,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -128,7 +133,7 @@ private fun ModeToggleCard(
                     .clickable { onModeToggle() }
                     .background(
                         color = when (currentMode) {
-                            Mode.SHINE -> SunBody
+                            Mode.SHINE -> MainScreenTheme.SunBody
                             Mode.SHADOW -> Color(0xFF424242)
                         },
                         shape = RoundedCornerShape(24.dp)
@@ -168,13 +173,13 @@ private fun ComposeMessageCard(
             modifier = Modifier
                 .width(4.dp)
                 .defaultMinSize(minHeight = 200.dp)
-                .background(Stripe)
+                .background(MainScreenTheme.Stripe)
         )
 
         Column(
             modifier = Modifier
                 .background(
-                    color = CardBg,
+                    color = MainScreenTheme.CardBg,
                     shape = RoundedCornerShape(10.dp)
                 )
                 .padding(20.dp)
@@ -182,10 +187,10 @@ private fun ComposeMessageCard(
         ) {
             Text(
                 text = when (currentMode) {
-                    Mode.SHINE -> "express your positivity"
-                    Mode.SHADOW -> "express yourself freely"
+                    Mode.SHINE -> stringResource(R.string.express_positivity)
+                    Mode.SHADOW -> stringResource(R.string.express_freely)
                 },
-                color = TextSecondary,
+                color = MainScreenTheme.TextSecondary,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
@@ -208,11 +213,11 @@ private fun ComposeMessageCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${draftMessage.length}/280",
+                    text = stringResource(R.string.character_count, draftMessage.length),
                     color = if (draftMessage.length > 280) {
                         Color(0xFFE53935)
                     } else {
-                        TextSecondary
+                        MainScreenTheme.TextSecondary
                     },
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -246,7 +251,7 @@ private fun SunnyTextField(
             .padding(16.dp)
             .defaultMinSize(minHeight = 120.dp),
         textStyle = MaterialTheme.typography.bodyLarge.copy(
-            color = TextPrimary,
+            color = MainScreenTheme.TextPrimary,
             fontWeight = FontWeight.Medium
         ),
         keyboardOptions = KeyboardOptions(
@@ -265,10 +270,10 @@ private fun SunnyTextField(
                 if (value.isEmpty()) {
                     Text(
                         text = when (currentMode) {
-                            Mode.SHINE -> "what positive message do you want to share?"
-                            Mode.SHADOW -> "what's really on your mind?"
+                            Mode.SHINE -> stringResource(R.string.placeholder_positive)
+                            Mode.SHADOW -> stringResource(R.string.placeholder_shadow)
                         },
-                        color = TextSecondary,
+                        color = MainScreenTheme.TextSecondary,
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -289,9 +294,9 @@ private fun SendButton(
             .clickable(enabled = enabled && !isLoading) { onClick() }
             .background(
                 color = when {
-                    isLoading -> TextSecondary
-                    enabled -> SunBody
-                    else -> TextSecondary
+                    isLoading -> MainScreenTheme.TextSecondary
+                    enabled -> MainScreenTheme.SunBody
+                    else -> MainScreenTheme.TextSecondary
                 },
                 shape = RoundedCornerShape(20.dp)
             )
@@ -306,7 +311,7 @@ private fun SendButton(
             )
         } else {
             Text(
-                text = "send",
+                text = stringResource(R.string.button_send),
                 color = Color.White,
                 style = MaterialTheme.typography.labelMedium.copy(
                     fontWeight = FontWeight.Bold
@@ -317,7 +322,7 @@ private fun SendButton(
 }
 
 @Composable
-private fun RecentMessagesCard(viewModel: MainViewModel) {
+private fun RecentMessagesCard(viewModel: MainScreenContract) {
     val outcomingMessages by viewModel.outcomingMessages.collectAsState()
 
     Row(
@@ -332,26 +337,25 @@ private fun RecentMessagesCard(viewModel: MainViewModel) {
             modifier = Modifier
                 .width(4.dp)
                 .height(160.dp)
-                .background(Stripe)
+                .background(MainScreenTheme.Stripe)
         )
 
         Column(
             modifier = Modifier
                 .background(
-                    color = CardBg,
+                    color = MainScreenTheme.CardBg,
                     shape = RoundedCornerShape(10.dp)
                 )
                 .padding(16.dp)
                 .weight(1f)
         ) {
             Text(
-                text = "your recent messages",
-                color = TextSecondary,
+                text = stringResource(R.string.recent_messages_title),
+                color = MainScreenTheme.TextSecondary,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
 
-            // Using the new UiState approach
             when (val state = outcomingMessages) {
                 UiState.Loading -> RecentMessagesLoading()
 
@@ -367,7 +371,7 @@ private fun RecentMessagesCard(viewModel: MainViewModel) {
                 is UiState.Error -> RecentMessagesError(
                     message = state.message
                         ?: state.exception.localizedMessage
-                        ?: "Failed to load recent messages"
+                        ?: stringResource(R.string.error_generic)
                 )
             }
         }
@@ -385,8 +389,8 @@ private fun RecentMessagesLoading() {
 @Composable
 private fun RecentMessagesEmpty() {
     Text(
-        text = "no messages sent yet",
-        color = TextSecondary,
+        text = stringResource(R.string.no_messages_sent),
+        color = MainScreenTheme.TextSecondary,
         style = MaterialTheme.typography.bodySmall
     )
 }
@@ -396,7 +400,7 @@ private fun RecentMessagesList(messages: List<Message>) {
     messages.forEachIndexed { index, message ->
         RecentMessageItem(
             message = message.body,
-            status = "delivered" // You might want to add actual status to Message model
+            status = stringResource(R.string.message_delivered)
         )
         if (index < messages.size - 1) {
             Spacer(modifier = Modifier.height(8.dp))
@@ -425,7 +429,7 @@ private fun RecentMessageSkeleton() {
                 .weight(1f)
                 .height(16.dp)
                 .background(
-                    color = TextSecondary.copy(alpha = 0.3f),
+                    color = MainScreenTheme.TextSecondary.copy(alpha = 0.3f),
                     shape = RoundedCornerShape(4.dp)
                 )
         )
@@ -437,7 +441,7 @@ private fun RecentMessageSkeleton() {
                 .width(60.dp)
                 .height(14.dp)
                 .background(
-                    color = TextSecondary.copy(alpha = 0.3f),
+                    color = MainScreenTheme.TextSecondary.copy(alpha = 0.3f),
                     shape = RoundedCornerShape(4.dp)
                 )
         )
@@ -456,7 +460,7 @@ private fun RecentMessageItem(
     ) {
         Text(
             text = message,
-            color = TextPrimary,
+            color = MainScreenTheme.TextPrimary,
             style = MaterialTheme.typography.bodySmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -468,10 +472,10 @@ private fun RecentMessageItem(
         Text(
             text = status,
             color = when (status) {
-                "delivered" -> Color(0xFF4CAF50)
-                "sending" -> SunBody
-                "failed" -> Color(0xFFE53935)
-                else -> TextSecondary
+                stringResource(R.string.message_delivered) -> Color(0xFF4CAF50)
+                stringResource(R.string.message_sending) -> MainScreenTheme.SunBody
+                stringResource(R.string.message_failed) -> Color(0xFFE53935)
+                else -> MainScreenTheme.TextSecondary
             },
             style = MaterialTheme.typography.labelSmall.copy(
                 fontWeight = FontWeight.Medium

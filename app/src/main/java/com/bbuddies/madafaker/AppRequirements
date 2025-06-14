@@ -69,7 +69,7 @@ Establish four primary tabs in the bottom navigation bar to support the Write‑
 1. **Iterative Distribution:** ≥ 4★ average after first 10 ratings ⇒ resend to ×10 users.
 2. **Adaptive Notifications:** Behaviour‑based quota (1‑4 per day).
 3. **Locale Hints:** Keyboard language ≠ selected locale ⇒ prompt switch.
-4. **Public Feed Experiment:** Top 50 daily messages in read‑only feed.
+4. **Public Inbox Experiment:** Top 50 daily messages in read‑only inbox.
 5. **Moderation Dashboard:** Admin web panel, real‑time abuse reports.
 6. **Report / Block Abuse:** In‑app “Report” action on any message (Phase 2)
 

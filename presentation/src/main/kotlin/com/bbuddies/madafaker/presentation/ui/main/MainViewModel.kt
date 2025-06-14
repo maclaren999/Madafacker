@@ -21,28 +21,27 @@ class MainViewModel @Inject constructor(
     private val messageRepository: MessageRepository,
     private val userRepository: UserRepository,
     private val preferenceManager: PreferenceManager
-) : BaseViewModel() {
+) : BaseViewModel(), MainScreenContract {
 
     private val _draftMessage = MutableStateFlow("")
-    val draftMessage: StateFlow<String> = _draftMessage
+    override val draftMessage: StateFlow<String> = _draftMessage
 
     private val _incomingMessages = MutableStateFlow<UiState<List<Message>>>(UiState.Loading)
-    val incomingMessages: StateFlow<UiState<List<Message>>> = _incomingMessages
+    override val incomingMessages: StateFlow<UiState<List<Message>>> = _incomingMessages
 
     private val _outcomingMessages = MutableStateFlow<UiState<List<Message>>>(UiState.Loading)
-    val outcomingMessages: StateFlow<UiState<List<Message>>> = _outcomingMessages
+    override val outcomingMessages: StateFlow<UiState<List<Message>>> = _outcomingMessages
 
     private val _isSending = MutableStateFlow(false)
-    val isSending: StateFlow<Boolean> = _isSending
+    override val isSending: StateFlow<Boolean> = _isSending
 
-    private val _currentMode = preferenceManager.currentMode
-    val currentMode = _currentMode
+    override val currentMode = preferenceManager.currentMode
 
     init {
         loadMessages()
     }
 
-    fun onSendMessage(message: String) {
+    override fun onSendMessage(message: String) {
         if (message.isBlank() || _isSending.value) return
 
         viewModelScope.launch {
@@ -70,13 +69,13 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun onDraftMessageChanged(message: String) {
+    override fun onDraftMessageChanged(message: String) {
         if (message.length <= AppConfig.MAX_MESSAGE_LENGTH) {
             _draftMessage.value = message
         }
     }
 
-    fun toggleMode() {
+    override fun toggleMode() {
         viewModelScope.launch {
             val newMode = when (currentMode.value) {
                 Mode.SHINE -> Mode.SHADOW
@@ -86,7 +85,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun refreshMessages() {
+    override fun refreshMessages() {
         loadMessages()
     }
 

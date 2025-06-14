@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Existing strings -->
     <string name="account_nickname_is_available">Nickname is available</string>
     <string name="account_nickname_is_not_available">This name is taken</string>
     <string name="account_nickname_cannot_be_empty">Nickname cannot be empty</string>
@@ -7,4 +8,51 @@
     <string name="network_error">Network error. Check your connection</string>
     <string name="account_nickname_is_too_long">\"Your nickname is too long. Max length is %d\"</string>
     <string name="error_generic">Unexpected error. Our programer is dumb.</string>
+
+    <!-- Main Screen -->
+    <string name="tab_write">write</string>
+    <string name="tab_inbox">inbox</string>
+    <string name="tab_my_posts">my posts</string>
+    <string name="tab_account">account</string>
+
+    <!-- Loading and Error States -->
+    <string name="loading_messages">loading messages…</string>
+    <string name="error_oops">oops!</string>
+    <string name="button_try_again">try again</string>
+
+    <!-- Empty States -->
+    <string name="no_posts_yet_title">no posts yet</string>
+    <string name="no_posts_yet_subtitle">your sent messages will appear here once you start sharing</string>
+
+    <!-- Message States -->
+    <string name="my_message">my message</string>
+    <string name="message_delivered">delivered</string>
+    <string name="message_sending">sending</string>
+    <string name="message_failed">failed</string>
+    <string name="replies_count">%d replies</string>
+
+    <!-- Mode Toggle -->
+    <string name="mode_shine">shine mode</string>
+    <string name="mode_shadow">shadow mode</string>
+    <string name="mode_shine_description">positive vibes only</string>
+    <string name="mode_shadow_description">uncensored thoughts</string>
+
+    <!-- Compose Message -->
+    <string name="express_positivity">express your positivity</string>
+    <string name="express_freely">express yourself freely</string>
+    <string name="placeholder_positive">what positive message do you want to share?</string>
+    <string name="placeholder_shadow">what\'s really on your mind?</string>
+    <string name="button_send">send</string>
+    <string name="character_count">%d/280</string>
+
+    <!-- Recent Messages -->
+    <string name="recent_messages_title">your recent messages</string>
+    <string name="no_messages_sent">no messages sent yet</string>
+
+    <!-- Account -->
+    <string name="account_settings_coming_soon">Account settings coming soon</string>
+
+    <!-- Message Actions -->
+    <string name="message_sent_success">Message sent successfully!</string>
+    <string name="message_send_failed">Failed to send message</string>
 </resources>
