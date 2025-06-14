@@ -7,12 +7,15 @@ import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import com.bbuddies.madafaker.common_domain.utils.NetworkConnectivityMonitor
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.base.suspendUiStateOf
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -20,7 +23,8 @@ import javax.inject.Inject
 class MainViewModel @Inject constructor(
     private val messageRepository: MessageRepository,
     private val userRepository: UserRepository,
-    private val preferenceManager: PreferenceManager
+    private val preferenceManager: PreferenceManager,
+    private val networkMonitor: NetworkConnectivityMonitor
 ) : BaseViewModel(), MainScreenContract {
 
     private val _draftMessage = MutableStateFlow("")
@@ -35,10 +39,38 @@ class MainViewModel @Inject constructor(
     private val _isSending = MutableStateFlow(false)
     override val isSending: StateFlow<Boolean> = _isSending
 
+    private val _isOnline = MutableStateFlow(true)
+    override val isOnline: StateFlow<Boolean> = _isOnline
+
+    private val _hasPendingMessages = MutableStateFlow(false)
+    override val hasPendingMessages: StateFlow<Boolean> = _hasPendingMessages
+
     override val currentMode = preferenceManager.currentMode
 
     init {
         loadMessages()
+        observeNetworkConnectivity()
+        checkPendingMessages()
+    }
+
+    private fun observeNetworkConnectivity() {
+        networkMonitor.isConnected
+            .onEach { isConnected ->
+                _isOnline.value = isConnected
+                if (isConnected) {
+                    // Network is back, try to send any pending messages
+                    messageRepository.retryUnsentMessages()
+                    checkPendingMessages()
+                }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun checkPendingMessages() {
+        viewModelScope.launch {
+            val hasPending = messageRepository.hasPendingMessages()
+            _hasPendingMessages.value = hasPending
+        }
     }
 
     override fun onSendMessage(message: String) {
@@ -55,7 +87,13 @@ class MainViewModel @Inject constructor(
                 is UiState.Success -> {
                     _draftMessage.value = ""
                     loadOutcomingMessages()
-                    showSuccess("Message sent successfully!")
+                    checkPendingMessages()
+
+                    if (_isOnline.value) {
+                        showSuccess("Message sent successfully!")
+                    } else {
+                        showSuccess("Message queued - will send when online")
+                    }
                 }
 
                 is UiState.Error -> {
@@ -87,6 +125,15 @@ class MainViewModel @Inject constructor(
 
     override fun refreshMessages() {
         loadMessages()
+        checkPendingMessages()
+    }
+
+    override fun retryPendingMessages() {
+        viewModelScope.launch {
+            messageRepository.retryUnsentMessages()
+            checkPendingMessages()
+            showSuccess("Retrying pending messages...")
+        }
     }
 
     private fun loadMessages() {

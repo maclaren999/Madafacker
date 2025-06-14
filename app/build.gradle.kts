@@ -57,6 +57,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.messaging.ktx)
+    implementation(libs.work.runtime.ktx)
+    implementation(libs.hilt.work)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

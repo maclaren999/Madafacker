@@ -7,10 +7,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +26,7 @@ import androidx.navigation.NavHostController
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.presentation.base.UiState
+import com.bbuddies.madafaker.presentation.ui.main.components.OfflineIndicator
 import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.InboxTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.MyPostsTab
@@ -38,6 +42,8 @@ fun MainScreen(
 ) {
     val pagerState = rememberPagerState(pageCount = { MainTab.entries.size })
     val scope = rememberCoroutineScope()
+    val isOnline by viewModel.isOnline.collectAsState()
+    val hasPendingMessages by viewModel.hasPendingMessages.collectAsState()
 
     Surface(modifier = modifier) {
         Box(
@@ -65,6 +71,13 @@ fun MainScreen(
             }
 
             Column(modifier = Modifier.fillMaxSize()) {
+                // Add offline indicator at the top
+                OfflineIndicator(
+                    isOnline = isOnline,
+                    hasPendingMessages = hasPendingMessages,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+
                 MainScreenTabs(
                     pagerState = pagerState,
                     scope = scope
@@ -103,12 +116,19 @@ private class PreviewMainViewModel : MainScreenContract {
     private val _currentMode = MutableStateFlow(Mode.SHINE)
     override val currentMode: StateFlow<Mode> = _currentMode
 
+    private val _isOnline = MutableStateFlow(true)
+    override val isOnline: StateFlow<Boolean> = _isOnline
+
+    private val _hasPendingMessages = MutableStateFlow(false)
+    override val hasPendingMessages: StateFlow<Boolean> = _hasPendingMessages
+
     override fun onSendMessage(message: String) {}
     override fun onDraftMessageChanged(message: String) {
         _draftMessage.value = message
     }
     override fun toggleMode() {}
     override fun refreshMessages() {}
+    override fun retryPendingMessages() {}
 }
 
 @Preview(showBackground = true)

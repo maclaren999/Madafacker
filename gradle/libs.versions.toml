@@ -37,6 +37,10 @@ googleGmsGoogleServices = "4.4.2"
 firebaseMessagingKtx = "24.1.1"
 composeRuntime = "1.8.2"
 datastore = "1.1.7"
+workManager = "2.9.0"
+hiltWork = "1.1.0"
+workRuntimeKtx = "2.10.1"
+hiltWorkVersion = "1.2.0"
 
 [libraries]
 # Core Android libraries
@@ -76,6 +80,11 @@ kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-cor
 hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" } # Annotation processor
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "androidxHilt" }
+
+# WorkManager
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
+androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" }
+androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWork" }
 
 # Network requests
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
@@ -127,6 +136,8 @@ truth = { group = "com.google.truth", name = "truth", version.ref = "truth" }
 
 # Kotlin serialization
 kotlinx-serialization = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
+hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWorkVersion" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }

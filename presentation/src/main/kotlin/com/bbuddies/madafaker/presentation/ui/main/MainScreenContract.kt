@@ -17,9 +17,14 @@ interface MainScreenContract {
     // Mode
     val currentMode: StateFlow<Mode>
 
+    // Network state and offline handling
+    val isOnline: StateFlow<Boolean>
+    val hasPendingMessages: StateFlow<Boolean>
+
     // Actions
     fun onSendMessage(message: String)
     fun onDraftMessageChanged(message: String)
     fun toggleMode()
     fun refreshMessages()
+    fun retryPendingMessages()
 }
