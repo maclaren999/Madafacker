@@ -31,11 +31,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenTheme
@@ -47,12 +51,17 @@ fun InboxTab(viewModel: MainScreenContract) {
     incomingMessages.HandleState(
         onRetry = viewModel::refreshMessages
     ) { messages ->
-        MessageList(messages.toInboxMessages())
+        InboxMessageList(messages.toInboxMessages())
     }
 }
 
 @Composable
-private fun MessageList(messages: List<InboxMessage>) {
+private fun InboxMessageList(messages: List<InboxMessage>) {
+    if (messages.isEmpty()) {
+        InboxEmptyState()
+        return
+    }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -61,6 +70,51 @@ private fun MessageList(messages: List<InboxMessage>) {
         items(messages) { msg ->
             MessageCard(msg)
             Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun InboxEmptyState() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 32.dp)
+        ) {
+            Text(
+                text = "📬",
+                fontSize = 64.sp,
+                modifier = Modifier.padding(bottom = 24.dp)
+            )
+
+            Text(
+                text = stringResource(R.string.inbox_empty_title),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MainScreenTheme.TextPrimary,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+
+            Text(
+                text = stringResource(R.string.inbox_empty_subtitle),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MainScreenTheme.TextSecondary,
+                textAlign = TextAlign.Center,
+                lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(R.string.inbox_empty_description),
+                style = MaterialTheme.typography.bodySmall,
+                color = MainScreenTheme.TextSecondary.copy(alpha = 0.8f),
+                textAlign = TextAlign.Center,
+                lineHeight = MaterialTheme.typography.bodySmall.lineHeight
+            )
         }
     }
 }

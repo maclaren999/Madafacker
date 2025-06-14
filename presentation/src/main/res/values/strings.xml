@@ -7,7 +7,7 @@
     <string name="account_characters_max_length">" characters - max length"</string>
     <string name="network_error">Network error. Check your connection</string>
     <string name="account_nickname_is_too_long">\"Your nickname is too long. Max length is %d\"</string>
-    <string name="error_generic">Unexpected error. Our programer is dumb.</string>
+    <string name="error_generic">Unexpected error. Our programmer is dumb.</string>
 
     <!-- Main Screen -->
     <string name="tab_write">write</string>
@@ -55,4 +55,9 @@
     <!-- Message Actions -->
     <string name="message_sent_success">Message sent successfully!</string>
     <string name="message_send_failed">Failed to send message</string>
+
+    <!-- Inbox Empty State -->
+    <string name="inbox_empty_title">your inbox is quiet</string>
+    <string name="inbox_empty_subtitle">no messages have arrived yet</string>
+    <string name="inbox_empty_description">when other users send messages to the community, they\'ll appear here for you to read and react to</string>
 </resources>
