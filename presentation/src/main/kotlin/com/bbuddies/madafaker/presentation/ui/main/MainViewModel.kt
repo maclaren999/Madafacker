@@ -4,7 +4,9 @@ import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.UnsentDraft
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
+import com.bbuddies.madafaker.common_domain.repository.DraftRepository
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.bbuddies.madafaker.common_domain.utils.NetworkConnectivityMonitor
@@ -14,6 +16,9 @@ import com.bbuddies.madafaker.presentation.base.suspendUiStateOf
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -24,7 +29,8 @@ class MainViewModel @Inject constructor(
     private val messageRepository: MessageRepository,
     private val userRepository: UserRepository,
     private val preferenceManager: PreferenceManager,
-    private val networkMonitor: NetworkConnectivityMonitor
+    private val networkMonitor: NetworkConnectivityMonitor,
+    private val draftRepository: DraftRepository
 ) : BaseViewModel(), MainScreenContract {
 
     private val _draftMessage = MutableStateFlow("")
@@ -51,7 +57,52 @@ class MainViewModel @Inject constructor(
         loadMessages()
         observeNetworkConnectivity()
         checkPendingMessages()
+        restoreDraft()
+        setupDraftAutoSave()
     }
+
+    private fun restoreDraft() {
+        viewModelScope.launch {
+            try {
+                val savedDraft = draftRepository.getDraftOnce()
+                if (savedDraft != null && savedDraft.body.isNotBlank()) {
+                    _draftMessage.value = savedDraft.body
+                    showSuccess("Draft restored")
+                }
+            } catch (e: Exception) {
+                // Silently fail - draft restoration is not critical
+            }
+        }
+    }
+
+    private fun setupDraftAutoSave() {
+        viewModelScope.launch {
+            // Auto-save drafts with debouncing to avoid excessive saves
+            _draftMessage
+                .drop(1) // Skip initial empty value
+                .distinctUntilChanged()
+                .debounce(1000) // Wait 1 second after user stops typing
+                .collect { message ->
+                    if (message.isNotBlank()) {
+                        saveDraft(message)
+                    }
+                }
+        }
+    }
+
+    private suspend fun saveDraft(message: String) {
+        try {
+            val draft = UnsentDraft(
+                body = message,
+                mode = currentMode.value.apiValue,
+                timestamp = System.currentTimeMillis()
+            )
+            draftRepository.saveDraft(draft)
+        } catch (e: Exception) {
+            // Silently fail - draft saving is not critical
+        }
+    }
+
 
     private fun observeNetworkConnectivity() {
         networkMonitor.isConnected
@@ -86,6 +137,7 @@ class MainViewModel @Inject constructor(
             when (result) {
                 is UiState.Success -> {
                     _draftMessage.value = ""
+                    clearDraft() // Clear draft after successful sending
                     loadOutcomingMessages()
                     checkPendingMessages()
 
@@ -120,6 +172,11 @@ class MainViewModel @Inject constructor(
                 Mode.SHADOW -> Mode.SHINE
             }
             preferenceManager.updateMode(newMode)
+
+            // Save draft with new mode if there's content
+            if (_draftMessage.value.isNotBlank()) {
+                saveDraft(_draftMessage.value)
+            }
         }
     }
 
@@ -133,6 +190,17 @@ class MainViewModel @Inject constructor(
             messageRepository.retryPendingMessages()
             checkPendingMessages()
             showSuccess("Retrying pending messages...")
+        }
+    }
+
+    override fun clearDraft() {
+        viewModelScope.launch {
+            try {
+                draftRepository.clearDraft()
+                _draftMessage.value = ""
+            } catch (e: Exception) {
+                // Silently fail
+            }
         }
     }
 

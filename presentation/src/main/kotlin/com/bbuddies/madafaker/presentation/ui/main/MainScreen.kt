@@ -129,6 +129,7 @@ private class PreviewMainViewModel : MainScreenContract {
     override fun toggleMode() {}
     override fun refreshMessages() {}
     override fun retryPendingMessages() {}
+    override fun clearDraft() {}
 }
 
 @Preview(showBackground = true)
