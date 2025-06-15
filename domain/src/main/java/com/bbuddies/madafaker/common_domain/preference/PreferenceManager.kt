@@ -1,7 +1,6 @@
 package com.bbuddies.madafaker.common_domain.preference
 
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.UnsentDraft
 import com.bbuddies.madafaker.common_domain.model.User
 import kotlinx.coroutines.flow.StateFlow
 
@@ -20,9 +19,5 @@ interface PreferenceManager {
     suspend fun updateCurrentUser(user: User)
     suspend fun clearUserData()
     suspend fun updateMode(mode: Mode)
-    suspend fun saveUnsentDraft(body: String, mode: String)
-    suspend fun getUnsentDraft(): UnsentDraft?
-    suspend fun clearUnsentDraft()
-    suspend fun hasUnsentDraft(): Boolean
 
 }

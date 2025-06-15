@@ -9,7 +9,6 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.UnsentDraft
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
@@ -19,7 +18,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -105,36 +103,6 @@ class PreferenceManagerImpl @Inject constructor(
 
     override suspend fun updateMode(mode: Mode) {
         dataStore.set(PreferenceKey.CurrentMode, mode.name)
-    }
-
-    override suspend fun saveUnsentDraft(body: String, mode: String) {
-        coroutineScope {
-            launch { dataStore.set(PreferenceKey.UnsentDraftBody, body) }
-            launch { dataStore.set(PreferenceKey.UnsentDraftMode, mode) }
-            launch { dataStore.set(PreferenceKey.UnsentDraftTimestamp, System.currentTimeMillis()) }
-        }
-    }
-
-    override suspend fun getUnsentDraft(): UnsentDraft? {
-        val body = dataStore.get(PreferenceKey.UnsentDraftBody).first()
-        val mode = dataStore.get(PreferenceKey.UnsentDraftMode).first()
-        val timestamp = dataStore.get(PreferenceKey.UnsentDraftTimestamp).first()
-
-        return if (body != null && mode != null && timestamp != null) {
-            UnsentDraft(body, mode, timestamp)
-        } else null
-    }
-
-    override suspend fun clearUnsentDraft() {
-        dataStore.edit { preferences ->
-            preferences.remove(PreferenceKey.UnsentDraftBody.key)
-            preferences.remove(PreferenceKey.UnsentDraftMode.key)
-            preferences.remove(PreferenceKey.UnsentDraftTimestamp.key)
-        }
-    }
-
-    override suspend fun hasUnsentDraft(): Boolean {
-        return dataStore.get(PreferenceKey.UnsentDraftBody).first() != null
     }
 }
 

@@ -5,7 +5,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
+import com.bbuddies.madafaker.common_domain.repository.PendingMessageRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +13,6 @@ import kotlinx.coroutines.withContext
 import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.request.CreateMessageRequest
-import remote.asMessageDB
 import timber.log.Timber
 import java.io.IOException
 import java.net.SocketTimeoutException
@@ -24,13 +23,14 @@ class SendMessageWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted workerParams: WorkerParameters,
     private val webService: MadafakerApi,
-    private val preferenceManager: PreferenceManager,
+    private val pendingMessageRepository: PendingMessageRepository,
     private val localDao: MadafakerDao
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
         const val KEY_MESSAGE_BODY = "message_body"
         const val KEY_MESSAGE_MODE = "message_mode"
+        const val KEY_PENDING_MESSAGE_ID = "pending_message_id"
         const val KEY_RETRY_COUNT = "retry_count"
         const val KEY_ERROR_MESSAGE = "error_message"
         const val KEY_MESSAGE_ID = "message_id"
@@ -50,6 +50,11 @@ class SendMessageWorker @AssistedInject constructor(
                 workDataOf(KEY_ERROR_MESSAGE to "Missing message mode")
             )
 
+        val pendingMessageId = inputData.getString(KEY_PENDING_MESSAGE_ID)
+            ?: return@withContext Result.failure(
+                workDataOf(KEY_ERROR_MESSAGE to "Missing pending message ID")
+            )
+
         val retryCount = inputData.getInt(KEY_RETRY_COUNT, 0)
 
         Timber.d("SendMessageWorker: Attempting to send message (attempt ${retryCount + 1}/$MAX_RETRY_ATTEMPTS)")
@@ -61,10 +66,10 @@ class SendMessageWorker @AssistedInject constructor(
             )
 
             // Store in local database
-            localDao.insertMessage(newMessage.asMessageDB())
+            localDao.insertMessage(newMessage)
 
-            // Clear the draft since message was sent successfully
-            preferenceManager.clearUnsentDraft()
+            // Remove from pending messages since it was sent successfully
+            pendingMessageRepository.deletePendingMessage(pendingMessageId)
 
             Timber.d("SendMessageWorker: Message sent successfully - ID: ${newMessage.id}")
 
@@ -82,14 +87,20 @@ class SendMessageWorker @AssistedInject constructor(
 
             val updatedRetryCount = retryCount + 1
 
+            // Update retry count in pending message
+            pendingMessageRepository.incrementRetryCount(pendingMessageId)
+
             return@withContext when {
                 // Max retries exceeded
                 updatedRetryCount >= MAX_RETRY_ATTEMPTS -> {
+                    // Keep the pending message for manual retry or user notification
                     Timber.w("SendMessageWorker: Max retries exceeded for message")
+                    // Keep the pending message for manual retry or user notification
                     Result.failure(
                         workDataOf(
                             KEY_ERROR_MESSAGE to "Max retries exceeded: ${exception.localizedMessage}",
-                            KEY_RETRY_COUNT to updatedRetryCount
+                            KEY_RETRY_COUNT to updatedRetryCount,
+                            KEY_PENDING_MESSAGE_ID to pendingMessageId
                         )
                     )
                 }
@@ -103,6 +114,8 @@ class SendMessageWorker @AssistedInject constructor(
                 // Non-retryable errors (e.g., validation errors)
                 else -> {
                     Timber.w("SendMessageWorker: Non-retryable error: ${exception.localizedMessage}")
+                    // Remove from pending messages since it's not retryable
+                    pendingMessageRepository.deletePendingMessage(pendingMessageId)
                     Result.failure(
                         workDataOf(
                             KEY_ERROR_MESSAGE to (exception.localizedMessage ?: "Unknown error"),

@@ -8,17 +8,19 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.PendingMessage
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
+import com.bbuddies.madafaker.common_domain.repository.PendingMessageRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import local.MadafakerDao
-import local.entity.MessageDB
 import remote.api.MadafakerApi
 import remote.api.request.CreateMessageRequest
 import timber.log.Timber
 import worker.SendMessageWorker
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -26,11 +28,12 @@ class MessageRepositoryImpl @Inject constructor(
     private val webService: MadafakerApi,
     private val preferenceManager: PreferenceManager,
     private val localDao: MadafakerDao,
-    private val workManager: WorkManager
+    private val workManager: WorkManager,
+    private val pendingMessageRepository: PendingMessageRepository
 ) : MessageRepository {
 
     companion object {
-        private const val SEND_MESSAGE_WORK_NAME = "send_message_work"
+        private const val SEND_MESSAGE_WORK_PREFIX = "send_message_work"
     }
 
     override suspend fun getIncomingMassage(): List<Message> =
@@ -62,24 +65,33 @@ class MessageRepositoryImpl @Inject constructor(
                 val newMessage = webService.createMessage(
                     CreateMessageRequest(body, currentMode.apiValue)
                 )
-                localDao.insertMessage(newMessage.asMessageDB())
+                localDao.insertMessage(newMessage)
 
                 Timber.d("Message sent successfully: ${newMessage.id}")
                 newMessage
 
             } catch (exception: Exception) {
-                Timber.w(exception, "Failed to send message immediately, scheduling for retry")
+                Timber.w(exception, "Failed to send message immediately, saving as pending")
 
-                // Save draft for offline retry
-                preferenceManager.saveUnsentDraft(body, currentMode.apiValue)
+                // Create pending message
+                val pendingMessage = PendingMessage(
+                    id = UUID.randomUUID().toString(),
+                    body = body,
+                    mode = currentMode.apiValue,
+                    createdAt = System.currentTimeMillis(),
+                    retryCount = 0,
+                    lastRetryAt = null
+                )
+
+                // Save to pending messages
+                pendingMessageRepository.savePendingMessage(pendingMessage)
 
                 // Schedule WorkManager job with exponential backoff
-                scheduleMessageSend(body, currentMode.apiValue)
+                schedulePendingMessageSend(pendingMessage)
 
                 // Return a temporary message for UI feedback
-                // This will be replaced when the actual message is sent
                 Message(
-                    id = "temp_${System.currentTimeMillis()}",
+                    id = "temp_${pendingMessage.id}",
                     body = body,
                     mode = currentMode.apiValue,
                     isPublic = true,
@@ -89,7 +101,27 @@ class MessageRepositoryImpl @Inject constructor(
             }
         }
 
-    private fun scheduleMessageSend(body: String, mode: String) {
+    override suspend fun createReply(body: String?, isPublic: Boolean, parentId: String?) =
+        withContext(Dispatchers.IO) {
+            webService.createReply(body, isPublic, parentId)
+        }
+
+    override suspend fun retryPendingMessages() {
+        withContext(Dispatchers.IO) {
+            val pendingMessages = pendingMessageRepository.getAllPendingMessages()
+            Timber.d("Found ${pendingMessages.size} pending messages to retry")
+
+            pendingMessages.forEach { pendingMessage ->
+                schedulePendingMessageSend(pendingMessage)
+            }
+        }
+    }
+
+    override suspend fun hasPendingMessages(): Boolean {
+        return pendingMessageRepository.hasPendingMessages()
+    }
+
+    private fun schedulePendingMessageSend(pendingMessage: PendingMessage) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
@@ -103,63 +135,22 @@ class MessageRepositoryImpl @Inject constructor(
             )
             .setInputData(
                 workDataOf(
-                    SendMessageWorker.KEY_MESSAGE_BODY to body,
-                    SendMessageWorker.KEY_MESSAGE_MODE to mode
+                    SendMessageWorker.KEY_MESSAGE_BODY to pendingMessage.body,
+                    SendMessageWorker.KEY_MESSAGE_MODE to pendingMessage.mode,
+                    SendMessageWorker.KEY_PENDING_MESSAGE_ID to pendingMessage.id,
+                    SendMessageWorker.KEY_RETRY_COUNT to pendingMessage.retryCount
                 )
             )
             .build()
 
-        // Use unique work to avoid duplicates
+        // Use unique work to avoid duplicates for the same pending message
+        val workName = "$SEND_MESSAGE_WORK_PREFIX-${pendingMessage.id}"
         workManager.enqueueUniqueWork(
-            SEND_MESSAGE_WORK_NAME,
+            workName,
             ExistingWorkPolicy.REPLACE,
             workRequest
         )
 
-        Timber.d("Scheduled message send work: ${workRequest.id}")
-    }
-
-    override suspend fun createReply(body: String?, isPublic: Boolean, parentId: String?) =
-        withContext(Dispatchers.IO) {
-            webService.createReply(body, isPublic, parentId)
-        }
-
-    /**
-     * Retry sending any unsent drafts
-     * Called when network becomes available or on app startup
-     */
-    override suspend fun retryUnsentMessages() {
-        withContext(Dispatchers.IO) {
-            val unsentDraft = preferenceManager.getUnsentDraft()
-            if (unsentDraft != null) {
-                Timber.d("Found unsent draft, scheduling retry")
-                scheduleMessageSend(unsentDraft.body, unsentDraft.mode)
-            }
-        }
-    }
-
-    /**
-     * Check if there are any pending messages to send
-     */
-    override suspend fun hasPendingMessages(): Boolean {
-        return preferenceManager.hasUnsentDraft()
+        Timber.d("Scheduled pending message send work: ${workRequest.id} for message: ${pendingMessage.id}")
     }
 }
-
-fun MessageDB.asMessage() = Message(
-    id = id,
-    body = body,
-    mode = mode,
-    createdAt = createdAt,
-    isPublic = isPublic,
-    authorId = authorId
-)
-
-fun Message.asMessageDB() = MessageDB(
-    id = id,
-    body = body,
-    mode = mode,
-    createdAt = createdAt,
-    isPublic = isPublic,
-    authorId = authorId
-)

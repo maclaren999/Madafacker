@@ -12,6 +12,7 @@ interface MessageRepository {
     suspend fun updateReply(id: String, isPublic: Boolean)
     suspend fun createMessage(body: String): Message
 
-    suspend fun retryUnsentMessages()
+    // Updated methods for pending messages
+    suspend fun retryPendingMessages()
     suspend fun hasPendingMessages(): Boolean
 }

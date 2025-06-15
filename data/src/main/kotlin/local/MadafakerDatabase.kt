@@ -2,13 +2,41 @@ package local
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import local.entity.MessageDB
-import local.entity.ReplyDB
-import local.entity.UserDB
+import androidx.room.TypeConverter
+import androidx.room.TypeConverters
+import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.PendingMessage
+import com.bbuddies.madafaker.common_domain.model.Reply
+import com.bbuddies.madafaker.common_domain.model.User
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
-@Database(entities = [MessageDB::class, ReplyDB::class, UserDB::class], version = 1)
+
+// Type converters for complex fields
+class Converters {
+    @TypeConverter
+    fun fromReplyList(value: List<Reply>): String {
+        return Json.encodeToString(value)
+    }
+
+    @TypeConverter
+    fun toReplyList(value: String): List<Reply> {
+        return Json.decodeFromString(value)
+    }
+}
+
+@Database(
+    entities = [
+        Message::class,
+        Reply::class,
+        User::class,
+        PendingMessage::class
+    ],
+    version = 2,
+    exportSchema = false
+)
+@TypeConverters(Converters::class)
 abstract class MadafakerDatabase : RoomDatabase() {
-
     abstract fun getMadafakerDao(): MadafakerDao
 
 }

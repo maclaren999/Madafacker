@@ -7,15 +7,15 @@ import androidx.datastore.preferences.preferencesDataStore
 import androidx.room.Room
 import androidx.work.WorkManager
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
-import com.bbuddies.madafaker.common_domain.utils.NetworkConnectivityMonitor
+import com.bbuddies.madafaker.common_domain.repository.PendingMessageRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import local.MadafakerDatabase
+import local.PendingMessageRepositoryImpl
 import local.PreferenceManagerImpl
-import utils.NetworkConnectivityMonitorImpl
 import javax.inject.Singleton
 
 @Module
@@ -33,6 +33,12 @@ class LocalDataModule {
 
     @Provides
     @Singleton
+    fun bindPendingMessageRepository(
+        pendingMessageRepositoryImpl: PendingMessageRepositoryImpl
+    ): PendingMessageRepository = pendingMessageRepositoryImpl
+
+    @Provides
+    @Singleton
     fun providePreferenceDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
         context.dataStore
 
@@ -44,7 +50,9 @@ class LocalDataModule {
         app,
         MadafakerDatabase::class.java,
         "madafaker_db"
-    ).build()
+    )
+        .fallbackToDestructiveMigration(false) // Add this for development to handle schema changes
+        .build()
 
     @Provides
     @Singleton
@@ -54,10 +62,4 @@ class LocalDataModule {
     @Singleton
     fun provideWorkManager(@ApplicationContext context: Context): WorkManager =
         WorkManager.getInstance(context)
-
-    @Provides
-    @Singleton
-    fun provideNetworkConnectivityMonitor(
-        @ApplicationContext context: Context
-    ): NetworkConnectivityMonitor = NetworkConnectivityMonitorImpl(context)
 }

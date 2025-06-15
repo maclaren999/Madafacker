@@ -48,6 +48,8 @@ dependencies {
     implementation(libs.room.ktx)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
+    implementation(libs.kotlinx.serialization.json)
+
     api(libs.androidx.datastore.preferences)
     api(libs.hilt)
     kapt(libs.hilt.compiler)

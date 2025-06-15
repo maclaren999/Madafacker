@@ -1,6 +1,7 @@
 plugins {
     id("java-library")
     alias(libs.plugins.jetbrainsKotlinJvm)
+    id(libs.plugins.kotlin.kapt.get().pluginId)
 }
 
 java {
@@ -10,4 +11,8 @@ java {
 
 dependencies {
     implementation(libs.kotlinx.coroutines.core)
+
+    api(libs.room.runtime)
+    kapt(libs.room.compiler)
+
 }

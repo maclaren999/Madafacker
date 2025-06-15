@@ -59,7 +59,7 @@ class MainViewModel @Inject constructor(
                 _isOnline.value = isConnected
                 if (isConnected) {
                     // Network is back, try to send any pending messages
-                    messageRepository.retryUnsentMessages()
+                    messageRepository.retryPendingMessages()
                     checkPendingMessages()
                 }
             }
@@ -130,7 +130,7 @@ class MainViewModel @Inject constructor(
 
     override fun retryPendingMessages() {
         viewModelScope.launch {
-            messageRepository.retryUnsentMessages()
+            messageRepository.retryPendingMessages()
             checkPendingMessages()
             showSuccess("Retrying pending messages...")
         }
