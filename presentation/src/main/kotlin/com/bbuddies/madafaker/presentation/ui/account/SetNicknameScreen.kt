@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.base.MfResult
-import com.bbuddies.madafaker.presentation.base.WarningSnackbarHost
+import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -100,29 +100,32 @@ fun SetNicknameScreen(
     warningsFlow: StateFlow<((context: Context) -> String?)?>,
     modifier: Modifier = Modifier
 ) {
-    Column(
+    ScreenWithWarnings(
+        warningsFlow = warningsFlow,
         modifier = modifier
-            .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
     ) {
-        Spacer(modifier = Modifier.weight(1f))
-        ProfileAvatar()
-        Spacer(modifier = Modifier.height(32.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+            ProfileAvatar()
+            Spacer(modifier = Modifier.height(32.dp))
 
-        NicknameInputBlock(
-            draftNickname,
-            validationResult,
-            onNicknameChange = onNicknameChange,
-            onSaveNickname = onSaveNickname
-        )
-        Spacer(modifier = Modifier.weight(1f))
-        Spacer(modifier = Modifier.height(16.dp))
-        DeleteAccountButton(onDeleteAccount)
+            NicknameInputBlock(
+                draftNickname,
+                validationResult,
+                onNicknameChange = onNicknameChange,
+                onSaveNickname = onSaveNickname
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(16.dp))
+            DeleteAccountButton(onDeleteAccount)
+        }
     }
-
-    WarningSnackbarHost(warningsFlow = warningsFlow)
 }
 
 @Composable
@@ -180,7 +183,6 @@ fun NicknameInputBlock(
                         validationResult.getErrorString.invoke(LocalContext.current),
                         color = Color.Red
                     )
-
                     else -> {}
                 }
             }

@@ -18,7 +18,6 @@ const val CONTENT_TYPE = "Content-Type: application/json"
 
 interface MadafakerApi {
 
-    //TODO: Fix types of the responses
     ///GET
     @Headers(CONTENT_TYPE)
     @GET("/api/user/current")

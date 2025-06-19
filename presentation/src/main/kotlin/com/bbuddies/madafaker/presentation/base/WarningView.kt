@@ -1,6 +1,8 @@
 package com.bbuddies.madafaker.presentation.base
 
 import android.content.Context
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -15,9 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.presentation.R
 import kotlinx.coroutines.flow.StateFlow
-
-
-//TODO: Move to a separate file & implement as global instance for the app
 
 @Composable
 fun WarningSnackbarHost(
@@ -41,5 +40,17 @@ fun WarningSnackbarHost(
             snackbarData = snackbarData,
             modifier = Modifier.padding(16.dp)
         )
+    }
+}
+
+@Composable
+fun ScreenWithWarnings(
+    warningsFlow: StateFlow<((context: Context) -> String?)?>,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Box(modifier = modifier.fillMaxSize()) {
+        content()
+        WarningSnackbarHost(warningsFlow = warningsFlow)
     }
 }

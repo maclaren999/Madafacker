@@ -1,5 +1,6 @@
 package com.bbuddies.madafaker.presentation.ui.main
 
+import android.content.Context
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.presentation.base.UiState
@@ -20,6 +21,9 @@ interface MainScreenContract {
     // Network state and offline handling
     val isOnline: StateFlow<Boolean>
     val hasPendingMessages: StateFlow<Boolean>
+
+    // Warnings (from BaseViewModel)
+    val warningsFlow: StateFlow<((context: Context) -> String?)?>
 
     // Actions
     fun onSendMessage(message: String)

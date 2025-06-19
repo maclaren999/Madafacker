@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.ui.main.components.OfflineIndicator
 import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTab
@@ -33,7 +34,6 @@ import com.bbuddies.madafaker.presentation.ui.main.tabs.MyPostsTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.WriteTab
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
 @Composable
 fun MainScreen(
     navController: NavHostController,
@@ -45,59 +45,65 @@ fun MainScreen(
     val isOnline by viewModel.isOnline.collectAsState()
     val hasPendingMessages by viewModel.hasPendingMessages.collectAsState()
 
-    Surface(modifier = modifier) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(MainScreenTheme.SunTop, MainScreenTheme.SunBottom)
-                    )
-                )
-        ) {
-            // Glowing sun at the top
-            Canvas(
+    ScreenWithWarnings(
+        warningsFlow = viewModel.warningsFlow,
+        modifier = modifier
+    ) {
+        Surface(modifier = Modifier.fillMaxSize()) {
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(100.dp)
-                    .align(Alignment.TopCenter)
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(MainScreenTheme.SunTop, MainScreenTheme.SunBottom)
+                        )
+                    )
             ) {
-                val radius = size.width * 0.6f
-                drawCircle(
-                    color = MainScreenTheme.SunBody,
-                    radius = radius,
-                    center = Offset(x = size.width / 2, y = size.height * 1.2f)
-                )
-            }
+                // Glowing sun at the top
+                Canvas(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .align(Alignment.TopCenter)
+                ) {
+                    val radius = size.width * 0.6f
+                    drawCircle(
+                        color = MainScreenTheme.SunBody,
+                        radius = radius,
+                        center = Offset(x = size.width / 2, y = size.height * 1.2f)
+                    )
+                }
 
-            Column(modifier = Modifier.fillMaxSize()) {
-                // Add offline indicator at the top
-                OfflineIndicator(
-                    isOnline = isOnline,
-                    hasPendingMessages = hasPendingMessages,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Add offline indicator at the top
+                    OfflineIndicator(
+                        isOnline = isOnline,
+                        hasPendingMessages = hasPendingMessages,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
 
-                MainScreenTabs(
-                    pagerState = pagerState,
-                    scope = scope
-                )
+                    MainScreenTabs(
+                        pagerState = pagerState,
+                        scope = scope
+                    )
 
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize()
-                ) { page ->
-                    when (MainTab.entries[page]) {
-                        MainTab.WRITE -> WriteTab(viewModel)
-                        MainTab.MY_POSTS -> MyPostsTab(viewModel)
-                        MainTab.INBOX -> InboxTab(viewModel)
-                        MainTab.ACCOUNT -> AccountTab()
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        when (MainTab.entries[page]) {
+                            MainTab.WRITE -> WriteTab(viewModel)
+                            MainTab.MY_POSTS -> MyPostsTab(viewModel)
+                            MainTab.INBOX -> InboxTab(viewModel)
+                            MainTab.ACCOUNT -> AccountTab()
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 // Preview implementation
 private class PreviewMainViewModel : MainScreenContract {
@@ -121,6 +127,9 @@ private class PreviewMainViewModel : MainScreenContract {
 
     private val _hasPendingMessages = MutableStateFlow(false)
     override val hasPendingMessages: StateFlow<Boolean> = _hasPendingMessages
+
+    private val _warningsFlow = MutableStateFlow<((android.content.Context) -> String?)?>(null)
+    override val warningsFlow: StateFlow<((android.content.Context) -> String?)?> = _warningsFlow
 
     override fun onSendMessage(message: String) {}
     override fun onDraftMessageChanged(message: String) {

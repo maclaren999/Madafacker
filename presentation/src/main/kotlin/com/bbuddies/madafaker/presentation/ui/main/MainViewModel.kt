@@ -67,7 +67,6 @@ class MainViewModel @Inject constructor(
                 val savedDraft = draftRepository.getDraftOnce()
                 if (savedDraft != null && savedDraft.body.isNotBlank()) {
                     _draftMessage.value = savedDraft.body
-                    showSuccess("Draft restored")
                 }
             } catch (e: Exception) {
                 // Silently fail - draft restoration is not critical
