@@ -1,4 +1,4 @@
-package remote
+package repository
 
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager

@@ -6,8 +6,8 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import remote.MessageRepositoryImpl
-import remote.UserRepositoryImpl
+import repository.MessageRepositoryImpl
+import repository.UserRepositoryImpl
 
 /*
 * This module is responsible for providing the repository implementations.

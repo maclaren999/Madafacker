@@ -1,4 +1,4 @@
-package remote
+package repository
 
 import androidx.work.BackoffPolicy
 import androidx.work.Constraints
