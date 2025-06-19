@@ -53,6 +53,7 @@ dependencies {
     api(libs.androidx.datastore.preferences)
     api(libs.hilt)
     kapt(libs.hilt.compiler)
+    implementation(libs.hilt.work)
     kapt(libs.room.compiler)
 
     implementation(libs.androidx.work.runtime.ktx)
