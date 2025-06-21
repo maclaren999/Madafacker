@@ -1,12 +1,34 @@
 package com.bbuddies.madafaker.common_domain.repository
 
+import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.User
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * UserRepository interface provides methods to interact with User data.
  * And encapsulates auth logic.
  */
 interface UserRepository {
+
+    /**
+     * Observable authentication state with user data
+     */
+    val authenticationState: StateFlow<AuthenticationState>
+
+    /**
+     * Convenience property for current user (nullable)
+     */
+    val currentUser: StateFlow<User?>
+
+    /**
+     * Observable login state
+     */
+    val isUserLoggedIn: StateFlow<Boolean>
+
+    /**
+     * Gets current authenticated user or throws if not authenticated
+     */
+    suspend fun getCurrentUserOrThrow(): User
 
     /**
      * Checks local storage for User entity.

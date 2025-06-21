@@ -3,6 +3,7 @@ package com.bbuddies.madafaker.presentation.ui.main
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.UnsentDraft
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
@@ -52,6 +53,38 @@ class MainViewModel @Inject constructor(
     override val hasPendingMessages: StateFlow<Boolean> = _hasPendingMessages
 
     override val currentMode = preferenceManager.currentMode
+
+    val authState = userRepository.authenticationState
+
+    val currentUser = userRepository.currentUser
+    val isLoggedIn = userRepository.isUserLoggedIn
+
+    fun handleAuthState() {
+        viewModelScope.launch {
+            authState.collect { state ->
+                when (state) {
+                    is AuthenticationState.NotAuthenticated -> {
+                        //TODO
+                        // Navigate to login
+                    }
+
+                    is AuthenticationState.Loading -> {
+                        // Show loading
+                    }
+
+                    is AuthenticationState.Authenticated -> {
+                        // Use state.user (guaranteed non-null!)
+                        val user = state.user
+                        // ... use user
+                    }
+
+                    is AuthenticationState.Error -> {
+                        // Handle error
+                    }
+                }
+            }
+        }
+    }
 
     init {
         loadMessages()

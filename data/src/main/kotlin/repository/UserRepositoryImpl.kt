@@ -1,17 +1,26 @@
 package repository
 
+import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.request.CreateUserRequest
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class UserRepositoryImpl @Inject constructor(
     private val webService: MadafakerApi,
     private val preferenceManager: PreferenceManager,
@@ -19,6 +28,64 @@ class UserRepositoryImpl @Inject constructor(
 ) : UserRepository {
 
     val firebaseMessaging by lazy { FirebaseMessaging.getInstance() }
+    private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+    override val authenticationState: StateFlow<AuthenticationState> =
+        preferenceManager.authToken
+            .map { authToken ->
+                when {
+                    authToken == null -> AuthenticationState.NotAuthenticated
+                    else -> {
+                        try {
+                            val user = localDao.getUserById(authToken)
+                            if (user != null) {
+                                AuthenticationState.Authenticated(user)
+                            } else {
+                                // Try to fetch from network
+                                val networkUser = webService.getCurrentUser()
+                                localDao.insertUser(networkUser)
+                                AuthenticationState.Authenticated(networkUser)
+                            }
+                        } catch (e: Exception) {
+                            AuthenticationState.Error(e)
+                        }
+                    }
+                }
+            }
+            .stateIn(
+                scope = repositoryScope,
+                started = SharingStarted.Lazily,
+                initialValue = AuthenticationState.Loading
+            )
+
+    override val currentUser: StateFlow<User?> = authenticationState
+        .map { state ->
+            when (state) {
+                is AuthenticationState.Authenticated -> state.user
+                else -> null
+            }
+        }
+        .stateIn(
+            scope = repositoryScope,
+            started = SharingStarted.Lazily,
+            initialValue = null
+        )
+
+    override val isUserLoggedIn: StateFlow<Boolean> = authenticationState
+        .map { it is AuthenticationState.Authenticated }
+        .stateIn(
+            scope = repositoryScope,
+            started = SharingStarted.Lazily,
+            initialValue = false
+        )
+
+    override suspend fun getCurrentUserOrThrow(): User =
+        when (val state = authenticationState.value) {
+            is AuthenticationState.Authenticated -> state.user
+            is AuthenticationState.NotAuthenticated -> throw IllegalStateException("User not authenticated")
+            is AuthenticationState.Loading -> throw IllegalStateException("Authentication state is loading")
+            is AuthenticationState.Error -> throw state.exception
+        }
 
     override suspend fun getCurrentUser(): User? = withContext(Dispatchers.IO) {
         preferenceManager.authToken.value?.let { token ->
