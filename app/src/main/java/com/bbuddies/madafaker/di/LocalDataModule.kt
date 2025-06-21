@@ -8,7 +8,6 @@ import androidx.room.Room
 import androidx.work.WorkManager
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.DraftRepository
-import com.bbuddies.madafaker.common_domain.repository.PendingMessageRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,7 +15,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import local.DraftRepositoryImpl
 import local.MadafakerDatabase
-import local.PendingMessageRepositoryImpl
 import local.PreferenceManagerImpl
 import javax.inject.Singleton
 

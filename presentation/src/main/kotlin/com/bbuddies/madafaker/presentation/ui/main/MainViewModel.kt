@@ -217,14 +217,6 @@ class MainViewModel @Inject constructor(
         checkPendingMessages()
     }
 
-    override fun retryPendingMessages() {
-        viewModelScope.launch {
-            messageRepository.retryPendingMessages()
-            checkPendingMessages()
-            showSuccess("Retrying pending messages...")
-        }
-    }
-
     override fun clearDraft() {
         viewModelScope.launch {
             try {
@@ -245,7 +237,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             _incomingMessages.value = UiState.Loading
             _incomingMessages.value = suspendUiStateOf {
-                messageRepository.getIncomingMassage()
+                messageRepository.observeIncomingMessages()
             }
         }
     }
@@ -254,7 +246,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             _outcomingMessages.value = UiState.Loading
             _outcomingMessages.value = suspendUiStateOf {
-                messageRepository.getOutcomingMassage()
+                messageRepository.observeOutgoingMessages()
             }
         }
     }

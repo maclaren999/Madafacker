@@ -1,6 +1,5 @@
 package repository
 
-import androidx.work.BackoffPolicy
 import androidx.work.Constraints
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
@@ -8,149 +7,144 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
 import com.bbuddies.madafaker.common_domain.model.Message
-import com.bbuddies.madafaker.common_domain.model.PendingMessage
-import com.bbuddies.madafaker.common_domain.model.Reply
+import com.bbuddies.madafaker.common_domain.model.MessageState
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
-import com.bbuddies.madafaker.common_domain.repository.PendingMessageRepository
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.request.CreateMessageRequest
 import timber.log.Timber
 import worker.SendMessageWorker
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class MessageRepositoryImpl @Inject constructor(
     private val webService: MadafakerApi,
-    private val preferenceManager: PreferenceManager,
     private val localDao: MadafakerDao,
     private val workManager: WorkManager,
-    private val pendingMessageRepository: PendingMessageRepository
+    private val preferenceManager: PreferenceManager,
+    private val userRepository: UserRepository
 ) : MessageRepository {
 
-    companion object {
-        private const val SEND_MESSAGE_WORK_PREFIX = "send_message_work"
+    // Single source of truth - local database
+    override fun observeIncomingMessages(): Flow<List<Message>> {
+        return userRepository.currentUser.value?.id?.let {
+            localDao.observeIncomingMessages(it)
+        } ?: emptyFlow()
     }
 
-    override suspend fun getIncomingMassage(): List<Message> =
-        withContext(Dispatchers.IO) {
-            webService.getIncomingMassage()
-        }
+    override fun observeOutgoingMessages(): Flow<List<Message>>? {
+        return userRepository.currentUser.value?.id?.let {
+            localDao.observeOutgoingMessages(it)
+        } ?: emptyFlow()
+    }
 
-    override suspend fun getOutcomingMassage(): List<Message> =
-        withContext(Dispatchers.IO) {
-            webService.getOutcomingMassage()
-        }
+    override suspend fun createMessage(body: String): Message {
+        val user = userRepository.currentUser.value ?: throw Exception("No user")
 
-    override suspend fun getReplyById(id: String): Reply =
-        withContext(Dispatchers.IO) {
-            webService.getReplyById(id)
-        }
+        val tempId = "temp_${UUID.randomUUID()}"
+        val currentMode = preferenceManager.currentMode.value
 
-    override suspend fun updateReply(id: String, isPublic: Boolean) =
-        withContext(Dispatchers.IO) {
-            webService.updateReply(id, isPublic)
-        }
+        // Create local message immediately
+        val localMessage = Message(
+            id = tempId,
+            body = body,
+            mode = currentMode.apiValue,
+            isPublic = true,
+            createdAt = System.currentTimeMillis().toString(),
+            authorId = user.id,
+            localState = MessageState.PENDING,
+            tempId = tempId,
+            needsSync = true
+        )
 
-    override suspend fun createMessage(body: String): Message =
-        withContext(Dispatchers.IO) {
-            val currentMode = preferenceManager.currentMode.value
+        localDao.insertMessage(localMessage)
 
-            try {
-                // First, try to send immediately
-                val newMessage = webService.createMessage(
-                    CreateMessageRequest(body, currentMode.apiValue)
+        // Try immediate send
+        try {
+            val serverMessage = webService.createMessage(
+                CreateMessageRequest(body, currentMode.apiValue)
+            )
+
+            // Replace temp message with server message
+            localDao.deleteMessage(tempId)
+            localDao.insertMessage(
+                serverMessage.copy(
+                    localState = MessageState.SENT,
+                    localCreatedAt = System.currentTimeMillis(),
+                    needsSync = false
                 )
-                localDao.insertMessage(newMessage)
+            )
 
-                Timber.d("Message sent successfully: ${newMessage.id}")
-                newMessage
+            return serverMessage
 
-            } catch (exception: Exception) {
-                Timber.w(exception, "Failed to send message immediately, saving as pending")
+        } catch (exception: Exception) {
+            // Schedule background send
+            schedulePendingMessageSend(localMessage)
+            return localMessage
+        }
+    }
 
-                // Create pending message
-                val pendingMessage = PendingMessage(
-                    id = UUID.randomUUID().toString(),
-                    body = body,
-                    mode = currentMode.apiValue,
-                    createdAt = System.currentTimeMillis(),
-                    retryCount = 0,
-                    lastRetryAt = null
-                )
+    override suspend fun refreshMessages() {
+        try {
+            // Fetch from server using existing API
+            val serverIncoming = webService.getIncomingMassage()
+            val serverOutgoing = webService.getOutcomingMassage()
 
-                // Save to pending messages
-                pendingMessageRepository.savePendingMessage(pendingMessage)
-
-                // Schedule WorkManager job with exponential backoff
-                schedulePendingMessageSend(pendingMessage)
-
-                // Return a temporary message for UI feedback
-                Message(
-                    id = "temp_${pendingMessage.id}",
-                    body = body,
-                    mode = currentMode.apiValue,
-                    isPublic = true,
-                    createdAt = System.currentTimeMillis().toString(),
-                    authorId = "temp_author"
+            // Simple merge: replace all non-pending local messages
+            val pendingMessages = localDao.getMessagesByState(MessageState.PENDING)
+            val allServerMessages = (serverIncoming + serverOutgoing).map { serverMsg ->
+                serverMsg.copy(
+                    localState = MessageState.SENT,
+                    localCreatedAt = System.currentTimeMillis(),
+                    needsSync = false
                 )
             }
-        }
 
-    override suspend fun createReply(body: String?, isPublic: Boolean, parentId: String?) =
-        withContext(Dispatchers.IO) {
-            webService.createReply(body, isPublic, parentId)
+            // Clear synced messages and insert fresh server data
+            localDao.deleteMessagesByState(MessageState.SENT)
+            localDao.insertMessages(allServerMessages)
+
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to refresh from server")
         }
+    }
 
     override suspend fun retryPendingMessages() {
-        withContext(Dispatchers.IO) {
-            val pendingMessages = pendingMessageRepository.getAllPendingMessages()
-            Timber.d("Found ${pendingMessages.size} pending messages to retry")
-
-            pendingMessages.forEach { pendingMessage ->
-                schedulePendingMessageSend(pendingMessage)
-            }
+        val pendingMessages = localDao.getMessagesByState(MessageState.PENDING)
+        pendingMessages.forEach { message ->
+            schedulePendingMessageSend(message)
         }
     }
 
     override suspend fun hasPendingMessages(): Boolean {
-        return pendingMessageRepository.hasPendingMessages()
+        return localDao.getMessagesByState(MessageState.PENDING).isNotEmpty()
     }
 
-    private fun schedulePendingMessageSend(pendingMessage: PendingMessage) {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-
+    private fun schedulePendingMessageSend(message: Message) {
         val workRequest = OneTimeWorkRequestBuilder<SendMessageWorker>()
-            .setConstraints(constraints)
-            .setBackoffCriteria(
-                BackoffPolicy.EXPONENTIAL,
-                15, // Initial delay: 15 seconds
-                TimeUnit.SECONDS
+            .setConstraints(
+                Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .build()
             )
             .setInputData(
                 workDataOf(
-                    SendMessageWorker.KEY_MESSAGE_BODY to pendingMessage.body,
-                    SendMessageWorker.KEY_MESSAGE_MODE to pendingMessage.mode,
-                    SendMessageWorker.KEY_PENDING_MESSAGE_ID to pendingMessage.id,
-                    SendMessageWorker.KEY_RETRY_COUNT to pendingMessage.retryCount
+                    SendMessageWorker.KEY_MESSAGE_BODY to message.body,
+                    SendMessageWorker.KEY_MESSAGE_MODE to message.mode,
+                    SendMessageWorker.KEY_TEMP_MESSAGE_ID to message.id
                 )
             )
+            .addTag("send_message")
             .build()
 
-        // Use unique work to avoid duplicates for the same pending message
-        val workName = "$SEND_MESSAGE_WORK_PREFIX-${pendingMessage.id}"
         workManager.enqueueUniqueWork(
-            workName,
+            "send_message_${message.id}",
             ExistingWorkPolicy.REPLACE,
             workRequest
         )
-
-        Timber.d("Scheduled pending message send work: ${workRequest.id} for message: ${pendingMessage.id}")
     }
 }

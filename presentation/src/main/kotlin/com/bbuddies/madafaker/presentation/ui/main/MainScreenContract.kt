@@ -30,6 +30,5 @@ interface MainScreenContract {
     fun onDraftMessageChanged(message: String)
     fun toggleMode()
     fun refreshMessages()
-    fun retryPendingMessages()
     fun clearDraft() // New: manually clear draft
 }

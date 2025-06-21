@@ -39,4 +39,9 @@ class Converters {
 abstract class MadafakerDatabase : RoomDatabase() {
     abstract fun getMadafakerDao(): MadafakerDao
 
+//    // Future: When server supports push
+//    suspend fun handlePushNotification(messageId: String) {
+//        // Just refresh messages - no API changes needed
+//        refreshMessages()
+//    }
 }

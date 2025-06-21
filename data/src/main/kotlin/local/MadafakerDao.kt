@@ -6,13 +6,15 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageState
 import com.bbuddies.madafaker.common_domain.model.PendingMessage
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
+import kotlinx.coroutines.flow.Flow
+
 
 @Dao
 interface MadafakerDao {
-
     // Message operations
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertMessage(message: Message)
@@ -28,6 +30,24 @@ interface MadafakerDao {
 
     @Query("DELETE FROM messages WHERE id = :messageId")
     suspend fun deleteMessage(messageId: String)
+
+    @Update
+    suspend fun updateMessage(message: Message)
+
+    @Query("SELECT * FROM messages WHERE authorId != :currentUserId ORDER BY localCreatedAt DESC")
+    fun observeIncomingMessages(currentUserId: String): Flow<List<Message>>
+
+    @Query("SELECT * FROM messages WHERE authorId = :currentUserId ORDER BY localCreatedAt DESC")
+    fun observeOutgoingMessages(currentUserId: String): Flow<List<Message>>
+
+    @Query("SELECT * FROM messages WHERE localState = :state")
+    suspend fun getMessagesByState(state: MessageState): List<Message>
+
+    @Query("DELETE FROM messages WHERE localState = :state")
+    suspend fun deleteMessagesByState(state: MessageState)
+
+    @Query("SELECT COUNT(*) FROM messages WHERE localState IN ('PENDING', 'FAILED')")
+    fun observePendingCount(): Flow<Int>
 
     // Reply operations
     @Insert(onConflict = OnConflictStrategy.REPLACE)

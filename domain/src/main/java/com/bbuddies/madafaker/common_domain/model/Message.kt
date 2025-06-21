@@ -11,7 +11,18 @@ data class Message(
     val isPublic: Boolean,
     val createdAt: String,
     val authorId: String,
-    val up: Int? = null,
-    val down: Int? = null,
-    val hearts: Int? = null
+
+    // CLIENT-ONLY fields (not sent to/from server)
+    val localState: MessageState = MessageState.SENT,
+    val localCreatedAt: Long = System.currentTimeMillis(),
+    val tempId: String? = null,
+    val needsSync: Boolean = false
 )
+
+// Separate client-only states
+enum class MessageState {
+    DRAFT,           // Local only
+    PENDING,         // Queued for sending
+    SENT,            // Confirmed sent
+    FAILED           // Failed to send
+}
