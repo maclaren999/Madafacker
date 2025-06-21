@@ -55,6 +55,9 @@ interface MadafakerDao {
     @Query("SELECT * FROM users WHERE id = :userId")
     suspend fun getUserById(userId: String): User?
 
+    @Query("DELETE FROM users WHERE id = :userId")
+    suspend fun deleteUserById(userId: String)
+
     @Update
     suspend fun updateUser(user: User)
 
