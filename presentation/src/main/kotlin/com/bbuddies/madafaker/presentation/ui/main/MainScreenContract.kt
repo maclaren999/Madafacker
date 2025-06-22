@@ -20,7 +20,6 @@ interface MainScreenContract {
 
     // Network state and offline handling
     val isOnline: StateFlow<Boolean>
-    val hasPendingMessages: StateFlow<Boolean>
 
     // Warnings (from BaseViewModel)
     val warningsFlow: StateFlow<((context: Context) -> String?)?>

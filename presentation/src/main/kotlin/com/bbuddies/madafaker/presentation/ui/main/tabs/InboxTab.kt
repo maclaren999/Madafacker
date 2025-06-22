@@ -207,9 +207,9 @@ private fun Message.toInboxMessage(): InboxMessage {
         id = id,
         author = "user_${authorId.take(8)}", // Simplified author display
         body = body,
-        up = if (AppConfig.USE_MOCK_API) (0..20).random() else up,
-        down = if (AppConfig.USE_MOCK_API) (0..5).random() else down,
-        hearts = if (AppConfig.USE_MOCK_API) (0..15).random() else hearts
+        up = if (AppConfig.USE_MOCK_API) (0..20).random() else null,
+        down = if (AppConfig.USE_MOCK_API) (0..5).random() else null,
+        hearts = if (AppConfig.USE_MOCK_API) (0..15).random() else null
     )
 }
 

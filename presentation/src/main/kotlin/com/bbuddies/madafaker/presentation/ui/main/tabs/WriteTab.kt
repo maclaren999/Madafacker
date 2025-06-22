@@ -14,7 +14,6 @@ import com.bbuddies.madafaker.presentation.ui.main.components.OfflineIndicator
 
 @Composable
 fun WriteTab(viewModel: MainScreenContract) {
-    val hasPendingMessages by viewModel.hasPendingMessages.collectAsState()
     val isOnline by viewModel.isOnline.collectAsState()
 
     Column(
@@ -24,7 +23,6 @@ fun WriteTab(viewModel: MainScreenContract) {
     ) {
         OfflineIndicator(
             isOnline = isOnline,
-            hasPendingMessages = hasPendingMessages,
             modifier = Modifier.padding(16.dp)
         )
 

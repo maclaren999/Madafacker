@@ -21,7 +21,6 @@ data class Message(
 
 // Separate client-only states
 enum class MessageState {
-    DRAFT,           // Local only
     PENDING,         // Queued for sending
     SENT,            // Confirmed sent
     FAILED           // Failed to send

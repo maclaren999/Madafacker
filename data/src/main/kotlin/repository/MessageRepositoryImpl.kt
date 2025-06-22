@@ -6,15 +6,19 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import local.MadafakerDao
 import remote.api.MadafakerApi
+import remote.api.dto.toDomainModel
 import remote.api.request.CreateMessageRequest
 import timber.log.Timber
 import worker.SendMessageWorker
@@ -30,18 +34,33 @@ class MessageRepositoryImpl @Inject constructor(
 ) : MessageRepository {
 
     // Single source of truth - local database
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeIncomingMessages(): Flow<List<Message>> {
-        return userRepository.currentUser.value?.id?.let {
-            localDao.observeIncomingMessages(it)
-        } ?: emptyFlow()
+        return userRepository.authenticationState
+            .flatMapLatest { authState ->
+                when (authState) {
+                    is AuthenticationState.Authenticated -> {
+                        localDao.observeIncomingMessages(authState.user.id)
+                    }
+
+                    else -> emptyFlow()
+                }
+            }
     }
 
-    override fun observeOutgoingMessages(): Flow<List<Message>>? {
-        return userRepository.currentUser.value?.id?.let {
-            localDao.observeOutgoingMessages(it)
-        } ?: emptyFlow()
-    }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    override fun observeOutgoingMessages(): Flow<List<Message>> {
+        return userRepository.authenticationState
+            .flatMapLatest { authState ->
+                when (authState) {
+                    is AuthenticationState.Authenticated -> {
+                        localDao.observeOutgoingMessages(authState.user.id)
+                    }
 
+                    else -> emptyFlow()
+                }
+            }
+    }
     override suspend fun createMessage(body: String): Message {
         val user = userRepository.currentUser.value ?: throw Exception("No user")
 
@@ -67,7 +86,7 @@ class MessageRepositoryImpl @Inject constructor(
         try {
             val serverMessage = webService.createMessage(
                 CreateMessageRequest(body, currentMode.apiValue)
-            )
+            ).toDomainModel()
 
             // Replace temp message with server message
             localDao.deleteMessage(tempId)
@@ -91,8 +110,8 @@ class MessageRepositoryImpl @Inject constructor(
     override suspend fun refreshMessages() {
         try {
             // Fetch from server using existing API
-            val serverIncoming = webService.getIncomingMassage()
-            val serverOutgoing = webService.getOutcomingMassage()
+            val serverIncoming = webService.getIncomingMessages().map { it.toDomainModel() }
+            val serverOutgoing = webService.getOutcomingMessages().map { it.toDomainModel() }
 
             // Simple merge: replace all non-pending local messages
             val pendingMessages = localDao.getMessagesByState(MessageState.PENDING)
@@ -113,12 +132,12 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun retryPendingMessages() {
-        val pendingMessages = localDao.getMessagesByState(MessageState.PENDING)
-        pendingMessages.forEach { message ->
-            schedulePendingMessageSend(message)
-        }
-    }
+//    override suspend fun retryPendingMessages() {
+//        val pendingMessages = localDao.getMessagesByState(MessageState.PENDING)
+//        pendingMessages.forEach { message ->
+//            schedulePendingMessageSend(message)
+//        }
+//    }
 
     override suspend fun hasPendingMessages(): Boolean {
         return localDao.getMessagesByState(MessageState.PENDING).isNotEmpty()
@@ -138,7 +157,7 @@ class MessageRepositoryImpl @Inject constructor(
                     SendMessageWorker.KEY_TEMP_MESSAGE_ID to message.id
                 )
             )
-            .addTag("send_message")
+            .addTag("send_message_with_id_${message.id}")
             .build()
 
         workManager.enqueueUniqueWork(

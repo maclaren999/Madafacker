@@ -5,7 +5,6 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.bbuddies.madafaker.common_domain.model.Message
-import com.bbuddies.madafaker.common_domain.model.PendingMessage
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
 import kotlinx.serialization.encodeToString
@@ -29,10 +28,9 @@ class Converters {
     entities = [
         Message::class,
         Reply::class,
-        User::class,
-        PendingMessage::class
+        User::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

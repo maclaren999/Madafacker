@@ -13,5 +13,4 @@ data class Reply(
     val updatedAt: String,
     val authorId: String,
     val parentId: String?,
-    val replies: List<Reply> = emptyList()
 )

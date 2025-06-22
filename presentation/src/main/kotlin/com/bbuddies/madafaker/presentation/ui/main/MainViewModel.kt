@@ -17,6 +17,7 @@ import com.bbuddies.madafaker.presentation.base.suspendUiStateOf
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -48,9 +49,6 @@ class MainViewModel @Inject constructor(
 
     private val _isOnline = MutableStateFlow(true)
     override val isOnline: StateFlow<Boolean> = _isOnline
-
-    private val _hasPendingMessages = MutableStateFlow(false)
-    override val hasPendingMessages: StateFlow<Boolean> = _hasPendingMessages
 
     override val currentMode = preferenceManager.currentMode
 
@@ -87,9 +85,8 @@ class MainViewModel @Inject constructor(
     }
 
     init {
-        loadMessages()
-        observeNetworkConnectivity()
-        checkPendingMessages()
+        refreshMessages()
+        observeMessages()
         restoreDraft()
         setupDraftAutoSave()
     }
@@ -135,27 +132,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-
-    private fun observeNetworkConnectivity() {
-        networkMonitor.isConnected
-            .onEach { isConnected ->
-                _isOnline.value = isConnected
-                if (isConnected) {
-                    // Network is back, try to send any pending messages
-                    messageRepository.retryPendingMessages()
-                    checkPendingMessages()
-                }
-            }
-            .launchIn(viewModelScope)
-    }
-
-    private fun checkPendingMessages() {
-        viewModelScope.launch {
-            val hasPending = messageRepository.hasPendingMessages()
-            _hasPendingMessages.value = hasPending
-        }
-    }
-
     override fun onSendMessage(message: String) {
         if (message.isBlank() || _isSending.value) return
 
@@ -170,8 +146,6 @@ class MainViewModel @Inject constructor(
                 is UiState.Success -> {
                     _draftMessage.value = ""
                     clearDraft() // Clear draft after successful sending
-                    loadOutcomingMessages()
-                    checkPendingMessages()
 
                     if (_isOnline.value) {
                         showSuccess("Message sent successfully!")
@@ -212,11 +186,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    override fun refreshMessages() {
-        loadMessages()
-        checkPendingMessages()
-    }
-
     override fun clearDraft() {
         viewModelScope.launch {
             try {
@@ -228,25 +197,34 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun loadMessages() {
-        loadIncomingMessages()
-        loadOutcomingMessages()
-    }
-
-    private fun loadIncomingMessages() {
-        viewModelScope.launch {
-            _incomingMessages.value = UiState.Loading
-            _incomingMessages.value = suspendUiStateOf {
-                messageRepository.observeIncomingMessages()
+    private fun observeMessages() {
+        // Observe incoming messages
+        messageRepository.observeIncomingMessages()
+            .onEach { messages ->
+                _incomingMessages.value = UiState.Success(messages)
             }
-        }
+            .catch { exception ->
+                _incomingMessages.value = UiState.Error(exception = exception)
+            }
+            .launchIn(viewModelScope)
+
+        // Observe outgoing messages
+        messageRepository.observeOutgoingMessages()
+            .onEach { messages ->
+                _outcomingMessages.value = UiState.Success(messages)
+            }
+            .catch { exception ->
+                _outcomingMessages.value = UiState.Error(exception = exception)
+            }
+            .launchIn(viewModelScope)
     }
 
-    private fun loadOutcomingMessages() {
+    override fun refreshMessages() {
         viewModelScope.launch {
-            _outcomingMessages.value = UiState.Loading
-            _outcomingMessages.value = suspendUiStateOf {
-                messageRepository.observeOutgoingMessages()
+            try {
+                messageRepository.refreshMessages()
+            } catch (e: Exception) {
+                showError("Failed to refresh messages: ${e.message}")
             }
         }
     }

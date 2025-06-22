@@ -5,8 +5,8 @@ import kotlinx.coroutines.flow.Flow
 
 interface MessageRepository {
 
-    fun observeIncomingMessages(): Flow<List<Message>>?
-    fun observeOutgoingMessages(): Flow<List<Message>>?
+    fun observeIncomingMessages(): Flow<List<Message>>
+    fun observeOutgoingMessages(): Flow<List<Message>>
     suspend fun refreshMessages()
 
     //TODO: Reply logic
@@ -16,6 +16,6 @@ interface MessageRepository {
     suspend fun createMessage(body: String): Message
 
     // Updated methods for pending messages
-    suspend fun retryPendingMessages()
+//    suspend fun retryPendingMessages()
     suspend fun hasPendingMessages(): Boolean
 }

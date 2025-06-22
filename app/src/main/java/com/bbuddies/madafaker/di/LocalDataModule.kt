@@ -33,12 +33,6 @@ class LocalDataModule {
 
     @Provides
     @Singleton
-    fun bindPendingMessageRepository(
-        pendingMessageRepositoryImpl: PendingMessageRepositoryImpl
-    ): PendingMessageRepository = pendingMessageRepositoryImpl
-
-    @Provides
-    @Singleton
     fun providePreferenceDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
         context.dataStore
 

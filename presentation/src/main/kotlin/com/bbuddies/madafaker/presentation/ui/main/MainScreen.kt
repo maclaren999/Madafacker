@@ -43,7 +43,6 @@ fun MainScreen(
     val pagerState = rememberPagerState(pageCount = { MainTab.entries.size })
     val scope = rememberCoroutineScope()
     val isOnline by viewModel.isOnline.collectAsState()
-    val hasPendingMessages by viewModel.hasPendingMessages.collectAsState()
 
     ScreenWithWarnings(
         warningsFlow = viewModel.warningsFlow,
@@ -78,7 +77,6 @@ fun MainScreen(
                     // Add offline indicator at the top
                     OfflineIndicator(
                         isOnline = isOnline,
-                        hasPendingMessages = hasPendingMessages,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
 
@@ -125,9 +123,6 @@ private class PreviewMainViewModel : MainScreenContract {
     private val _isOnline = MutableStateFlow(true)
     override val isOnline: StateFlow<Boolean> = _isOnline
 
-    private val _hasPendingMessages = MutableStateFlow(false)
-    override val hasPendingMessages: StateFlow<Boolean> = _hasPendingMessages
-
     private val _warningsFlow = MutableStateFlow<((android.content.Context) -> String?)?>(null)
     override val warningsFlow: StateFlow<((android.content.Context) -> String?)?> = _warningsFlow
 
@@ -137,7 +132,6 @@ private class PreviewMainViewModel : MainScreenContract {
     }
     override fun toggleMode() {}
     override fun refreshMessages() {}
-    override fun retryPendingMessages() {}
     override fun clearDraft() {}
 }
 

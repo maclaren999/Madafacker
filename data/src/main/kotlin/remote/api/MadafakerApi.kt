@@ -1,8 +1,8 @@
 package remote.api
 
-import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
+import remote.api.dto.MessageDto
 import remote.api.request.CreateMessageRequest
 import remote.api.request.CreateUserRequest
 import remote.api.response.NameAvailabilityResponse
@@ -25,11 +25,11 @@ interface MadafakerApi {
 
     @Headers(CONTENT_TYPE)
     @GET("/api/message/current/incoming")
-    suspend fun getIncomingMassage(): List<Message>
+    suspend fun getIncomingMessages(): List<MessageDto>
 
     @Headers(CONTENT_TYPE)
     @GET("/api/message/current/outcoming")
-    suspend fun getOutcomingMassage(): List<Message>
+    suspend fun getOutcomingMessages(): List<MessageDto>
 
     @Headers(CONTENT_TYPE)
     @GET("/api/reply/:{id}")
@@ -52,7 +52,7 @@ interface MadafakerApi {
 
     @Headers(CONTENT_TYPE)
     @POST("/api/message")
-    suspend fun createMessage(@Body request: CreateMessageRequest): Message
+    suspend fun createMessage(@Body request: CreateMessageRequest): MessageDto
 
     @Headers(CONTENT_TYPE)
     @POST("/api/reply")

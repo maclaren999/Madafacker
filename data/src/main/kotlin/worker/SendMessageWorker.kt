@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import local.MadafakerDao
 import remote.api.MadafakerApi
+import remote.api.dto.toDomainModel
 import remote.api.request.CreateMessageRequest
 import java.io.IOException
 import java.net.SocketTimeoutException
@@ -44,7 +45,7 @@ class SendMessageWorker @AssistedInject constructor(
             // Replace temp message with server message
             localDao.deleteMessage(tempMessageId)
             localDao.insertMessage(
-                serverMessage.copy(
+                serverMessage.toDomainModel().copy(
                     localState = MessageState.SENT,
                     localCreatedAt = System.currentTimeMillis(),
                     needsSync = false
