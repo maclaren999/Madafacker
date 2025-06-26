@@ -36,6 +36,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageState
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
@@ -48,12 +50,12 @@ fun MyPostsTab(viewModel: MainScreenContract) {
     outcomingMessages.HandleState(
         onRetry = viewModel::refreshMessages
     ) { messages ->
-        MyPostsList(messages.toInboxMessages())
+        MyPostsList(messages)
     }
 }
 
 @Composable
-private fun MyPostsList(messages: List<InboxMessage>) {
+private fun MyPostsList(messages: List<Message>) {
     if (messages.isEmpty()) {
         EmptyStateView(
             emoji = "💬",
@@ -68,8 +70,8 @@ private fun MyPostsList(messages: List<InboxMessage>) {
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        items(messages) { msg ->
-            MyPostCard(msg)
+        items(messages) { message ->
+            MyPostCard(message)
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
@@ -109,7 +111,7 @@ private fun EmptyStateView(
 }
 
 @Composable
-private fun MyPostCard(message: InboxMessage) {
+private fun MyPostCard(message: Message) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -145,11 +147,7 @@ private fun MyPostCard(message: InboxMessage) {
                     style = MaterialTheme.typography.labelMedium,
                 )
 
-                Text(
-                    text = stringResource(R.string.message_delivered),
-                    color = Color(0xFF4CAF50),
-                    style = MaterialTheme.typography.labelSmall
-                )
+                MessageStateIndicator(messageState = message.localState)
             }
 
             Text(
@@ -161,30 +159,45 @@ private fun MyPostCard(message: InboxMessage) {
                 overflow = TextOverflow.Ellipsis
             )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                message.up?.let {
-                    Reaction(Icons.Outlined.ThumbUp, it, MainScreenTheme.TextSecondary)
-                }
-                message.down?.let {
-                    Reaction(Icons.Outlined.KeyboardArrowDown, it, MainScreenTheme.TextSecondary)
-                }
-                message.hearts?.let {
-                    Reaction(Icons.Outlined.FavoriteBorder, it, MainScreenTheme.HeartRed)
-                }
+            // Only show reactions and replies for SENT messages
+            if (message.localState == MessageState.SENT) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    // Mock reactions - these would come from the server in a real app
+                    Reaction(Icons.Outlined.ThumbUp, 0, MainScreenTheme.TextSecondary)
+                    Reaction(Icons.Outlined.KeyboardArrowDown, 0, MainScreenTheme.TextSecondary)
+                    Reaction(Icons.Outlined.FavoriteBorder, 0, MainScreenTheme.HeartRed)
 
-                Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.weight(1f))
 
-                Text(
-                    text = stringResource(R.string.replies_count, 3),
-                    color = MainScreenTheme.TextSecondary,
-                    style = MaterialTheme.typography.labelSmall
-                )
+                    Text(
+                        text = stringResource(R.string.replies_count, 0),
+                        color = MainScreenTheme.TextSecondary,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+fun MessageStateIndicator(messageState: MessageState) {
+    val (text, color) = when (messageState) {
+        MessageState.PENDING -> stringResource(R.string.message_sending) to MainScreenTheme.SunBody
+        MessageState.SENT -> stringResource(R.string.message_delivered) to Color(0xFF4CAF50)
+        MessageState.FAILED -> stringResource(R.string.message_failed) to Color(0xFFE53935)
+    }
+
+    Text(
+        text = text,
+        color = color,
+        style = MaterialTheme.typography.labelSmall.copy(
+            fontWeight = FontWeight.Medium
+        )
+    )
 }
 
 @Composable

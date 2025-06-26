@@ -10,6 +10,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNot
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.tasks.await
@@ -62,14 +65,30 @@ class UserRepositoryImpl @Inject constructor(
         .map { state ->
             when (state) {
                 is AuthenticationState.Authenticated -> state.user
-                else -> null
+                is AuthenticationState.NotAuthenticated -> null
+                is AuthenticationState.Error -> null
+                is AuthenticationState.Loading -> return@map null // Don't emit during loading
             }
         }
+        .distinctUntilChanged() // Only emit when user actually changes
         .stateIn(
             scope = repositoryScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.Eagerly, // Start immediately to avoid initial null
             initialValue = null
         )
+
+    // Add a suspend function that waits for authentication to complete
+    override suspend fun awaitCurrentUser(): User? {
+        return authenticationState
+            .filterNot { it is AuthenticationState.Loading } // Skip loading states
+            .map { state ->
+                when (state) {
+                    is AuthenticationState.Authenticated -> state.user
+                    else -> null
+                }
+            }
+            .first() // Get the first non-loading result
+    }
 
     override val isUserLoggedIn: StateFlow<Boolean> = authenticationState
         .map { it is AuthenticationState.Authenticated }

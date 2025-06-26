@@ -18,9 +18,6 @@ interface MainScreenContract {
     // Mode
     val currentMode: StateFlow<Mode>
 
-    // Network state and offline handling
-    val isOnline: StateFlow<Boolean>
-
     // Warnings (from BaseViewModel)
     val warningsFlow: StateFlow<((context: Context) -> String?)?>
 

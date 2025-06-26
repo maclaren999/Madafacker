@@ -47,9 +47,6 @@ class MainViewModel @Inject constructor(
     private val _isSending = MutableStateFlow(false)
     override val isSending: StateFlow<Boolean> = _isSending
 
-    private val _isOnline = MutableStateFlow(true)
-    override val isOnline: StateFlow<Boolean> = _isOnline
-
     override val currentMode = preferenceManager.currentMode
 
     val authState = userRepository.authenticationState
@@ -146,12 +143,6 @@ class MainViewModel @Inject constructor(
                 is UiState.Success -> {
                     _draftMessage.value = ""
                     clearDraft() // Clear draft after successful sending
-
-                    if (_isOnline.value) {
-                        showSuccess("Message sent successfully!")
-                    } else {
-                        showSuccess("Message queued - will send when online")
-                    }
                 }
 
                 is UiState.Error -> {

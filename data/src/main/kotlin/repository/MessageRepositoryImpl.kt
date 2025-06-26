@@ -61,8 +61,11 @@ class MessageRepositoryImpl @Inject constructor(
                 }
             }
     }
+
     override suspend fun createMessage(body: String): Message {
-        val user = userRepository.currentUser.value ?: throw Exception("No user")
+        // Use the new await function to get user safely
+        val user = userRepository.awaitCurrentUser()
+            ?: throw IllegalStateException("No authenticated user available")
 
         val tempId = "temp_${UUID.randomUUID()}"
         val currentMode = preferenceManager.currentMode.value

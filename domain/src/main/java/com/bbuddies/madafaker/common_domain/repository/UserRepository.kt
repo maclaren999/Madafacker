@@ -26,6 +26,11 @@ interface UserRepository {
     val isUserLoggedIn: StateFlow<Boolean>
 
     /**
+     * Emits null if user is not logged in.
+     */
+    suspend fun awaitCurrentUser(): User?
+
+    /**
      * Gets current authenticated user or throws if not authenticated
      */
     suspend fun getCurrentUserOrThrow(): User

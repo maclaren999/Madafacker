@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
+@Deprecated("Not used")
 fun OfflineIndicator(
     isOnline: Boolean,
     modifier: Modifier = Modifier

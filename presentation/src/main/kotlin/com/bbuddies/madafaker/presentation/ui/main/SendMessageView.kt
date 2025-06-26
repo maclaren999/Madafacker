@@ -37,8 +37,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageState
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.UiState
+import com.bbuddies.madafaker.presentation.ui.main.tabs.MessageStateIndicator
 
 /* ----------  SEND MESSAGE VIEW  ---------- */
 @Composable
@@ -400,7 +402,7 @@ private fun RecentMessagesList(messages: List<Message>) {
     messages.forEachIndexed { index, message ->
         RecentMessageItem(
             message = message.body,
-            status = stringResource(R.string.message_delivered)
+            messageState = message.localState
         )
         if (index < messages.size - 1) {
             Spacer(modifier = Modifier.height(8.dp))
@@ -451,7 +453,7 @@ private fun RecentMessageSkeleton() {
 @Composable
 private fun RecentMessageItem(
     message: String,
-    status: String
+    messageState: MessageState
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -469,17 +471,8 @@ private fun RecentMessageItem(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Text(
-            text = status,
-            color = when (status) {
-                stringResource(R.string.message_delivered) -> Color(0xFF4CAF50)
-                stringResource(R.string.message_sending) -> MainScreenTheme.SunBody
-                stringResource(R.string.message_failed) -> Color(0xFFE53935)
-                else -> MainScreenTheme.TextSecondary
-            },
-            style = MaterialTheme.typography.labelSmall.copy(
-                fontWeight = FontWeight.Medium
-            )
-        )
+        MessageStateIndicator(messageState = messageState)
     }
 }
+
+
