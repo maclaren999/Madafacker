@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
@@ -79,4 +80,22 @@ interface MadafakerDao {
 
     @Update
     suspend fun updateUser(user: User)
+
+    //Clear operations
+    @Query("DELETE FROM messages")
+    suspend fun clearMessages()
+
+    @Query("DELETE FROM replies")
+    suspend fun clearReplies()
+
+    @Query("DELETE FROM users")
+    suspend fun clearUsers()
+
+    @Transaction
+    suspend fun clearAllData() {
+        clearMessages()
+        clearReplies()
+        clearUsers()
+    }
+
 }

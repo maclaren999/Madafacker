@@ -19,12 +19,15 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTab
+import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTabViewModel
 import com.bbuddies.madafaker.presentation.ui.main.tabs.InboxTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.MyPostsTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.WriteTab
@@ -85,7 +88,14 @@ fun MainScreen(
                             MainTab.WRITE -> WriteTab(viewModel)
                             MainTab.MY_POSTS -> MyPostsTab(viewModel)
                             MainTab.INBOX -> InboxTab(viewModel)
-                            MainTab.ACCOUNT -> AccountTab()
+                            MainTab.ACCOUNT -> AccountTab(
+                                viewModel = hiltViewModel<AccountTabViewModel>(),
+                                onNavigateToSetNickname = {
+                                    navController.navigate(NavigationItem.Account.route) {
+                                        popUpTo(NavigationItem.Main.route) { inclusive = true }
+                                    }
+                                }
+                            )
                         }
                     }
                 }

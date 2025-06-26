@@ -139,4 +139,11 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun isNameAvailable(name: String): Boolean = withContext(Dispatchers.IO) {
         webService.checkNameAvailability(name).nameIsAvailable
     }
+
+    override suspend fun clearAllUserData() = withContext(Dispatchers.IO) {
+        // Clear all local data
+        localDao.clearAllData()
+        // Clear preferences
+        preferenceManager.clearUserData()
+    }
 }

@@ -56,4 +56,5 @@ interface UserRepository {
      * */
     suspend fun isNameAvailable(name: String): Boolean
 
+    suspend fun clearAllUserData()
 }
