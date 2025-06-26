@@ -20,6 +20,7 @@ import kotlinx.coroutines.withContext
 import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.request.CreateUserRequest
+import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -128,12 +129,33 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createUser(name: String): User = withContext(Dispatchers.IO) {
-        val fcmToken = firebaseMessaging.token.await()
-        val user = webService.createUser(CreateUserRequest(name, fcmToken))
-        preferenceManager.updateAuthToken(user.id) // fcmToken = User.id = authToken
-        // Cache user locally
-        localDao.insertUser(user) // Direct use of domain model
-        user
+        // First attempt with current FCM token
+        val initialFcmToken = firebaseMessaging.token.await()
+
+        try {
+            val user = webService.createUser(CreateUserRequest(name, initialFcmToken))
+            preferenceManager.updateAuthToken(user.id)
+            localDao.insertUser(user)
+            return@withContext user
+        } catch (e: Exception) {
+            // Check if it's a duplicate registration token error
+            if (isDuplicateRegistrationTokenError(e)) {
+                // Refresh FCM token and retry
+                val freshFcmToken = refreshFcmToken()
+                try {
+                    val user = webService.createUser(CreateUserRequest(name, freshFcmToken))
+                    preferenceManager.updateAuthToken(user.id)
+                    localDao.insertUser(user)
+                    return@withContext user
+                } catch (retryException: Exception) {
+                    // If retry also fails, throw the retry exception
+                    throw retryException
+                }
+            } else {
+                // If it's not a duplicate token error, rethrow original exception
+                throw e
+            }
+        }
     }
 
     override suspend fun isNameAvailable(name: String): Boolean = withContext(Dispatchers.IO) {
@@ -141,9 +163,59 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     override suspend fun clearAllUserData() = withContext(Dispatchers.IO) {
+        try {
+            // Delete current FCM token to ensure fresh token for new account
+            firebaseMessaging.deleteToken().await()
+        } catch (e: Exception) {
+            // Log but don't fail the logout process if token deletion fails
+            // The user should still be able to logout even if FCM cleanup fails
+        }
+
         // Clear all local data
         localDao.clearAllData()
         // Clear preferences
         preferenceManager.clearUserData()
+    }
+
+    private suspend fun refreshFcmToken(): String = withContext(Dispatchers.IO) {
+        try {
+            // Delete current token
+            firebaseMessaging.deleteToken().await()
+            // Get new token
+            firebaseMessaging.token.await()
+        } catch (e: Exception) {
+            // Fallback to just getting current token if deletion fails
+            firebaseMessaging.token.await()
+        }
+    }
+
+}
+
+private fun isDuplicateRegistrationTokenError(exception: Exception): Boolean {
+    return when (exception) {
+        is HttpException -> {
+            if (exception.code() != 400) return false
+
+            try {
+                val errorBody = exception.response()?.errorBody()?.string()
+                if (errorBody != null) {
+                    // Parse JSON response to check for duplicate registration token error
+                    val isRegistrationTokenError = errorBody.contains("registrationToken") &&
+                            errorBody.contains("already exists")
+                    val isDuplicatedValueError = errorBody.contains("Duplicated value is not allowed")
+
+                    return isRegistrationTokenError || isDuplicatedValueError
+                }
+                false
+            } catch (e: Exception) {
+                false
+            }
+        }
+
+        else -> {
+            val message = exception.message?.lowercase() ?: ""
+            message.contains("registrationtoken") &&
+                    (message.contains("already exists") || message.contains("duplicate"))
+        }
     }
 }
