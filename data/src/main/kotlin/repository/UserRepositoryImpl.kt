@@ -21,6 +21,7 @@ import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.request.CreateUserRequest
 import retrofit2.HttpException
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -136,6 +137,7 @@ class UserRepositoryImpl @Inject constructor(
             val user = webService.createUser(CreateUserRequest(name, initialFcmToken))
             preferenceManager.updateAuthToken(user.id)
             localDao.insertUser(user)
+            Timber.tag("USER_REPO").d("User created with FCM token: $initialFcmToken")
             return@withContext user
         } catch (e: Exception) {
             // Check if it's a duplicate registration token error
