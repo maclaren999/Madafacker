@@ -9,10 +9,10 @@ import kotlinx.coroutines.flow.StateFlow
  * User data is managed by UserRepository/Room DB.
  */
 interface PreferenceManager {
-    val authToken: StateFlow<String?>
+    val googleIdAuthToken: StateFlow<String?>
     val currentMode: StateFlow<Mode>
 
-    suspend fun updateAuthToken(authToken: String)
+    suspend fun updateAuthToken(googleIdToken: String)
     suspend fun updateCurrentMode(mode: Mode)
     suspend fun updateMode(mode: Mode)
     suspend fun clearUserData()

@@ -47,7 +47,7 @@ interface UserRepository {
      * Creates a user on the server, handles FCM token retrieval internally,
      * and saves the user model and auth token locally.
      */
-    suspend fun createUser(name: String): User
+//    suspend fun createUser(name: String): User
 
     suspend fun updateUserName(name: String): User
 
@@ -57,4 +57,8 @@ interface UserRepository {
     suspend fun isNameAvailable(name: String): Boolean
 
     suspend fun clearAllUserData()
+
+    suspend fun storeGoogleAuth(idToken: String, googleUserId: String)
+    suspend fun createUserWithGoogle(nickname: String, idToken: String, googleUserId: String): User
+    suspend fun authenticateWithGoogle(idToken: String, googleUserId: String): User
 }

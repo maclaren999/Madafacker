@@ -48,15 +48,15 @@ class PreferenceManagerImpl @Inject constructor(
         dataStore.set(PreferenceKey.CurrentMode, mode.name)
     }
 
-    override val authToken: StateFlow<String?> = dataStore.get<String>(PreferenceKey.AuthToken)
+    override val googleIdAuthToken: StateFlow<String?> = dataStore.get<String>(PreferenceKey.AuthToken)
         .stateIn(
             scope = CoroutineScope(Dispatchers.IO),
             started = SharingStarted.Eagerly,
             initialValue = null
         )
 
-    override suspend fun updateAuthToken(authToken: String) {
-        dataStore.set(PreferenceKey.AuthToken, authToken)
+    override suspend fun updateAuthToken(googleIdToken: String) {
+        dataStore.set(PreferenceKey.AuthToken, googleIdToken)
     }
 
     override suspend fun clearUserData() {

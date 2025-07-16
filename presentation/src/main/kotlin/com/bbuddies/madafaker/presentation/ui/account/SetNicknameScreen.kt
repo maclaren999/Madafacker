@@ -31,8 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.base.MfResult
@@ -48,8 +50,9 @@ fun SetNicknameScreenPreview() {
         validationResult = MfResult.Success(Unit),
         onNicknameChange = {},
         onDeleteAccount = {},
-        onSaveNickname = {},
-        warningsFlow = MutableStateFlow(null)
+        onGoogleSignIn = {},
+        warningsFlow = MutableStateFlow(null),
+        isSigningIn = false
     )
 }
 
@@ -61,6 +64,7 @@ fun SetNicknameScreen(
 ) {
     val draftNickname by viewModel.draftNickname.collectAsState()
     val validationResult by viewModel.nicknameDraftValidationResult.collectAsState()
+    val isSigningIn by viewModel.isSigningIn.collectAsState()
 
     SetNicknameScreen(
         draftNickname = draftNickname,
@@ -69,9 +73,9 @@ fun SetNicknameScreen(
             viewModel.onDraftNickChanged(newDraft)
         },
         onDeleteAccount = { viewModel.handleDeleteAccount() },
-        onSaveNickname = {
-            viewModel.onSaveNickname(
-                onSuccessfulSave = { notificationPermissionHelper ->
+        onGoogleSignIn = {
+            viewModel.onGoogleSignIn(
+                onSuccessfulSignIn = { notificationPermissionHelper ->
                     // Check if notification permission is already granted
                     val nextDestination = if (notificationPermissionHelper.isNotificationPermissionGranted()) {
                         NavigationItem.Main
@@ -86,6 +90,7 @@ fun SetNicknameScreen(
             )
         },
         warningsFlow = viewModel.warningsFlow,
+        isSigningIn = isSigningIn,
         modifier = modifier
     )
 }
@@ -96,8 +101,9 @@ fun SetNicknameScreen(
     validationResult: MfResult<Unit>?,
     onNicknameChange: (String) -> Unit,
     onDeleteAccount: () -> Unit,
-    onSaveNickname: () -> Unit,
+    onGoogleSignIn: () -> Unit,
     warningsFlow: StateFlow<((context: Context) -> String?)?>,
+    isSigningIn: Boolean,
     modifier: Modifier = Modifier
 ) {
     ScreenWithWarnings(
@@ -115,12 +121,35 @@ fun SetNicknameScreen(
             ProfileAvatar()
             Spacer(modifier = Modifier.height(32.dp))
 
-            NicknameInputBlock(
-                draftNickname,
-                validationResult,
-                onNicknameChange = onNicknameChange,
-                onSaveNickname = onSaveNickname
+            // New to the app section
+            Text(
+                text = "New to the app?",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
+
+            NicknameInputBlock(
+                draftNickname = draftNickname,
+                validationResult = validationResult,
+                onNicknameChange = onNicknameChange
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Already have account section
+            Text(
+                text = "Already have account?",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            GoogleSignInButton(
+                onClick = onGoogleSignIn,
+                isLoading = isSigningIn,
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.height(16.dp))
             DeleteAccountButton(onDeleteAccount)
@@ -146,55 +175,72 @@ fun NicknameInputBlock(
     draftNickname: String,
     validationResult: MfResult<Unit>?,
     onNicknameChange: (String) -> Unit,
-    onSaveNickname: () -> Unit,
 ) {
-    Column {
-        TextField(
-            value = draftNickname,
-            onValueChange = {
-                onNicknameChange(it)
-            },
-            label = { Text(draftNickname) },
-            trailingIcon = {
-                Text(
-                    text = "${draftNickname.length}/100",
-                    modifier = Modifier.padding(end = 8.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            },
-            textStyle = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier
-                .padding(vertical = 16.dp)
-                .fillMaxWidth()
-                .height(64.dp)
-                .background(
-                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(8.dp)
-                ),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
+    TextField(
+        value = draftNickname,
+        onValueChange = {
+            onNicknameChange(it)
+        },
+        label = { Text("Enter the desired nickname") },
+        placeholder = { Text("Your nickname") },
+        trailingIcon = {
+            Text(
+                text = "${draftNickname.length}/100",
+                modifier = Modifier.padding(end = 8.dp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        },
+        textStyle = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
+                shape = RoundedCornerShape(8.dp)
             ),
-            shape = RoundedCornerShape(8.dp),
-            supportingText = {
-                when (validationResult) {
-                    is MfResult.Loading -> Text("Validating nickname...", color = Color.Gray)
-                    is MfResult.Error -> Text(
-                        validationResult.getErrorString.invoke(LocalContext.current),
-                        color = Color.Red
-                    )
-                    else -> {}
-                }
+        colors = TextFieldDefaults.colors(
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent
+        ),
+        shape = RoundedCornerShape(8.dp),
+        supportingText = {
+            when (validationResult) {
+                is MfResult.Loading -> Text("Validating nickname...", color = Color.Gray)
+                is MfResult.Error -> Text(
+                    validationResult.getErrorString.invoke(LocalContext.current),
+                    color = Color.Red
+                )
+
+                else -> {}
             }
-        )
-        Button(
-            onClick = { onSaveNickname() },
-            enabled = validationResult is MfResult.Success,
-            modifier = Modifier
-                .align(Alignment.End)
-                .padding(top = 8.dp)
-        ) {
-            Text("Save Nickname")
+        }
+    )
+}
+
+@Composable
+fun GoogleSignInButton(
+    onClick: () -> Unit,
+    isLoading: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        enabled = !isLoading,
+        modifier = modifier
+            .height(48.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        if (isLoading) {
+            Text("Signing in...")
+        } else {
+            Text(
+                text = "Log In with Google",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }

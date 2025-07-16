@@ -36,7 +36,7 @@ class UserRepositoryImpl @Inject constructor(
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override val authenticationState: StateFlow<AuthenticationState> =
-        preferenceManager.authToken
+        preferenceManager.googleIdAuthToken
             .map { authToken ->
                 when {
                     authToken == null -> AuthenticationState.NotAuthenticated
@@ -109,7 +109,7 @@ class UserRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getCurrentUser(): User? = withContext(Dispatchers.IO) {
-        preferenceManager.authToken.value?.let { token ->
+        preferenceManager.googleIdAuthToken.value?.let { token ->
             try {
                 val user = webService.getCurrentUser() // authToken added in AuthInterceptor
                 // Cache user locally
@@ -129,36 +129,36 @@ class UserRepositoryImpl @Inject constructor(
         updatedUser
     }
 
-    override suspend fun createUser(name: String): User = withContext(Dispatchers.IO) {
-        // First attempt with current FCM token
-        val initialFcmToken = firebaseMessaging.token.await()
-
-        try {
-            val user = webService.createUser(CreateUserRequest(name, initialFcmToken))
-            preferenceManager.updateAuthToken(user.id)
-            localDao.insertUser(user)
-            Timber.tag("USER_REPO").d("User created with FCM token: $initialFcmToken")
-            return@withContext user
-        } catch (e: Exception) {
-            // Check if it's a duplicate registration token error
-            if (isDuplicateRegistrationTokenError(e)) {
-                // Refresh FCM token and retry
-                val freshFcmToken = refreshFcmToken()
-                try {
-                    val user = webService.createUser(CreateUserRequest(name, freshFcmToken))
-                    preferenceManager.updateAuthToken(user.id)
-                    localDao.insertUser(user)
-                    return@withContext user
-                } catch (retryException: Exception) {
-                    // If retry also fails, throw the retry exception
-                    throw retryException
-                }
-            } else {
-                // If it's not a duplicate token error, rethrow original exception
-                throw e
-            }
-        }
-    }
+//    override suspend fun createUser(name: String): User = withContext(Dispatchers.IO) {
+//        // First attempt with current FCM token
+//        val initialFcmToken = firebaseMessaging.token.await()
+//
+//        try {
+//            val user = webService.createUser(CreateUserRequest(name, initialFcmToken))
+//            preferenceManager.updateAuthToken(user.id)
+//            localDao.insertUser(user)
+//            Timber.tag("USER_REPO").d("User created with FCM token: $initialFcmToken")
+//            return@withContext user
+//        } catch (e: Exception) {
+//            // Check if it's a duplicate registration token error
+//            if (isDuplicateRegistrationTokenError(e)) {
+//                // Refresh FCM token and retry
+//                val freshFcmToken = refreshFcmToken()
+//                try {
+//                    val user = webService.createUser(CreateUserRequest(name, freshFcmToken))
+//                    preferenceManager.updateAuthToken(user.id)
+//                    localDao.insertUser(user)
+//                    return@withContext user
+//                } catch (retryException: Exception) {
+//                    // If retry also fails, throw the retry exception
+//                    throw retryException
+//                }
+//            } else {
+//                // If it's not a duplicate token error, rethrow original exception
+//                throw e
+//            }
+//        }
+//    }
 
     override suspend fun isNameAvailable(name: String): Boolean = withContext(Dispatchers.IO) {
         webService.checkNameAvailability(name).nameIsAvailable
@@ -191,6 +191,60 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun storeGoogleAuth(idToken: String, googleUserId: String) = withContext(Dispatchers.IO) {
+        Timber.d("Google Auth IDs: idToken: $idToken googleUserId: $googleUserId")
+        preferenceManager.updateAuthToken(idToken)
+        // Store Google User ID if neededfor future reference
+        // You might want to add this to your preference manager as well
+    }
+
+    override suspend fun createUserWithGoogle(nickname: String, idToken: String, googleUserId: String): User =
+        withContext(Dispatchers.IO) {
+            // First attempt with current FCM token
+            val initialFcmToken = firebaseMessaging.token.await()
+
+            try {
+                // The API endpoint remains the same, but the Google ID token will be sent in the header
+                val user = webService.createUser(CreateUserRequest(nickname, initialFcmToken))
+                preferenceManager.updateAuthToken(idToken)
+
+                localDao.insertUser(user)
+                Timber.tag("USER_REPO").d("User created with Google Auth. User ID: $googleUserId")
+                return@withContext user
+            } catch (e: Exception) {
+                // Check if it's a duplicate registration token error
+                if (isDuplicateRegistrationTokenError(e)) {
+                    // Refresh FCM token and retry
+                    val freshFcmToken = refreshFcmToken()
+                    try {
+                        val user = webService.createUser(CreateUserRequest(nickname, freshFcmToken))
+                        preferenceManager.updateAuthToken(idToken)
+                        localDao.insertUser(user)
+                        return@withContext user
+                    } catch (retryException: Exception) {
+                        throw retryException
+                    }
+                } else {
+                    throw e
+                }
+            }
+        }
+
+    override suspend fun authenticateWithGoogle(idToken: String, googleUserId: String): User =
+        withContext(Dispatchers.IO) {
+            try {
+                // For existing users, just get current user info with the Google ID token in header
+                val user = webService.getCurrentUser()
+                preferenceManager.updateAuthToken(googleIdToken = idToken)
+                localDao.insertUser(user)
+                Timber.tag("USER_REPO").d("User authenticated with Google. User ID: $googleUserId")
+                return@withContext user
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to authenticate with Google")
+                throw e
+            }
+        }
+
 }
 
 private fun isDuplicateRegistrationTokenError(exception: Exception): Boolean {
@@ -220,4 +274,6 @@ private fun isDuplicateRegistrationTokenError(exception: Exception): Boolean {
                     (message.contains("already exists") || message.contains("duplicate"))
         }
     }
+
+
 }

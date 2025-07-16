@@ -81,6 +81,9 @@ dependencies {
     implementation(libs.androidx.compose.runtime)
     debugImplementation(libs.chucker)
     releaseImplementation(libs.chuckerNoOp)
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services)
+    implementation(libs.google.identity)
 }
 
 kapt {

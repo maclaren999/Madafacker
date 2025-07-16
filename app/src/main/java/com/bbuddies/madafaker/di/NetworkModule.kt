@@ -1,5 +1,6 @@
 package com.bbuddies.madafaker.di
 
+import com.bbuddies.madafaker.BuildConfig
 import com.bbuddies.madafaker.common_domain.AppConfig
 import dagger.Module
 import dagger.Provides
@@ -7,7 +8,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import remote.api.BASE_URL.API_BASE_URL
 import remote.api.MadafakerApi
 import remote.api.interceptors.AuthInterceptor
 import remote.api.interceptors.MockInterceptor
@@ -59,7 +59,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(API_BASE_URL) // Replace with actual URL
+            .baseUrl(BuildConfig.API_BASE_URL) // Replace with actual URL
             .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create())
             .build()

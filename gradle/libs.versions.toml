@@ -21,6 +21,8 @@ okhttp = "4.12.0"
 room = "2.7.1"
 navigation = "2.9.0"
 firebaseBom = "33.14.0"
+credentials = "1.5.0"
+identityGoogleId = "1.1.1"
 glide = "4.12.0"
 onesignal = "4.6.3"
 mockito = "4.6.1"
@@ -110,6 +112,10 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
+# Credential Manager
+credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
+credentials-play-services = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
+google-identity = { group = "com.google.android.libraries.identity.googleid", name = "googleid", version.ref = "identityGoogleId" }
 
 # Mocking (testing)
 mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
