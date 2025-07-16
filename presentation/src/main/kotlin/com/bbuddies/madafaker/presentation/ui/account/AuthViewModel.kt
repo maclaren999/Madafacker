@@ -1,21 +1,12 @@
 package com.bbuddies.madafaker.presentation.ui.account
 
-import android.content.Context
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.GetCredentialResponse
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
-import com.bbuddies.madafaker.presentation.BuildConfig
+import com.bbuddies.madafaker.presentation.auth.GoogleAuthManager
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import com.bbuddies.madafaker.presentation.base.MfResult
 import com.bbuddies.madafaker.presentation.utils.NotificationPermissionHelper
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -32,7 +23,7 @@ enum class AuthUiState {
 class AuthViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val notificationPermissionHelper: NotificationPermissionHelper,
-    @ApplicationContext private val context: Context
+    private val googleAuthManager: GoogleAuthManager
 ) : BaseViewModel() {
 
     private val _authUiState = MutableStateFlow(AuthUiState.INITIAL)
@@ -47,14 +38,6 @@ class AuthViewModel @Inject constructor(
     private val draftValidator = NicknameDraftValidator(userRepository, viewModelScope)
     val nicknameDraftValidationResult = draftValidator.validationResult
 
-    private val webClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
-
-    private val credentialManager = CredentialManager.create(context)
-
-    // Store Google credentials for later use in account creation
-    private var storedGoogleIdToken: String? = null
-    private var storedGoogleUserId: String? = null
-
     fun onDraftNickChanged(newNickname: String) {
         _draftNickname.value = newNickname
         draftValidator.onDraftNickChanged(newNickname)
@@ -67,31 +50,28 @@ class AuthViewModel @Inject constructor(
 
             try {
                 // Perform Google authentication
-                val googleResult = performGoogleAuthentication()
+                val googleResult = googleAuthManager.performGoogleAuthentication()
 
                 if (googleResult != null) {
-                    // Store credentials for potential account creation
-                    val credential = googleResult.credential
-                    if (credential is CustomCredential &&
-                        credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-                    ) {
+                    // Extract and store credentials
+                    val authResult = googleAuthManager.extractAndStoreCredentials(googleResult)
 
-                        val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                        storedGoogleIdToken = googleIdTokenCredential.idToken
-                        storedGoogleUserId = googleIdTokenCredential.id
-
+                    if (authResult != null) {
                         // Store Google auth and check if user exists
-                        userRepository.storeGoogleAuth(storedGoogleIdToken!!, storedGoogleUserId!!)
+                        userRepository.storeGoogleAuth(authResult.idToken, authResult.googleUserId)
 
                         try {
                             // Try to authenticate existing user
-                            userRepository.authenticateWithGoogle(storedGoogleIdToken!!, storedGoogleUserId!!)
+                            userRepository.authenticateWithGoogle(authResult.idToken, authResult.googleUserId)
                             // User exists, proceed to main screen
                             onSuccessfulSignIn(notificationPermissionHelper)
                         } catch (e: Exception) {
                             // User doesn't exist, show nickname input
                             _authUiState.value = AuthUiState.POST_GOOGLE_AUTH
                         }
+                    } else {
+                        _warningsFlow.emit { "Failed to process Google authentication" }
+                        _authUiState.value = AuthUiState.INITIAL
                     }
                 }
             } catch (e: Exception) {
@@ -123,8 +103,13 @@ class AuthViewModel @Inject constructor(
                 }
 
                 // Create user with stored Google credentials
-                if (storedGoogleIdToken != null && storedGoogleUserId != null) {
-                    userRepository.createUserWithGoogle(nickname, storedGoogleIdToken!!, storedGoogleUserId!!)
+                val storedCredentials = googleAuthManager.getStoredCredentials()
+                if (storedCredentials != null) {
+                    userRepository.createUserWithGoogle(
+                        nickname,
+                        storedCredentials.idToken,
+                        storedCredentials.googleUserId
+                    )
                     onSuccessfulCreation(notificationPermissionHelper)
                 } else {
                     _warningsFlow.emit { "Authentication error. Please try again." }
@@ -138,27 +123,5 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
-
-    private suspend fun performGoogleAuthentication(): GetCredentialResponse? {
-        return try {
-            val googleIdOption = GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(false)
-                .setServerClientId(webClientId)
-                .build()
-
-            val request = GetCredentialRequest.Builder()
-                .addCredentialOption(googleIdOption)
-                .build()
-
-            credentialManager.getCredential(
-                request = request,
-                context = context
-            )
-        } catch (e: GetCredentialException) {
-            Timber.e(e, "Google authentication failed")
-            throw e
-        }
-    }
-
 
 }
