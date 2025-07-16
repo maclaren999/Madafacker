@@ -11,6 +11,34 @@ plugins {
     alias(libs.plugins.google.gms.google.services) apply false
 }
 
+/**
+ * Loads build configuration values from a JSON file based on build type.
+ *
+ * Expected JSON structure:
+ * {
+ *   "debug": { "KEY": "debug-value" },
+ *   "release": { "KEY": "release-value" }
+ * }
+ *
+ * File location:
+ * - Default: app/secrets.json (relative to project root)
+ * - Custom: Set MADAFAKER_SECRETS_PATH environment variable
+ *
+ * Security:
+ * - Only whitelisted keys are loaded from JSON
+ * - Environment variables can override file values
+ *
+ * Usage:
+ * ```kotlin
+ * val config = loadBuildConfigForBuildType("debug")
+ * config.forEach { (key, value) ->
+ *     buildConfigField("String", key, "\"$value\"")
+ * }
+ * ```
+ *
+ * @param buildType The build type name (e.g., "debug", "release")
+ * @return Map of configuration key-value pairs for the specified build type
+ */
 extra["loadBuildConfigForBuildType"] = { buildType: String ->
     val config = mutableMapOf<String, String>()
 
