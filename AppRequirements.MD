@@ -6,9 +6,17 @@ TODO: Make draft message work
 
 ## 1  Product Vision
 
-Deliver a light‑weight, low‑friction social experience where users broadcast a single line of text to strangers and receive unexpected thoughts in return. The app balances two contrasting moods—positive encouragement and uncensored catharsis—while rewarding creativity and respectful engagement.
+Deliver a light‑weight, low‑friction social experience where users broadcast a single line of text to strangers and receive unexpected
+thoughts in return. The app features two distinct content filtering modes:
 
-## 2  Business Goals
+1. Shine Mode - Strict content filtering that removes abuse, hate speech, harassment, sexism, racism and other harmful content to maintain a
+   positive environment
+2. Shadow Mode - Light content filtering that only removes illegal content (drug trafficking, exploitation of minors, explicit violence)
+   while allowing more controversial expression
+
+The app balances these contrasting approaches while rewarding creativity and respectful engagement.
+
+## 2  Business Goals
 
 1. **Daily Delight:** Drive habitual, micro‑time engagement (30‑60 s sessions).
 2. **Viral Growth Loop:** Push‑notification delivery of messages → ratings → wider distribution → screenshots/shared quotes.
@@ -17,11 +25,14 @@ Deliver a light‑weight, low‑friction social experience where users broadcast
 
 ## 3  Personas & Use‑Cases
 
-| Persona                | Motivation                                  | Key Flows                                         |
-| ---------------------- | ------------------------------------------- | ------------------------------------------------- |
-| **The Support‑Seeker** | Wants to brighten someone’s day & feel good | Writes in *Shine*, rates messages, builds streaks |
-| **The Ranter**         | Needs a safe outlet for spicy takes         | Writes in *Shadow*, hunts witty lines             |
-| **The Lurker**         | Prefers reading & rating                    | Receives notifications, rarely writes             |
+| Persona                | Motivation                                  | Key Flows                                               |
+|------------------------|---------------------------------------------|---------------------------------------------------------|
+| **The Support‑Seeker** | Wants to brighten someone’s day & feel good | Writes in *Shine*, rates messages, builds streaks       |
+| **The Ranter**         | Needs a safe outlet for spicy takes         | Writes in *Shadow*, hunts witty lines                   |
+| **The Lurker**         | Prefers reading & rating                    | Receives notifications, rarely writes                   |
+| **The Connector**      | Enjoys making new friends and networking    | Engages actively, replies to messages, shares content   |
+| **The Critic**         | Provides thoughtful feedback and ratings    | Rates messages carefully, reports inappropriate content |
+| **The Creator**        | Loves crafting unique and creative lines    | Writes frequently, experiments with styles and tones    |
 
 ## 4  MVP Feature Set
 
@@ -33,7 +44,7 @@ Deliver a light‑weight, low‑friction social experience where users broadcast
   2. **Mode Toggle:** “Drag or tap the sun icon to switch modes.” Demo animation where the sun sinks and the moon emerges.
   3. **Receive & Rate:** “When messages arrive, read and rate them.” Includes swipe gesture visual.
 * **Auto‑Advance & Skip:** Panels auto‑advance after 2–3 seconds; “Skip” becomes available after the first panel.
-* \*\*Set Nickname Prompt: Immediately after intro, show dialog for a unique nickname (3–15 chars, emojis allowed).
+* \*\*Set Nickname Prompt: Immediately after intro, show auth page.
 
   * Footer contains a **Privacy Policy** link.
   * Push‑notification permission request fires once nickname is confirmed.
@@ -43,28 +54,28 @@ Deliver a light‑weight, low‑friction social experience where users broadcast
 Establish four primary tabs in the bottom navigation bar to support the Write‑focused flow and clear separation of content:
 
 | Position | Purpose                                        | Label    | Icon |
-| -------- | ---------------------------------------------- | -------- | ---- |
+|----------|------------------------------------------------|----------|------|
 | **1.**   | Compose and view your last 3 sent messages     | Write    | ✍️   |
 | **2.**   | Sent messages + their replies (tap for thread) | My Posts | 💬   |
-| **3.**   | Review messages you’ve received                | Inbox    | 📥   |
+| **3.**   | Review messages you’ve received and reply      | Inbox    | 📥   |
 | **4.**   | Account settings and profile                   | Account  | 👤   |
 
-### 4.3 Error & Informational States
+### 4.3  Account & Settings
 
-* **Offline send failure:** Toast/banner “Failed to send. Will retry...” Background retry via WorkManager.
+* Google sign‑in links messages across devices.
+* Avatar & 80‑char bio.
+* Language + Locale selector (default phone locale).
+
+### 4.4 Error & Informational States
+
+* **Offline send failure:** Silently display a small progress icon on the message and do the Background retry via WorkManager.
 * **Nickname already taken:** Inline field error prompting a new name.
 * **Moderation rejection (Shine):** Dialog suggests switching to Shadow mode if the user wants uncensored wording.
 * **Push permission denied:** Snackbar outlining that pushes are essential to the experience and promising no spam, plus a button to open system settings.
-* **No messages yet:** Friendly empty‑state illustration with copy: “No messages yet.”
+* **No messages yet:** Empty‑state copy: “No messages yet.”
 
 **Spam/Flood Control:** Backend enforces a **30‑second** minimum interval between sends; returns HTTP 429 with a friendly error.
 
-### 4.2  Account & Settings
-
-* Optional email sign‑in ⇒ links messages across devices.&#x20;
-  Google sign‑in will be added in Phase 2.
-* Avatar & 80‑char bio.
-* Language + Locale selector (default phone locale).
 
 ## 5  Future (Post‑MVP) Backlog
 
@@ -77,11 +88,11 @@ Establish four primary tabs in the bottom navigation bar to support the Write‑
 
 ## 6  Non‑Functional Requirements
 
-* **Privacy‑by‑Design:** No PII required; nickname + token.
 * **Latency:** <300 ms API round‑trip for message send.
 * **Scalability:** Use topic‑based FCM for batched sends.
 * **Legal:** Comply with GDPR/CCPA.
-* \*\*Analytics: Instrument Firebase Analytics to track key events (app*open, send\_message, receive\_notification, open\_notification, dismiss\_*notification, rate\_message, toggle\_mode) and funnel metrics for ongoing product improvement.
+* **Analytics:** Instrument Firebase Analytics to track key events (app*open, send\_message, receive\_notification, open\_notification,
+  dismiss\_*notification, rate\_message, toggle\_mode) and funnel metrics for ongoing product improvement.
 * **Crash Reporting:** Integrate Firebase Crashlytics for real‑time crash and ANR monitoring.
 * **Spam/Flood Control:** 30‑second minimum send interval enforced server‑side.
 * **Kotlin Multiplatform Preparedness:** Structure the Android codebase (business logic, network layer) to facilitate a future migration to Kotlin Multiplatform (KMP) for shared modules across mobile platforms.
@@ -98,7 +109,8 @@ To automatically moderate user-generated text in **Shine** mode with a lightweig
 
 **Recommended MVP Approach:**
 
-1. **Server-Side Enforcement:** For every Shine‑mode submission, call the **OpenAI Moderation API**. If any category (e.g., profanity, hate) exceeds the threshold (e.g., 0.6), reject with a user-friendly error: “Please keep it positive!”
+1. **Server-Side Enforcement:** For every Shine‑mode submission, call the **OpenAI Moderation API**. If any category (e.g., profanity, hate)
+   exceeds the threshold (e.g., 0.6), reject with a user-friendly error: “Please keep it positive or switch to Shadow mode!”
 2. **Client-Side Quick Check:** Use **Firebase ML Kit Profanity Filter** in the Android app to flag disallowed words instantly, helping users self-correct before sending.
 3. **Custom Blocklist (Optional):** Maintain a small server-hosted JSON list of brand‑ or culture‑specific banned terms; screen messages against it post‑API check.
 
@@ -106,27 +118,27 @@ This hybrid solution gives robust, free moderation out of the box, minimizes fal
 
 ## 7  Technical Architecture (High‑Level)
 
-```mermaid
+
 flowchart TD
   Mobile(Android) -- REST/JSON --> API(Gateway)
   API --> Node(NestJS Service Cluster)
   Node -- ORM --> DB(PostgreSQL)
   Node --> FCM(Push)
   Cron(Scheduled Jobs) --> Node
-```
+
 
 * **Security:** Bearer `token` header for user JWT; `x-api-key` for cron jobs.
-* **Data Storage:** Users, Messages, Replies, Ratings tables (see §8).
+* **Data Storage:** Users, Messages, Replies (see §8).
 * **Push Delivery:** Outgoing messages are delivered via Firebase Cloud Messaging (FCM) to **randomly selected** active users within the same mode.
 
 ## 8  Data Model Summary
 
-| Entity      | Key Fields                                | Relations                 |
-| ----------- | ----------------------------------------- | ------------------------- |
-| **User**    | id UUID, name, registrationToken          | 1‑\* Message, 1‑\* Reply  |
-| **Message** | id, body, mode, public, authorId, wasSent | *‑1 User, 1‑* Reply       |
-| **Reply**   | id, body, public, parentId, authorId      | \*‑1 Message, self‑nested |
-| **Rating**  | userId, messageId, value                  |  FK → User, Message       |
+| Entity          | Key Fields                                                                    | Relations                 |
+|-----------------|-------------------------------------------------------------------------------|---------------------------|
+| **User**        | id String, name, registrationToken?, coins, createdAt, updatedAt              | 1‑\* Message, 1‑\* Reply  |
+| **Message**     | id, body, mode, isPublic, authorId, createdAt, localState, tempId?, needsSync | *‑1 User, 1‑* Reply       |
+| **Reply**       | id, body, mode, isPublic, parentId?, authorId, createdAt, updatedAt           | \*‑1 Message, self‑nested |
+| **UnsentDraft** | body, mode, timestamp *(Client-only)*                                         | N/A                       |
 
 ## 9  API Contract Coverage (Postman)
 
@@ -256,24 +268,3 @@ Below are the canonical endpoints as documented in Postman. Note that server cur
 5. **Tablet / foldable layouts:** Not a priority for MVP.
 
 ---
-
-**Next Step:** Review & annotate this draft → confirm MVP scope → derive sprint backlog & detailed API specs.
-
-## 11 Resolved Decisions
-
-1. **Maximum daily sends per user:** Limited to 10 messages per day in Phase 1.
-2. **Shadow mode content filtering:** Explicit illegal content will still be filtered starting with Phase 2.
-3. **Economy mechanics (coin sink/inflation control):** Deferred to Phase 2 backlog.
-4. **Translation vs. locale restriction:** ML-driven auto‑detect deferred to Phase 2.
-5. **Tablet / foldable layouts:** Not a priority for MVP.
-
----
-
-**Next Step:** Review & annotate this draft → confirm MVP scope → derive sprint backlog & detailed API specs.
-  Naming – Modes
-
-| Positive Mode | Unfiltered Mode |
-| ------------- | --------------- |
-| **Shine**     | **Shadow**      |
-
-*(Locked for MVP)*\*

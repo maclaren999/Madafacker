@@ -143,13 +143,13 @@ Each module has specific responsibilities - maintain clean boundaries:
 
 ### Authentication
 
-- JWT Bearer token authentication
+- Google Sign-In for user authentication
 - FCM registration token management
-- No PII required - nickname + token only
+
 
 ### API Security
 
-- Bearer token headers for user requests
+- Bearer token(Google auth token) headers for user requests
 - x-api-key for cron job endpoints
 - Rate limiting (30-second minimum between sends)
 
@@ -172,8 +172,8 @@ Each module has specific responsibilities - maintain clean boundaries:
 
 Detailed product requirements and API specifications are documented in:
 
-- `app/src/main/java/com/bbuddies/madafaker/AppRequirements`
-- `app/src/main/java/com/bbuddies/madafaker/API requests.postman_collection.json`
+- `AppRequirements.md` !!!
+- `API requests.postman_collection.json`
 
 ## Future Architecture Considerations
 
