@@ -11,7 +11,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.bbuddies.madafaker.presentation.ui.account.SetNicknameScreen
+import com.bbuddies.madafaker.presentation.ui.account.AuthScreen
 import com.bbuddies.madafaker.presentation.ui.main.MainScreen
 import com.bbuddies.madafaker.presentation.ui.main.MainViewModel
 import com.bbuddies.madafaker.presentation.ui.permission.NotificationPermissionScreen
@@ -21,7 +21,7 @@ enum class MadafakerScreen {
     SplashScreen,
     MainScreen,
     MessageScreen,
-    SetNicknameScreen,
+    AuthScreen,
     NotificationPermissionScreen,
 }
 
@@ -30,7 +30,7 @@ sealed class NavigationItem(val route: String) {
     object Main : NavigationItem(MadafakerScreen.MainScreen.name)
 
     //    object Message : NavigationItem(MadafakerScreen.MessageScreen.name)
-    object Account : NavigationItem(MadafakerScreen.SetNicknameScreen.name)
+    object Account : NavigationItem(MadafakerScreen.AuthScreen.name)
     object NotificationPermission : NavigationItem(MadafakerScreen.NotificationPermissionScreen.name)
 }
 
@@ -67,7 +67,7 @@ fun AppNavHost(
 //            MessageScreen(navController)
 //        }
         composable(NavigationItem.Account.route) {
-            SetNicknameScreen(
+            AuthScreen(
                 navController = navController,
                 viewModel = hiltViewModel(),
                 modifier = Modifier

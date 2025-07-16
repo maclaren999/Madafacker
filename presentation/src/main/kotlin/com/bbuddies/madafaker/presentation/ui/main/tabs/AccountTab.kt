@@ -46,7 +46,7 @@ import com.bbuddies.madafaker.presentation.ui.main.MainScreenTheme
 @Composable
 fun AccountTab(
     viewModel: AccountTabViewModel,
-    onNavigateToSetNickname: () -> Unit
+    onNavigateToAuth: () -> Unit
 ) {
     val context = LocalContext.current
     val currentUser by viewModel.currentUser.collectAsState()
@@ -97,7 +97,7 @@ fun AccountTab(
     if (showLogoutDialog) {
         LogoutConfirmationDialog(
             onConfirm = {
-                viewModel.performLogout(onNavigateToSetNickname)
+                viewModel.performLogout(onNavigateToAuth)
             },
             onDismiss = viewModel::dismissLogoutDialog
         )

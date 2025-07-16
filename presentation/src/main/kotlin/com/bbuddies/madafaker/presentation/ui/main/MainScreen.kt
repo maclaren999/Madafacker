@@ -90,7 +90,7 @@ fun MainScreen(
                             MainTab.INBOX -> InboxTab(viewModel)
                             MainTab.ACCOUNT -> AccountTab(
                                 viewModel = hiltViewModel<AccountTabViewModel>(),
-                                onNavigateToSetNickname = {
+                                onNavigateToAuth = {
                                     navController.navigate(NavigationItem.Account.route) {
                                         popUpTo(NavigationItem.Main.route) { inclusive = true }
                                     }

@@ -5,14 +5,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -20,7 +18,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -32,6 +29,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,38 +42,56 @@ import kotlinx.coroutines.flow.StateFlow
 
 @Preview
 @Composable
-fun SetNicknameScreenPreview() {
-    SetNicknameScreen(
+fun AuthScreenPreview() {
+    AuthScreen(
+        authUiState = AuthUiState.INITIAL,
         draftNickname = "Nickname",
         validationResult = MfResult.Success(Unit),
         onNicknameChange = {},
-        onDeleteAccount = {},
         onGoogleSignIn = {},
+        onCreateAccount = {},
         warningsFlow = MutableStateFlow(null),
         isSigningIn = false
     )
 }
 
 @Composable
-fun SetNicknameScreen(
+fun AuthScreen(
     navController: NavController,
-    viewModel: NewUserViewModel,
+    viewModel: AuthViewModel,
     modifier: Modifier = Modifier
 ) {
+    val authUiState by viewModel.authUiState.collectAsState()
     val draftNickname by viewModel.draftNickname.collectAsState()
     val validationResult by viewModel.nicknameDraftValidationResult.collectAsState()
     val isSigningIn by viewModel.isSigningIn.collectAsState()
 
-    SetNicknameScreen(
+    AuthScreen(
+        authUiState = authUiState,
         draftNickname = draftNickname,
         validationResult = validationResult,
         onNicknameChange = { newDraft ->
             viewModel.onDraftNickChanged(newDraft)
         },
-        onDeleteAccount = { viewModel.handleDeleteAccount() },
         onGoogleSignIn = {
             viewModel.onGoogleSignIn(
                 onSuccessfulSignIn = { notificationPermissionHelper ->
+                    // Check if notification permission is already granted
+                    val nextDestination = if (notificationPermissionHelper.isNotificationPermissionGranted()) {
+                        NavigationItem.Main
+                    } else {
+                        NavigationItem.NotificationPermission
+                    }
+
+                    navController.navigate(nextDestination.route) {
+                        popUpTo(NavigationItem.Account.route) { inclusive = true }
+                    }
+                }
+            )
+        },
+        onCreateAccount = {
+            viewModel.onCreateAccount(
+                onSuccessfulCreation = { notificationPermissionHelper ->
                     // Check if notification permission is already granted
                     val nextDestination = if (notificationPermissionHelper.isNotificationPermissionGranted()) {
                         NavigationItem.Main
@@ -96,12 +112,13 @@ fun SetNicknameScreen(
 }
 
 @Composable
-fun SetNicknameScreen(
+fun AuthScreen(
+    authUiState: AuthUiState,
     draftNickname: String,
     validationResult: MfResult<Unit>?,
     onNicknameChange: (String) -> Unit,
-    onDeleteAccount: () -> Unit,
     onGoogleSignIn: () -> Unit,
+    onCreateAccount: () -> Unit,
     warningsFlow: StateFlow<((context: Context) -> String?)?>,
     isSigningIn: Boolean,
     modifier: Modifier = Modifier
@@ -121,39 +138,112 @@ fun SetNicknameScreen(
             ProfileAvatar()
             Spacer(modifier = Modifier.height(32.dp))
 
-            // New to the app section
-            Text(
-                text = "New to the app?",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Medium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            when (authUiState) {
+                AuthUiState.INITIAL -> {
+                    InitialAuthContent(
+                        onGoogleSignIn = onGoogleSignIn,
+                        isSigningIn = isSigningIn
+                    )
+                }
 
-            NicknameInputBlock(
-                draftNickname = draftNickname,
-                validationResult = validationResult,
-                onNicknameChange = onNicknameChange
-            )
+                AuthUiState.POST_GOOGLE_AUTH -> {
+                    PostGoogleAuthContent(
+                        draftNickname = draftNickname,
+                        validationResult = validationResult,
+                        onNicknameChange = onNicknameChange,
+                        onCreateAccount = onCreateAccount,
+                        isSigningIn = isSigningIn
+                    )
+                }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Already have account section
-            Text(
-                text = "Already have account?",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            GoogleSignInButton(
-                onClick = onGoogleSignIn,
-                isLoading = isSigningIn,
-                modifier = Modifier.fillMaxWidth()
-            )
+                AuthUiState.LOADING -> {
+                    LoadingContent()
+                }
+            }
 
             Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.height(16.dp))
-            DeleteAccountButton(onDeleteAccount)
         }
+    }
+}
+
+@Composable
+fun InitialAuthContent(
+    onGoogleSignIn: () -> Unit,
+    isSigningIn: Boolean
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Welcome section
+        Text(
+            text = "Welcome to Madafaker",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        Text(
+            text = "Share random thoughts with strangers and discover unexpected perspectives",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+
+        GoogleSignInButton(
+            onClick = onGoogleSignIn,
+            isLoading = isSigningIn,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun PostGoogleAuthContent(
+    draftNickname: String,
+    validationResult: MfResult<Unit>?,
+    onNicknameChange: (String) -> Unit,
+    onCreateAccount: () -> Unit,
+    isSigningIn: Boolean
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Choose your nickname",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        NicknameInputBlock(
+            draftNickname = draftNickname,
+            validationResult = validationResult,
+            onNicknameChange = onNicknameChange
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        CreateAccountButton(
+            onClick = onCreateAccount,
+            isLoading = isSigningIn,
+            isEnabled = validationResult is MfResult.Success && draftNickname.isNotBlank(),
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Composable
+fun LoadingContent() {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "Setting up your account...",
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center
+        )
     }
 }
 
@@ -183,6 +273,7 @@ fun NicknameInputBlock(
         },
         label = { Text("Enter the desired nickname") },
         placeholder = { Text("Your nickname") },
+        singleLine = true,
         trailingIcon = {
             Text(
                 text = "${draftNickname.length}/100",
@@ -246,25 +337,30 @@ fun GoogleSignInButton(
 }
 
 @Composable
-fun DeleteAccountButton(onDeleteAccount: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .background(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(size = 8.dp)),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
+fun CreateAccountButton(
+    onClick: () -> Unit,
+    isLoading: Boolean,
+    isEnabled: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        enabled = !isLoading && isEnabled,
+        modifier = modifier
+            .height(48.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary
+        ),
+        shape = RoundedCornerShape(8.dp)
     ) {
-        TextButton(
-            onClick = onDeleteAccount,
-            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
-            modifier = Modifier
-                .padding(
-                    start = 28.dp, top = 16.dp, end = 28.dp, bottom = 16.dp
-                )
-                .width(328.dp)
-                .height(60.dp)
-        ) {
-            Text("Delete account")
+        if (isLoading) {
+            Text("Creating account...")
+        } else {
+            Text(
+                text = "Create Account",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
-

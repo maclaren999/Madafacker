@@ -49,6 +49,31 @@ The app balances these contrasting approaches while rewarding creativity and res
   * Footer contains a **Privacy Policy** link.
   * Push‑notification permission request fires once nickname is confirmed.
 
+### 4.1.1 New Authentication Flow (Updated Implementation)
+
+**State 1 - Initial/Unauthenticated:**
+
+* Display welcome message explaining the app concept: "Share random thoughts with strangers and discover unexpected perspectives"
+* Show "Log in with Google" button as the primary action
+* Hide all other UI elements until Google authentication is complete
+
+**State 2 - Post-Google Authentication:**
+
+* If user already exists in backend: Navigate directly to main screen
+* If user is new (not registered in backend):
+  * Show nickname input field with real-time validation
+  * Show "Create Account" button (enabled only when nickname is valid)
+  * Validate nickname availability via `/api/user/check-name-availability`
+  * Send `createUser` API request when submitted
+  * Navigate to main screen after successful user creation
+
+**Technical Implementation:**
+
+* Single Google Sign-In flow for both new and existing users
+* Backend user existence determined via `/api/user/current` endpoint after Google authentication
+* Follows API contract specified in section 9 for user creation and validation
+* Push notification permission request fires after successful authentication
+
 ### 4.2 UI Navigation Tabs
 
 Establish four primary tabs in the bottom navigation bar to support the Write‑focused flow and clear separation of content:
