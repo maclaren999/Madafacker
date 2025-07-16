@@ -11,3 +11,5 @@
 local.properties
 /.fastRequest/
 app/google-services.json
+app/secrets.json
+app/secrets.*.json

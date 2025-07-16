@@ -7,6 +7,8 @@ plugins {
     id(libs.plugins.kotlin.kapt.get().pluginId)
 }
 
+val loadBuildConfigForBuildType = rootProject.extra["loadBuildConfigForBuildType"] as (String) -> Map<String, String>
+
 android {
     namespace = "com.bbuddies.madafaker.presentation"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -19,9 +21,20 @@ android {
     }
 
     buildTypes {
+        debug {
+            val config = loadBuildConfigForBuildType("debug")
+            //noinspection WrongGradleMethod
+            config.forEach { (key, value) ->
+                buildConfigField("String", key, "\"$value\"")
+            }
+        }
+
         release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            val config = loadBuildConfigForBuildType("release")
+            //noinspection WrongGradleMethod
+            config.forEach { (key, value) ->
+                buildConfigField("String", key, "\"$value\"")
+            }
         }
     }
     compileOptions {
@@ -30,6 +43,11 @@ android {
     }
     kotlinOptions {
         jvmTarget = "21"
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
     }
 }
 

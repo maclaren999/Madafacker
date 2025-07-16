@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
 }
 
+val loadBuildConfigForBuildType = rootProject.extra["loadBuildConfigForBuildType"] as (String) -> Map<String, String>
+
 android {
     namespace = "com.bbuddies.madafaker"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -25,9 +27,20 @@ android {
     }
 
     buildTypes {
+        debug {
+            val config = loadBuildConfigForBuildType("debug")
+            //noinspection WrongGradleMethod
+            config.forEach { (key, value) ->
+                buildConfigField("String", key, "\"$value\"")
+            }
+        }
+
         release {
-            isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            val config = loadBuildConfigForBuildType("release")
+            //noinspection WrongGradleMethod
+            config.forEach { (key, value) ->
+                buildConfigField("String", key, "\"$value\"")
+            }
         }
     }
     compileOptions {
