@@ -3,6 +3,7 @@ package com.bbuddies.madafaker.presentation.ui.main
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.common_domain.exception.ModerationException
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.UnsentDraft
@@ -26,6 +27,16 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * State for moderation dialog
+ */
+data class ModerationDialogState(
+    val title: String,
+    val message: String,
+    val showSwitchToShadow: Boolean,
+    val currentMode: Mode
+)
+
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val messageRepository: MessageRepository,
@@ -46,6 +57,9 @@ class MainViewModel @Inject constructor(
 
     private val _isSending = MutableStateFlow(false)
     override val isSending: StateFlow<Boolean> = _isSending
+
+    private val _moderationDialog = MutableStateFlow<ModerationDialogState?>(null)
+    val moderationDialog: StateFlow<ModerationDialogState?> = _moderationDialog
 
     override val currentMode = preferenceManager.currentMode
 
@@ -146,7 +160,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 is UiState.Error -> {
-                    showError(result.message ?: "Failed to send message")
+                    handleSendMessageError(result.exception)
                 }
 
                 is UiState.Loading -> {} // Won't happen with suspendUiStateOf
@@ -168,7 +182,7 @@ class MainViewModel @Inject constructor(
                 Mode.SHINE -> Mode.SHADOW
                 Mode.SHADOW -> Mode.SHINE
             }
-            preferenceManager.updateMode(newMode)
+            preferenceManager.updateCurrentMode(newMode)
 
             // Save draft with new mode if there's content
             if (_draftMessage.value.isNotBlank()) {
@@ -229,6 +243,57 @@ class MainViewModel @Inject constructor(
     private fun showError(message: String) {
         viewModelScope.launch {
             _warningsFlow.emit { _ -> message }
+        }
+    }
+
+    private fun handleSendMessageError(exception: Throwable) {
+        when (exception) {
+            is ModerationException.ClientSideViolation -> {
+                showModerationDialog(
+                    title = "Content Not Allowed",
+                    message = exception.message ?: "No message passed.",
+                    showSwitchToShadow = exception.mode == Mode.SHINE,
+                    currentMode = exception.mode
+                )
+            }
+
+            is ModerationException.ServerSideViolation -> {
+                showModerationDialog(
+                    title = "Content Rejected",
+                    message = exception.serverMessage,
+                    showSwitchToShadow = exception.mode == Mode.SHINE,
+                    currentMode = exception.mode
+                )
+            }
+
+            else -> {
+                showError(exception.localizedMessage ?: "Failed to send message")
+            }
+        }
+    }
+
+    private fun showModerationDialog(
+        title: String,
+        message: String,
+        showSwitchToShadow: Boolean,
+        currentMode: Mode
+    ) {
+        _moderationDialog.value = ModerationDialogState(
+            title = title,
+            message = message,
+            showSwitchToShadow = showSwitchToShadow,
+            currentMode = currentMode
+        )
+    }
+
+    fun dismissModerationDialog() {
+        _moderationDialog.value = null
+    }
+
+    fun switchToShadowMode() {
+        viewModelScope.launch {
+            preferenceManager.updateCurrentMode(Mode.SHADOW)
+            dismissModerationDialog()
         }
     }
 }

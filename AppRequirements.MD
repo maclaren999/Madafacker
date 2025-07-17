@@ -123,23 +123,50 @@ Establish four primary tabs in the bottom navigation bar to support the Write‑
 * **Kotlin Multiplatform Preparedness:** Structure the Android codebase (business logic, network layer) to facilitate a future migration to Kotlin Multiplatform (KMP) for shared modules across mobile platforms.
   Avoid Java libs - use Kotlin-based libs if possible.
 
-### 6.1 Content Filtering for Shine Mode
+### 6.1 Content Filtering for Shine and Shadow Modes ✅ IMPLEMENTED
 
-To automatically moderate user-generated text in **Shine** mode with a lightweight integration, adopt a hybrid of server-side ML and client-side filtering:
+**Implementation Status:** ✅ **COMPLETED**
 
-| Tool / Service                       | Platform         | Key Features                                                              | Integration Effort                                                            |
-| ------------------------------------ | ---------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| **OpenAI Moderation API**            | Backend          | Multidimensional policy checks: abuse, hate, sexual, self-harm, profanity | Single REST call to `/moderations`; free and unlimited usage (no token quota) |
-| **Firebase ML Kit Profanity Filter** | Mobile (Android) | On-device simple profanity blacklist; instant feedback                    | Add ML Kit SDK + Profanity Extension                                          |
+- ✅ Client-side filtering for Shine mode (regex-based profanity detection)
+- ✅ Server-side API preparation with moderation endpoints
+- ✅ User-friendly error handling with mode switching suggestions
+- ✅ Backend specification document for OpenAI Moderation API integration
 
-**Recommended MVP Approach:**
+To automatically moderate user-generated text with lightweight integrations, we have implemented a hybrid approach tailored to each mode's
+filtering requirements:
 
-1. **Server-Side Enforcement:** For every Shine‑mode submission, call the **OpenAI Moderation API**. If any category (e.g., profanity, hate)
-   exceeds the threshold (e.g., 0.6), reject with a user-friendly error: “Please keep it positive or switch to Shadow mode!”
-2. **Client-Side Quick Check:** Use **Firebase ML Kit Profanity Filter** in the Android app to flag disallowed words instantly, helping users self-correct before sending.
-3. **Custom Blocklist (Optional):** Maintain a small server-hosted JSON list of brand‑ or culture‑specific banned terms; screen messages against it post‑API check.
+| Tool / Service                   | Platform         | Status  | Key Features                                                              |
+|----------------------------------|------------------|---------|---------------------------------------------------------------------------|
+| **OpenAI Moderation API**        | Backend          | 📋 SPEC | Multidimensional policy checks: abuse, hate, sexual, self-harm, profanity |
+| **Regex-based Profanity Filter** | Mobile (Android) | ✅ DONE  | On-device simple profanity blacklist; instant feedback                    |
+| **Custom Keyword Detection**     | Mobile (Android) | ✅ DONE  | Regex-based detection for obvious illegal patterns                        |
 
-This hybrid solution gives robust, free moderation out of the box, minimizes false positives through client prompts, and keeps your server code simple.
+**Shine Mode - Comprehensive Filtering:** ✅ **IMPLEMENTED**
+
+1. **Client-Side Quick Check:** ✅ Implemented regex-based profanity filter in the Android app to flag disallowed words instantly, helping
+   users self-correct before sending.
+2. **Server-Side Enforcement:** 📋 Backend specification provided for **OpenAI Moderation API** integration with all categories enabled. If
+   any category (e.g., profanity, hate) exceeds the threshold (e.g., 0.6), reject with user-friendly error: "Please keep it positive or
+   switch to Shadow mode!"
+3. **Mode Switch Dialog:** ✅ Implemented user-friendly dialog suggesting Shadow mode switch when content is rejected.
+
+**Shadow Mode - Minimal Illegal Content Filtering:** ✅ **IMPLEMENTED**
+
+1. **Client-Side:** ✅ No client-side filtering applied (as specified)
+2. **Server-Side Enforcement:** 📋 Backend specification provided for **OpenAI Moderation API** with only severe illegal categories enabled (
+   `sexual/minors`, `hate/threatening`, `violence/graphic`). Reject only explicit illegal content with error: "This content violates legal
+   guidelines and cannot be shared."
+
+**Technical Implementation Details:**
+
+- ✅ `ContentFilterService` interface and implementation in Clean Architecture pattern
+- ✅ `ModerationException` hierarchy for different violation types
+- ✅ Integration with existing message creation flow in `MessageRepositoryImpl`
+- ✅ User-friendly error handling in `MainViewModel` with moderation dialog
+- ✅ Comprehensive backend specification document (`docs/BackendModerationSpec.md`)
+
+This hybrid solution provides robust moderation for Shine mode while maintaining Shadow mode's minimal filtering philosophy, focusing only
+on direct illegal activity.
 
 ## 7  Technical Architecture (High‑Level)
 

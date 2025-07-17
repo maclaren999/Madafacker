@@ -53,6 +53,8 @@ android {
 
 dependencies {
     implementation(project(":domain"))
+    implementation(libs.androidx.junit.ktx)
+    implementation(libs.androidx.ui.test.junit4.android)
     kapt(libs.hilt.compiler)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.runtime)
@@ -70,8 +72,10 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.firebase.messaging.ktx)
     testImplementation(libs.junit)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     implementation(libs.timber)
     implementation(libs.credentials)
     implementation(libs.credentials.play.services)

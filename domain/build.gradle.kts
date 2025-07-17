@@ -14,5 +14,6 @@ dependencies {
 
     api(libs.room.runtime)
     kapt(libs.room.compiler)
+    testImplementation(kotlin("test"))
 
 }

@@ -11,6 +11,10 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +46,13 @@ fun MainScreen(
 ) {
     val pagerState = rememberPagerState(pageCount = { MainTab.entries.size })
     val scope = rememberCoroutineScope()
+
+    // Observe moderation dialog state if viewModel is MainViewModel
+    val moderationDialogState by if (viewModel is MainViewModel) {
+        viewModel.moderationDialog.collectAsState()
+    } else {
+        remember { mutableStateOf(null) }
+    }
 
     ScreenWithWarnings(
         warningsFlow = viewModel.warningsFlow,
@@ -100,6 +111,23 @@ fun MainScreen(
                     }
                 }
             }
+        }
+
+        // Show moderation dialog if needed
+        moderationDialogState?.let { dialogState ->
+            ModerationDialog(
+                state = dialogState,
+                onDismiss = {
+                    if (viewModel is MainViewModel) {
+                        viewModel.dismissModerationDialog()
+                    }
+                },
+                onSwitchToShadow = {
+                    if (viewModel is MainViewModel) {
+                        viewModel.switchToShadowMode()
+                    }
+                }
+            )
         }
     }
 }

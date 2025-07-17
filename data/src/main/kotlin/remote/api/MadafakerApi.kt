@@ -3,6 +3,8 @@ package remote.api
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
 import remote.api.dto.MessageDto
+import remote.api.dto.ModerationRequestDto
+import remote.api.dto.ModerationResponseDto
 import remote.api.request.CreateMessageRequest
 import remote.api.request.CreateUserRequest
 import remote.api.response.NameAvailabilityResponse
@@ -61,4 +63,9 @@ interface MadafakerApi {
     @Headers(CONTENT_TYPE)
     @GET("/api/user/check-name-availability")
     suspend fun checkNameAvailability(@Query("name") name: String): NameAvailabilityResponse
+
+    ///MODERATION (Future server-side integration)
+    @Headers(CONTENT_TYPE)
+    @POST("/api/moderation/check")
+    suspend fun checkModeration(@Body request: ModerationRequestDto): ModerationResponseDto
 }

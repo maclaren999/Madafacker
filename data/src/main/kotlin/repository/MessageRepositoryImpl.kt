@@ -6,12 +6,14 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.bbuddies.madafaker.common_domain.exception.ModerationException
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import com.bbuddies.madafaker.common_domain.service.ContentFilterService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -20,6 +22,7 @@ import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.dto.toDomainModel
 import remote.api.request.CreateMessageRequest
+import retrofit2.HttpException
 import timber.log.Timber
 import worker.SendMessageWorker
 import java.util.UUID
@@ -30,7 +33,8 @@ class MessageRepositoryImpl @Inject constructor(
     private val localDao: MadafakerDao,
     private val workManager: WorkManager,
     private val preferenceManager: PreferenceManager,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val contentFilterService: ContentFilterService
 ) : MessageRepository {
 
     // Single source of truth - local database
@@ -70,6 +74,17 @@ class MessageRepositoryImpl @Inject constructor(
         val tempId = "temp_${UUID.randomUUID()}"
         val currentMode = preferenceManager.currentMode.value
 
+        // Perform client-side content filtering for SHINE mode
+        val filterResult = contentFilterService.filterContent(body, currentMode)
+        if (!filterResult.isAllowed) {
+            throw ModerationException.ClientSideViolation(
+                violationType = filterResult.violationType!!,
+                detectedWords = filterResult.detectedWords,
+                mode = currentMode,
+                message = filterResult.suggestion ?: "Content violates community guidelines"
+            )
+        }
+
         // Create local message immediately
         val localMessage = Message(
             id = tempId,
@@ -104,7 +119,29 @@ class MessageRepositoryImpl @Inject constructor(
             return serverMessage
 
         } catch (exception: Exception) {
-            // Schedule background send
+            // Handle server-side moderation errors
+            if (exception is HttpException && exception.code() == 422) {
+                // Parse moderation error response
+                val errorBody = exception.response()?.errorBody()?.string()
+                if (errorBody != null) {
+                    try {
+                        // Parse the moderation error (simplified - would need proper JSON parsing)
+                        localDao.deleteMessage(tempId) // Remove temp message
+                        throw ModerationException.ServerSideViolation(
+                            violationType = null, // Would parse from errorBody
+                            mode = currentMode,
+                            serverMessage = "Content violates community guidelines",
+                            suggestion = if (currentMode.apiValue == "light")
+                                "Try switching to Shadow mode for uncensored expression"
+                            else "This content cannot be shared"
+                        )
+                    } catch (parseException: Exception) {
+                        Timber.w(parseException, "Failed to parse moderation error")
+                    }
+                }
+            }
+
+            // For other errors, schedule background send
             schedulePendingMessageSend(localMessage)
             return localMessage
         }

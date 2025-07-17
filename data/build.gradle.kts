@@ -61,6 +61,9 @@ dependencies {
     kapt(libs.androidx.hilt.compiler)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockito)
+    testImplementation("org.mockito.kotlin:mockito-kotlin:4.1.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }
