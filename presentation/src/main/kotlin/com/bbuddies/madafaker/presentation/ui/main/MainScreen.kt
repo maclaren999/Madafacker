@@ -11,6 +11,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.presentation.DeepLinkData
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.base.UiState
@@ -38,10 +40,19 @@ import kotlinx.coroutines.flow.StateFlow
 fun MainScreen(
     navController: NavHostController,
     viewModel: MainScreenContract,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    deepLinkData: DeepLinkData? = null
 ) {
     val pagerState = rememberPagerState(pageCount = { MainTab.entries.size })
     val scope = rememberCoroutineScope()
+
+    // Handle deep link navigation to Inbox tab
+    LaunchedEffect(deepLinkData) {
+        if (deepLinkData != null) {
+            // Navigate to Inbox tab (index 2)
+            pagerState.animateScrollToPage(MainTab.INBOX.ordinal)
+        }
+    }
 
     ScreenWithWarnings(
         warningsFlow = viewModel.warningsFlow,
@@ -87,7 +98,10 @@ fun MainScreen(
                         when (MainTab.entries[page]) {
                             MainTab.WRITE -> WriteTab(viewModel)
                             MainTab.MY_POSTS -> MyPostsTab(viewModel)
-                            MainTab.INBOX -> InboxTab(viewModel)
+                            MainTab.INBOX -> InboxTab(
+                                viewModel = viewModel,
+                                highlightedMessageId = if (page == MainTab.INBOX.ordinal) deepLinkData?.messageId else null
+                            )
                             MainTab.ACCOUNT -> AccountTab(
                                 viewModel = hiltViewModel<AccountTabViewModel>(),
                                 onNavigateToAuth = {

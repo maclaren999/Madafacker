@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.google.gms.google.services)
     id(libs.plugins.daggerHilt.get().pluginId)
     id(libs.plugins.kotlin.kapt.get().pluginId)
 }

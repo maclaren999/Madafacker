@@ -41,22 +41,32 @@ import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
+import com.bbuddies.madafaker.presentation.ui.components.HighlightedMessageCard
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenTheme
 
 @Composable
-fun InboxTab(viewModel: MainScreenContract) {
+fun InboxTab(
+    viewModel: MainScreenContract,
+    highlightedMessageId: String? = null
+) {
     val incomingMessages by viewModel.incomingMessages.collectAsState()
 
     incomingMessages.HandleState(
         onRetry = viewModel::refreshMessages
     ) { messages ->
-        InboxMessageList(messages.toInboxMessages())
+        InboxMessageList(
+            messages = messages.toInboxMessages(),
+            highlightedMessageId = highlightedMessageId
+        )
     }
 }
 
 @Composable
-private fun InboxMessageList(messages: List<InboxMessage>) {
+private fun InboxMessageList(
+    messages: List<InboxMessage>,
+    highlightedMessageId: String? = null
+) {
     if (messages.isEmpty()) {
         InboxEmptyState()
         return
@@ -68,7 +78,12 @@ private fun InboxMessageList(messages: List<InboxMessage>) {
             .padding(horizontal = 16.dp)
     ) {
         items(messages) { msg ->
-            MessageCard(msg)
+            val isHighlighted = highlightedMessageId == msg.id
+            if (isHighlighted) {
+                HighlightedMessageCard(msg)
+            } else {
+                MessageCard(msg)
+            }
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
@@ -207,6 +222,7 @@ private fun Message.toInboxMessage(): InboxMessage {
         id = id,
         author = "user_${authorId.take(8)}", // Simplified author display
         body = body,
+        mode = mode,
         up = if (AppConfig.USE_MOCK_API) (0..20).random() else null,
         down = if (AppConfig.USE_MOCK_API) (0..5).random() else null,
         hearts = if (AppConfig.USE_MOCK_API) (0..15).random() else null
@@ -222,6 +238,7 @@ data class InboxMessage(
     val id: String,
     val author: String,
     val body: String,
+    val mode: String,
     val up: Int?,
     val down: Int?,
     val hearts: Int?
