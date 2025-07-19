@@ -62,7 +62,7 @@ class NotificationManagerTest {
         val mode = Mode.SHADOW
 
         // When
-        notificationManager.handleNotificationOpened(messageId, notificationId, mode)
+        notificationManager.handleNotificationOpenedWithMode(messageId, notificationId, mode)
 
         // Then
         coVerify { trackNotificationEventUseCase.trackNotificationOpened(messageId, mode, any()) }
@@ -76,7 +76,7 @@ class NotificationManagerTest {
         val mode = Mode.SHINE
 
         // When
-        notificationManager.handleNotificationDismissed(messageId, notificationId, mode)
+        notificationManager.handleNotificationDismissedWithMode(messageId, notificationId, mode)
 
         // Then
         coVerify { trackNotificationEventUseCase.trackNotificationDismissed(messageId, mode, any()) }

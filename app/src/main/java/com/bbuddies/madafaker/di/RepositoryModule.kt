@@ -2,6 +2,8 @@ package com.bbuddies.madafaker.di
 
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import com.bbuddies.madafaker.notification.NotificationManager
+import com.bbuddies.madafaker.notification_domain.repository.NotificationManagerRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -21,5 +23,8 @@ interface RepositoryModule {
 
     @Binds
     fun userRepository(repository: UserRepositoryImpl): UserRepository
+
+    @Binds
+    fun notificationManagerRepository(notificationManager: NotificationManager): NotificationManagerRepository
 
 }

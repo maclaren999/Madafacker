@@ -49,6 +49,16 @@ interface MadafakerDao {
     @Query("SELECT COUNT(*) FROM messages WHERE localState IN ('PENDING', 'FAILED')")
     fun observePendingCount(): Flow<Int>
 
+    // Read state management
+    @Query("SELECT * FROM messages WHERE authorId != :currentUserId AND isRead = false ORDER BY localCreatedAt DESC LIMIT 1")
+    suspend fun getMostRecentUnreadMessage(currentUserId: String): Message?
+
+    @Query("UPDATE messages SET isRead = true, readAt = :readAt WHERE id = :messageId")
+    suspend fun markMessageAsRead(messageId: String, readAt: Long)
+
+    @Query("UPDATE messages SET isRead = true, readAt = :readAt WHERE authorId != :currentUserId AND isRead = false")
+    suspend fun markAllIncomingMessagesAsRead(currentUserId: String, readAt: Long)
+
     // Reply operations
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReply(reply: Reply)

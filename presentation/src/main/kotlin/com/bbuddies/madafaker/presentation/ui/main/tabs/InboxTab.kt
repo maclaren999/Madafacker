@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -51,13 +52,18 @@ fun InboxTab(
     highlightedMessageId: String? = null
 ) {
     val incomingMessages by viewModel.incomingMessages.collectAsState()
+    val isReplySending by viewModel.isReplySending.collectAsState()
+    val replyError by viewModel.replyError.collectAsState()
 
     incomingMessages.HandleState(
         onRetry = viewModel::refreshMessages
     ) { messages ->
         InboxMessageList(
             messages = messages.toInboxMessages(),
-            highlightedMessageId = highlightedMessageId
+            highlightedMessageId = highlightedMessageId,
+            viewModel = viewModel,
+            isReplySending = isReplySending,
+            replyError = replyError
         )
     }
 }
@@ -65,7 +71,10 @@ fun InboxTab(
 @Composable
 private fun InboxMessageList(
     messages: List<InboxMessage>,
-    highlightedMessageId: String? = null
+    highlightedMessageId: String? = null,
+    viewModel: MainScreenContract,
+    isReplySending: Boolean,
+    replyError: String?
 ) {
     if (messages.isEmpty()) {
         InboxEmptyState()
@@ -80,7 +89,19 @@ private fun InboxMessageList(
         items(messages) { msg ->
             val isHighlighted = highlightedMessageId == msg.id
             if (isHighlighted) {
-                HighlightedMessageCard(msg)
+                HighlightedMessageCard(
+                    message = msg,
+                    onSendReply = { messageId, replyText, isPublic ->
+                        viewModel.onSendReply(messageId, replyText, isPublic)
+                    },
+                    isReplySending = isReplySending,
+                    replyError = replyError
+                )
+
+                // Mark highlighted message as read when displayed
+                LaunchedEffect(msg.id) {
+                    viewModel.markMessageAsRead(msg.id)
+                }
             } else {
                 MessageCard(msg)
             }

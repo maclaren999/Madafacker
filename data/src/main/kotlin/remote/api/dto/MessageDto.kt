@@ -28,7 +28,10 @@ fun MessageDto.toDomainModel(): Message {
         localState = MessageState.SENT,
         localCreatedAt = System.currentTimeMillis(),
         tempId = null,
-        needsSync = false
+        needsSync = false,
+        // New messages from server are unread by default
+        isRead = false,
+        readAt = null
     )
 }
 

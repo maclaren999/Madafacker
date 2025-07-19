@@ -300,7 +300,6 @@ The notification system delivers incoming messages via silent push notifications
 intrigue. The system adapts notification frequency based on user engagement patterns while respecting timezone and sleep schedules.
 
 **Core Principles:**
-
 - Privacy-first: Actual message content hidden until app is opened
 - Engagement-driven: Frequency adapts based on user behavior
 - Mode-aware: Different presentation for Shine vs Shadow modes
@@ -309,7 +308,6 @@ intrigue. The system adapts notification frequency based on user engagement patt
 ### 12.2 Notification Content & Placeholders
 
 **Shine Mode Placeholders (Supportive/Empathetic):**
-
 - "Someone shared a thought with you ✨"
 - "A stranger left you something to consider 💭"
 - "Fresh perspective from the universe 🌟"
@@ -320,7 +318,6 @@ intrigue. The system adapts notification frequency based on user engagement patt
 - "A human moment awaits ⚡"
 
 **Shadow Mode Placeholders (Edgy/Mysterious):**
-
 - "Someone shared their unfiltered thoughts 🌙"
 - "A wild message appeared from the shadows 🎪"
 - "Raw thoughts from a stranger 🔮"
@@ -331,7 +328,6 @@ intrigue. The system adapts notification frequency based on user engagement patt
 - "Truth from the underground 🔥"
 
 **Visual Styling:**
-
 - **Shine Mode:** Warm colors (gold/yellow accent), sun icon
 - **Shadow Mode:** Cool colors (purple/blue accent), moon icon
 - **Notification Icon:** Mode-specific small icon in status bar
@@ -341,7 +337,6 @@ intrigue. The system adapts notification frequency based on user engagement patt
 **Base Frequency:** 1-4 notifications per day (configurable via Firebase Remote Config)
 
 **Engagement-Based Adaptation:**
-
 ```
 High Engagement (>80% open rate): 3-4 notifications/day
 Medium Engagement (40-80% open rate): 2-3 notifications/day
@@ -350,13 +345,11 @@ Very Low Engagement (<10% open rate): 1 notification/day
 ```
 
 **Timing Constraints:**
-
 - **Nighttime Blackout:** No notifications between 10 PM - 8 AM (user's timezone)
 - **Minimum Interval:** 3 hours between notifications
 - **Maximum Interval:** 18 hours (to ensure daily engagement)
 
 **Dormant User Re-engagement:**
-
 - After 7 days of ignored notifications: Send special feedback prompt
 - Placeholder: "Why are you ignoring me? 🥺 Tap to let us know"
 - Links to in-app feedback form with detailed options
@@ -364,7 +357,6 @@ Very Low Engagement (<10% open rate): 1 notification/day
 ### 12.4 User Feedback Tracking
 
 **Tracked Events:**
-
 - `notification_received` - FCM delivery confirmed
 - `notification_opened` - User taps notification
 - `notification_dismissed` - User swipes away notification
@@ -375,7 +367,6 @@ Very Low Engagement (<10% open rate): 1 notification/day
 - `message_replied` - User sent reply to message
 
 **Client-Side Logic:**
-
 - Track engagement metrics locally using DataStore
 - Calculate engagement rate over rolling 7-day window
 - Use Firebase Remote Config for frequency parameters
@@ -384,14 +375,12 @@ Very Low Engagement (<10% open rate): 1 notification/day
 ### 12.5 UI/UX Behavior
 
 **Notification Tray:**
-
 - Mode-specific icon and accent color
 - Generic placeholder text only (randomly selected by client)
 - Silent delivery (no sound/vibration)
 - Notifications remain up to 12 hours if not opened
 
 **Deep Link Behavior:**
-
 - Notification tap → Navigate to Inbox tab
 - Target message highlighted with:
   - **Larger, bold text**
@@ -399,7 +388,6 @@ Very Low Engagement (<10% open rate): 1 notification/day
   - **Reply hint:** "Tap to reply to this message..."
 
 **Rating Interaction:**
-
 - After selection, button is highlighted with background color
 - Visual feedback confirms rating was recorded
 - Rating options:
@@ -409,7 +397,6 @@ Very Low Engagement (<10% open rate): 1 notification/day
 - Rating analytics event sent only after 10 seconds (or when screen closed) in case if user changes mind
 
 **Simplified Analytics:**
-
 - Direct Firebase Analytics integration (no local storage)
 - Real-time event tracking for immediate insights
 - Backend analytics via BigQuery export from Firebase
@@ -417,7 +404,6 @@ Very Low Engagement (<10% open rate): 1 notification/day
 ### 12.6 Technical Implementation
 
 **Firebase Messaging Service Updates:**
-
 ```kotlin
 // Enhanced notification data payload
 {
@@ -429,7 +415,6 @@ Very Low Engagement (<10% open rate): 1 notification/day
 ```
 
 **Notification Channel Configuration:**
-
 ```kotlin
 NotificationChannel(
   channelId,
@@ -443,7 +428,6 @@ NotificationChannel(
 ```
 
 **Remote Config Parameters:**
-
 - `notification_frequency_base`: Default daily frequency
 - `engagement_thresholds`: JSON object with engagement brackets
 - `nighttime_start_hour`: Blackout period start (default: 22)
@@ -454,7 +438,6 @@ NotificationChannel(
 ### 12.7 Simplified Analytics Integration
 
 **Direct Firebase Analytics Events (No Local Storage):**
-
 ```kotlin
 // Real-time event tracking
 "notification_received" -> {
@@ -497,7 +480,6 @@ NotificationChannel(
 ```
 
 **Backend Analytics via BigQuery:**
-
 - Firebase Analytics automatically exports to BigQuery
 - Backend queries notification data using SQL
 - Real-time dashboard capabilities
@@ -506,7 +488,6 @@ NotificationChannel(
 ### 12.8 Configuration Management
 
 **Firebase Remote Config Setup:**
-
 - A/B test different placeholder sets
 - Experiment with frequency algorithms
 - Adjust timing constraints by region
@@ -517,28 +498,24 @@ NotificationChannel(
 ### 13.1 Completed Features ✅
 
 **Firebase Cloud Messaging Setup:**
-
 - ✅ Enhanced FCM service with silent notification support
 - ✅ Notification channels configured for silent delivery (no sound/vibration)
 - ✅ Data payload structure implemented (messageId, mode, timestamp)
 - ✅ Mode-specific notification handling
 
 **Notification UI Components:**
-
 - ✅ Mode-specific placeholder message arrays (Shine vs Shadow)
 - ✅ Mode-specific styling (warm colors/sun icon for Shine, cool colors/moon icon for Shadow)
 - ✅ HighlightedMessageCard component with expanded state
 - ✅ Visual accents (mode-specific border/background) for targeted messages
 
 **Deep Link Navigation:**
-
 - ✅ Notification tap navigation to Inbox tab
 - ✅ Message highlighting with expanded state in Inbox
 - ✅ Deep link intent handling in MainActivity
 - ✅ Navigation state management for notification-triggered flows
 
 **Simplified Event Tracking:**
-
 - ✅ Direct Firebase Analytics integration (no local storage)
 - ✅ Comprehensive event tracking: notification_received, notification_opened, notification_dismissed, notification_ignored, message_rated,
   message_replied
@@ -546,7 +523,6 @@ NotificationChannel(
 - ✅ BigQuery-ready data structure for backend analytics
 
 **Remote Config Integration:**
-
 - ✅ Firebase Remote Config setup for placeholder messages
 - ✅ Configuration management for notification parameters
 - ✅ Fallback to local messages when Remote Config unavailable
@@ -560,7 +536,6 @@ NotificationChannel(
 - `getNotificationConfig()` - Firebase Remote Config
 
 **Use Case Pattern (Direct Analytics):**
-
 - `trackNotificationReceived(messageId, mode)`
 - `trackNotificationOpened(messageId, mode, timeToOpen)`
 - `trackNotificationDismissed(messageId, mode, timeInTray)`
@@ -569,7 +544,6 @@ NotificationChannel(
 - `trackMessageReplied(messageId, mode, replyLength, viaNotification)`
 
 **Clean Architecture Maintained:**
-
 - Domain layer: Pure business logic and interfaces
 - Data layer: Firebase integrations only (Analytics + Remote Config)
 - Presentation layer: UI components and navigation

@@ -23,6 +23,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -45,7 +46,10 @@ import com.bbuddies.madafaker.presentation.ui.main.tabs.InboxMessage
 @Composable
 fun HighlightedMessageCard(
     message: InboxMessage,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSendReply: ((messageId: String, replyText: String, isPublic: Boolean) -> Unit)? = null,
+    isReplySending: Boolean = false,
+    replyError: String? = null
 ) {
     var selectedRating by remember { mutableStateOf<String?>(null) }
     var replyText by remember { mutableStateOf("") }
@@ -204,19 +208,38 @@ fun HighlightedMessageCard(
             // Send reply button
             Button(
                 onClick = {
-                    // TODO: Implement reply sending
+                    onSendReply?.invoke(message.id, replyText, true)
                     replyText = ""
                 },
-                enabled = replyText.isNotBlank(),
+                enabled = replyText.isNotBlank() && !isReplySending,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = accentColor
                 )
             ) {
+                if (isReplySending) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "Send Reply",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Show reply error if any
+            replyError?.let { error ->
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Send Reply",
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         }

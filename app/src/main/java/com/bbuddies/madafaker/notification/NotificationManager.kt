@@ -9,6 +9,7 @@ import androidx.core.app.NotificationCompat
 import com.bbuddies.madafaker.R
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.notification_domain.model.NotificationPayload
+import com.bbuddies.madafaker.notification_domain.repository.NotificationManagerRepository
 import com.bbuddies.madafaker.notification_domain.usecase.GetPlaceholderMessageUseCase
 import com.bbuddies.madafaker.notification_domain.usecase.TrackNotificationEventUseCase
 import com.bbuddies.madafaker.presentation.MainActivity
@@ -24,7 +25,7 @@ class NotificationManager @Inject constructor(
     @ApplicationContext private val context: Context,
     private val getPlaceholderMessageUseCase: GetPlaceholderMessageUseCase,
     private val trackNotificationEventUseCase: TrackNotificationEventUseCase
-) {
+) : NotificationManagerRepository {
 
     companion object {
         private const val CHANNEL_ID = "madafaker_messages"
@@ -150,12 +151,12 @@ class NotificationManager @Inject constructor(
         }
     }
 
-    fun handleNotificationOpened(messageId: String, notificationId: String, mode: Mode) {
+    fun handleNotificationOpenedWithMode(messageId: String, notificationId: String, mode: Mode) {
         val timeToOpen = calculateTimeToOpen(notificationId)
         trackNotificationOpened(messageId, mode, timeToOpen)
     }
 
-    fun handleNotificationDismissed(messageId: String, notificationId: String, mode: Mode) {
+    fun handleNotificationDismissedWithMode(messageId: String, notificationId: String, mode: Mode) {
         val timeInTray = calculateTimeInTray(notificationId)
         trackNotificationDismissed(messageId, mode, timeInTray)
     }
@@ -168,6 +169,24 @@ class NotificationManager @Inject constructor(
         } catch (e: Exception) {
             0L
         }
+    }
+
+    /**
+     * Dismiss all notifications from system tray
+     * Called when user views inbox organically
+     */
+    override fun dismissAllNotifications() {
+        notificationManager.cancel(NOTIFICATION_ID)
+    }
+
+    override fun handleNotificationOpened(messageId: String, notificationId: String, mode: String) {
+        val modeEnum = Mode.valueOf(mode)
+        handleNotificationOpenedWithMode(messageId, notificationId, modeEnum)
+    }
+
+    override fun handleNotificationDismissed(messageId: String, notificationId: String, mode: String) {
+        val modeEnum = Mode.valueOf(mode)
+        handleNotificationDismissedWithMode(messageId, notificationId, modeEnum)
     }
 
     private fun calculateTimeInTray(notificationId: String): Long {

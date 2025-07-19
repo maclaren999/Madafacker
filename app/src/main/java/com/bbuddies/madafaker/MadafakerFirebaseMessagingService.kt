@@ -33,7 +33,7 @@ class MadafakerFirebaseMessagingService : FirebaseMessagingService() {
             handleDataPayload(message.data)
         }
 
-        // Legacy notification handling (fallback)w
+        // Legacy notification handling (fallback)
         if (message.notification != null) {
             Log.d(TAG, "Received legacy notification: ${message.notification}")
         }

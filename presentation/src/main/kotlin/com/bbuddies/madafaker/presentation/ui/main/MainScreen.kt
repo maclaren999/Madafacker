@@ -12,6 +12,8 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,12 +47,21 @@ fun MainScreen(
 ) {
     val pagerState = rememberPagerState(pageCount = { MainTab.entries.size })
     val scope = rememberCoroutineScope()
+    val highlightedMessageId by viewModel.highlightedMessageId.collectAsState()
 
     // Handle deep link navigation to Inbox tab
     LaunchedEffect(deepLinkData) {
         if (deepLinkData != null) {
             // Navigate to Inbox tab (index 2)
             pagerState.animateScrollToPage(MainTab.INBOX.ordinal)
+        }
+    }
+
+    // Handle organic navigation to Inbox tab
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage == MainTab.INBOX.ordinal && deepLinkData == null) {
+            // User navigated to inbox organically (not via notification)
+            viewModel.onInboxViewed()
         }
     }
 
@@ -100,7 +111,7 @@ fun MainScreen(
                             MainTab.MY_POSTS -> MyPostsTab(viewModel)
                             MainTab.INBOX -> InboxTab(
                                 viewModel = viewModel,
-                                highlightedMessageId = if (page == MainTab.INBOX.ordinal) deepLinkData?.messageId else null
+                                highlightedMessageId = highlightedMessageId
                             )
                             MainTab.ACCOUNT -> AccountTab(
                                 viewModel = hiltViewModel<AccountTabViewModel>(),
@@ -136,6 +147,15 @@ private class PreviewMainViewModel : MainScreenContract {
     private val _currentMode = MutableStateFlow(Mode.SHINE)
     override val currentMode: StateFlow<Mode> = _currentMode
 
+    private val _isReplySending = MutableStateFlow(false)
+    override val isReplySending: StateFlow<Boolean> = _isReplySending
+
+    private val _replyError = MutableStateFlow<String?>(null)
+    override val replyError: StateFlow<String?> = _replyError
+
+    private val _highlightedMessageId = MutableStateFlow<String?>(null)
+    override val highlightedMessageId: StateFlow<String?> = _highlightedMessageId
+
     private val _warningsFlow = MutableStateFlow<((android.content.Context) -> String?)?>(null)
     override val warningsFlow: StateFlow<((android.content.Context) -> String?)?> = _warningsFlow
 
@@ -146,6 +166,10 @@ private class PreviewMainViewModel : MainScreenContract {
     override fun toggleMode() {}
     override fun refreshMessages() {}
     override fun clearDraft() {}
+    override fun onSendReply(messageId: String, replyText: String, isPublic: Boolean) {}
+    override fun clearReplyError() {}
+    override fun onInboxViewed() {}
+    override fun markMessageAsRead(messageId: String) {}
 }
 
 @Preview(showBackground = true)
