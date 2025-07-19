@@ -57,17 +57,25 @@ class AuthViewModel @Inject constructor(
                     val authResult = googleAuthManager.extractAndStoreCredentials(googleResult)
 
                     if (authResult != null) {
-                        // Store Google auth and check if user exists
-                        userRepository.storeGoogleAuth(authResult.idToken, authResult.googleUserId)
+                        // Authenticate with Firebase using Google ID token
+                        val firebaseUser = googleAuthManager.firebaseAuthWithGoogle(authResult.idToken)
 
-                        try {
-                            // Try to authenticate existing user
-                            userRepository.authenticateWithGoogle(authResult.idToken, authResult.googleUserId)
-                            // User exists, proceed to main screen
-                            onSuccessfulSignIn(notificationPermissionHelper)
-                        } catch (e: Exception) {
-                            // User doesn't exist, show nickname input
-                            _authUiState.value = AuthUiState.POST_GOOGLE_AUTH
+                        if (firebaseUser != null) {
+                            // Store Google auth and check if user exists
+                            userRepository.storeGoogleAuth(authResult.idToken, authResult.googleUserId)
+
+                            try {
+                                // Try to authenticate existing user
+                                userRepository.authenticateWithGoogle(authResult.idToken, authResult.googleUserId)
+                                // User exists, proceed to main screen
+                                onSuccessfulSignIn(notificationPermissionHelper)
+                            } catch (e: Exception) {
+                                // User doesn't exist, show nickname input
+                                _authUiState.value = AuthUiState.POST_GOOGLE_AUTH
+                            }
+                        } else {
+                            _warningsFlow.emit { "Firebase authentication failed" }
+                            _authUiState.value = AuthUiState.INITIAL
                         }
                     } else {
                         _warningsFlow.emit { "Failed to process Google authentication" }
@@ -120,6 +128,30 @@ class AuthViewModel @Inject constructor(
                 _warningsFlow.emit { "Account creation failed: ${e.localizedMessage}" }
             } finally {
                 _isSigningIn.value = false
+            }
+        }
+    }
+
+    /**
+     * Signs out the current user from both Firebase and clears all credential state.
+     */
+    fun signOut(onSignOutComplete: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                // Sign out from Google and Firebase
+                googleAuthManager.signOut()
+
+                // Clear user data from repository
+                userRepository.clearAllUserData()
+
+                // Reset UI state
+                _authUiState.value = AuthUiState.INITIAL
+                _draftNickname.value = ""
+
+                onSignOutComplete()
+            } catch (e: Exception) {
+                Timber.e(e, "Sign out failed")
+                _warningsFlow.emit { "Sign out failed: ${e.localizedMessage}" }
             }
         }
     }

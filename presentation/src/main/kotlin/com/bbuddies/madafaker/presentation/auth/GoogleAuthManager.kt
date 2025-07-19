@@ -1,15 +1,21 @@
 package com.bbuddies.madafaker.presentation.auth
 
 import android.content.Context
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import com.bbuddies.madafaker.presentation.BuildConfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,6 +30,7 @@ class GoogleAuthManager @Inject constructor(
 ) {
     private val webClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
     private val credentialManager = CredentialManager.create(context)
+    private val firebaseAuth = FirebaseAuth.getInstance()
 
     // Store Google credentials for later use in account creation
     private var storedGoogleIdToken: String? = null
@@ -121,6 +128,70 @@ class GoogleAuthManager @Inject constructor(
      */
     fun hasStoredCredentials(): Boolean {
         return storedGoogleIdToken != null && storedGoogleUserId != null
+    }
+
+    /**
+     * Authenticates with Firebase using the Google ID token.
+     * @param idToken The Google ID token to authenticate with
+     * @return FirebaseUser if successful, null otherwise
+     */
+    suspend fun firebaseAuthWithGoogle(idToken: String): FirebaseUser? {
+        return try {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            val result = firebaseAuth.signInWithCredential(credential).await()
+
+            if (result.user != null) {
+                Timber.d("Firebase authentication successful. User: ${result.user?.uid}")
+                result.user
+            } else {
+                Timber.e("Firebase authentication failed: No user returned")
+                null
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Firebase authentication failed")
+            throw e
+        }
+    }
+
+    /**
+     * Signs out the user from both Firebase and clears credential state.
+     */
+    suspend fun signOut() {
+        try {
+            // Firebase sign out
+            firebaseAuth.signOut()
+
+            // Clear stored credentials
+            clearStoredCredentials()
+
+            // Clear credential state from Credential Manager
+            val clearRequest = ClearCredentialStateRequest()
+            credentialManager.clearCredentialState(clearRequest)
+
+            Timber.d("User signed out successfully")
+        } catch (e: ClearCredentialException) {
+            Timber.e(e, "Failed to clear credential state: ${e.localizedMessage}")
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Sign out failed")
+            throw e
+        }
+    }
+
+    /**
+     * Gets the current Firebase user.
+     * @return FirebaseUser if signed in, null otherwise
+     */
+    fun getCurrentFirebaseUser(): FirebaseUser? {
+        return firebaseAuth.currentUser
+    }
+
+    /**
+     * Checks if user is currently signed in to Firebase.
+     * @return true if signed in, false otherwise
+     */
+    fun isSignedIn(): Boolean {
+        return firebaseAuth.currentUser != null
     }
 }
 

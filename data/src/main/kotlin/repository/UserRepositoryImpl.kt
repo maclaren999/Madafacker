@@ -235,7 +235,7 @@ class UserRepositoryImpl @Inject constructor(
             try {
                 // For existing users, just get current user info with the Google ID token in header
                 val user = webService.getCurrentUser()
-                preferenceManager.updateAuthToken(googleIdToken = idToken)
+                preferenceManager.updateAuthToken(idToken)
                 localDao.insertUser(user)
                 Timber.tag("USER_REPO").d("User authenticated with Google. User ID: $googleUserId")
                 return@withContext user
