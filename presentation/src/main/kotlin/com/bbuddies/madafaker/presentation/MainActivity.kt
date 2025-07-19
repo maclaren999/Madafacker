@@ -1,5 +1,6 @@
 package com.bbuddies.madafaker.presentation
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,12 +18,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.bbuddies.madafaker.presentation.theme.MadafakerTheme
+import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var sharedTextManager: SharedTextManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Handle shared text from external apps
+        handleSharedText(intent)
+
 //        setupGoogleAuth()
 
         // Enable edge-to-edge display
@@ -60,6 +72,28 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        // Handle shared text when app is already running (singleTop launch mode)
+        handleSharedText(intent)
+    }
+
+    /**
+     * Handles shared text from external apps via ACTION_SEND intent.
+     * Extracts text from intent extras and passes it to SharedTextManager.
+     */
+    private fun handleSharedText(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+            val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+            if (!sharedText.isNullOrBlank()) {
+                Timber.d("Received shared text: ${sharedText.take(50)}...")
+                sharedTextManager.setSharedText(sharedText)
+            } else {
+                Timber.w("Received ACTION_SEND intent but no text found")
             }
         }
     }

@@ -11,6 +11,9 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,8 +34,10 @@ import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTabViewModel
 import com.bbuddies.madafaker.presentation.ui.main.tabs.InboxTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.MyPostsTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.WriteTab
+import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
@@ -42,6 +47,18 @@ fun MainScreen(
 ) {
     val pagerState = rememberPagerState(pageCount = { MainTab.entries.size })
     val scope = rememberCoroutineScope()
+
+    // Handle shared text navigation
+    val hasUnconsumedSharedText by viewModel.sharedTextManager.hasUnconsumedSharedText.collectAsState()
+
+    // Navigate to WriteTab when shared text is received
+    LaunchedEffect(hasUnconsumedSharedText) {
+        if (hasUnconsumedSharedText && pagerState.currentPage != MainTab.WRITE.ordinal) {
+            scope.launch {
+                pagerState.animateScrollToPage(MainTab.WRITE.ordinal)
+            }
+        }
+    }
 
     ScreenWithWarnings(
         warningsFlow = viewModel.warningsFlow,
@@ -124,6 +141,8 @@ private class PreviewMainViewModel : MainScreenContract {
 
     private val _warningsFlow = MutableStateFlow<((android.content.Context) -> String?)?>(null)
     override val warningsFlow: StateFlow<((android.content.Context) -> String?)?> = _warningsFlow
+
+    override val sharedTextManager = SharedTextManager()
 
     override fun onSendMessage(message: String) {}
     override fun onDraftMessageChanged(message: String) {

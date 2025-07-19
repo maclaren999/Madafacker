@@ -4,6 +4,7 @@ import android.content.Context
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.presentation.base.UiState
+import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import kotlinx.coroutines.flow.StateFlow
 
 interface MainScreenContract {
@@ -20,6 +21,9 @@ interface MainScreenContract {
 
     // Warnings (from BaseViewModel)
     val warningsFlow: StateFlow<((context: Context) -> String?)?>
+
+    // Shared text manager for external text sharing
+    val sharedTextManager: SharedTextManager
 
     // Actions
     fun onSendMessage(message: String)

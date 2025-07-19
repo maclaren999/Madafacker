@@ -276,7 +276,7 @@ fun NicknameInputBlock(
         singleLine = true,
         trailingIcon = {
             Text(
-                text = "${draftNickname.length}/100",
+                text = "${draftNickname.length}/${NicknameDraftValidator.MAX_NICKNAME_LENGTH}",
                 modifier = Modifier.padding(end = 8.dp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

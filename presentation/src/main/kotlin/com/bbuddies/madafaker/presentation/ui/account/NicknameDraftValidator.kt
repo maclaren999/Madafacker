@@ -87,9 +87,10 @@ class NicknameDraftValidator(
             }
         }
 
-
-    /** Maximum allowed length for a nickname. */
-    val MAX_NICKNAME_LENGTH = 100
+    companion object {
+        /** Maximum allowed length for a nickname. */
+        val MAX_NICKNAME_LENGTH = 24
+    }
 
     /**
      * Checks if the nickname has the correct format.

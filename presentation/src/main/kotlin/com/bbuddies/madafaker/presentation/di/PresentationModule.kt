@@ -2,6 +2,7 @@ package com.bbuddies.madafaker.presentation.di
 
 import android.content.Context
 import com.bbuddies.madafaker.presentation.utils.NotificationPermissionHelper
+import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,5 +20,11 @@ object PresentationModule {
         @ApplicationContext context: Context
     ): NotificationPermissionHelper {
         return NotificationPermissionHelper(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSharedTextManager(): SharedTextManager {
+        return SharedTextManager()
     }
 }
