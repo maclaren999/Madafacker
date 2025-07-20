@@ -6,7 +6,6 @@ import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.auth.GoogleAuthManager
 import com.bbuddies.madafaker.presentation.auth.GoogleAuthResult
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
-import com.bbuddies.madafaker.presentation.base.MfResult
 import com.bbuddies.madafaker.presentation.utils.NotificationPermissionHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -154,7 +153,7 @@ class AuthViewModel @Inject constructor(
 
         return when {
             nickname.isEmpty() -> "Please enter a nickname"
-            nicknameDraftValidationResult.value !is MfResult.Success -> "Please enter a valid nickname"
+            nicknameDraftValidationResult.value !is ValidationState.Success -> "Please enter a valid nickname"
             else -> null
         }
     }

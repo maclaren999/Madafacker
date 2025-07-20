@@ -37,7 +37,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.R
-import com.bbuddies.madafaker.presentation.base.MfResult
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,7 +47,7 @@ fun AuthScreenPreview() {
     AuthScreen(
         authUiState = AuthUiState.INITIAL,
         draftNickname = "Nickname",
-        validationResult = MfResult.Success(Unit),
+        validationResult = ValidationState.Success,
         onNicknameChange = {},
         onGoogleSignIn = {},
         onCreateAccount = {},
@@ -117,7 +116,7 @@ fun AuthScreen(
 fun AuthScreen(
     authUiState: AuthUiState,
     draftNickname: String,
-    validationResult: MfResult<Unit>?,
+    validationResult: ValidationState?,
     onNicknameChange: (String) -> Unit,
     onGoogleSignIn: () -> Unit,
     onCreateAccount: () -> Unit,
@@ -204,7 +203,7 @@ fun InitialAuthContent(
 @Composable
 fun PostGoogleAuthContent(
     draftNickname: String,
-    validationResult: MfResult<Unit>?,
+    validationResult: ValidationState?,
     onNicknameChange: (String) -> Unit,
     onCreateAccount: () -> Unit,
     isSigningIn: Boolean
@@ -230,7 +229,7 @@ fun PostGoogleAuthContent(
         CreateAccountButton(
             onClick = onCreateAccount,
             isLoading = isSigningIn,
-            isEnabled = validationResult is MfResult.Success && draftNickname.isNotBlank(),
+            isEnabled = validationResult is ValidationState.Success && draftNickname.isNotBlank(),
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -265,7 +264,7 @@ fun ProfileAvatar() {
 @Composable
 fun NicknameInputBlock(
     draftNickname: String,
-    validationResult: MfResult<Unit>?,
+    validationResult: ValidationState?,
     onNicknameChange: (String) -> Unit,
 ) {
     TextField(
@@ -298,8 +297,12 @@ fun NicknameInputBlock(
         shape = RoundedCornerShape(8.dp),
         supportingText = {
             when (validationResult) {
-                is MfResult.Loading -> Text(stringResource(R.string.auth_validating_nickname), color = Color.Gray)
-                is MfResult.Error -> Text(
+                is ValidationState.Loading -> Text(
+                    stringResource(R.string.auth_validating_nickname),
+                    color = Color.Gray
+                )
+
+                is ValidationState.Error -> Text(
                     validationResult.getErrorString.invoke(LocalContext.current),
                     color = Color.Red
                 )

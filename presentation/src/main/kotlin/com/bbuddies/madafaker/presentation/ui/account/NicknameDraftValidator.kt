@@ -3,7 +3,6 @@ package com.bbuddies.madafaker.presentation.ui.account
 import android.content.Context
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.bbuddies.madafaker.presentation.R
-import com.bbuddies.madafaker.presentation.base.MfResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -12,6 +11,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.coroutines.cancellation.CancellationException
+
+/**
+ * Represents the state of nickname validation.
+ */
+sealed class ValidationState {
+    object Success : ValidationState()
+    object Loading : ValidationState()
+    data class Error(val getErrorString: (context: Context) -> String) : ValidationState()
+}
 
 /**
  * Validates nickname drafts for user accounts.
@@ -25,7 +33,7 @@ class NicknameDraftValidator(
 ) {
 
     /** Current validation result. */
-    val validationResult: MutableStateFlow<MfResult<Unit>?> =
+    val validationResult: MutableStateFlow<ValidationState?> =
         MutableStateFlow(null)
 
     private var validationJob: Job? = null
@@ -43,7 +51,7 @@ class NicknameDraftValidator(
             validationResult.value = null
             val formatResult = hasCorrectFormat(newNickname)
 
-            if (formatResult is MfResult.Error) {
+            if (formatResult is ValidationState.Error) {
                 validationResult.value = formatResult
                 return@launch
             }
@@ -56,7 +64,7 @@ class NicknameDraftValidator(
                 }
             }
             delay(500)
-            validationResult.value = MfResult.Loading() // Show loading if it takes too long
+            validationResult.value = ValidationState.Loading // Show loading if it takes too long
         }
     }
 
@@ -66,24 +74,24 @@ class NicknameDraftValidator(
      * @param nickname The nickname to check.
      * @return Result of the availability check.
      */
-    private suspend fun checkNameAvailability(nickname: String): MfResult<Unit>? =
+    private suspend fun checkNameAvailability(nickname: String): ValidationState? =
         runCatching {
             val isAvailable = userRepository.isNameAvailable(nickname)
             if (isAvailable) {
-                MfResult.Success(Unit)
+                ValidationState.Success
             } else {
-                MfResult.Error({ context: Context ->
+                ValidationState.Error { context: Context ->
                     context.getString(R.string.account_nickname_is_not_available)
-                }, Unit)
+                }
             }
         }.getOrElse { it ->
             if (it is CancellationException)
                 null
             else {
                 Timber.e(it)
-                MfResult.Error({ context: Context ->
+                ValidationState.Error { context: Context ->
                     context.getString(R.string.network_error)
-                })
+                }
             }
         }
 
@@ -98,16 +106,16 @@ class NicknameDraftValidator(
      * @param nickname The nickname to check.
      * @return Result of the format check.
      */
-    fun hasCorrectFormat(nickname: String): MfResult<Unit> =
+    fun hasCorrectFormat(nickname: String): ValidationState =
         when {
-            nickname.isEmpty() -> MfResult.Error({ context: Context ->
+            nickname.isEmpty() -> ValidationState.Error { context: Context ->
                 context.getString(R.string.account_nickname_cannot_be_empty)
-            })
+            }
 
-            nickname.length > MAX_NICKNAME_LENGTH -> MfResult.Error({ context: Context ->
+            nickname.length > MAX_NICKNAME_LENGTH -> ValidationState.Error { context: Context ->
                 context.getString(R.string.account_nickname_is_too_long, MAX_NICKNAME_LENGTH)
-            })
+            }
 
-            else -> MfResult.Success(Unit)
+            else -> ValidationState.Success
         }
 }
