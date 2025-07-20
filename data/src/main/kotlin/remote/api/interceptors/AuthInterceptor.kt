@@ -10,7 +10,7 @@ class AuthInterceptor @Inject constructor(
 ) : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalRequest = chain.request()
-        val authToken = preferenceManager.googleIdAuthToken.value
+        val authToken = preferenceManager.firebaseIdToken.value
 
         val newRequest =
             if (authToken != null)

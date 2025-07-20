@@ -58,7 +58,7 @@ interface UserRepository {
 
     suspend fun clearAllUserData()
 
-    suspend fun storeGoogleAuth(idToken: String, googleUserId: String)
+    suspend fun storeGoogleAuth(googleIdToken: String, googleUserId: String, firebaseIdToken: String)
     suspend fun createUserWithGoogle(nickname: String, idToken: String, googleUserId: String): User
-    suspend fun authenticateWithGoogle(idToken: String, googleUserId: String): User
+    suspend fun authenticateWithGoogle(googleIdToken: String, googleUserId: String): User
 }

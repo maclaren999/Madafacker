@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -59,14 +60,17 @@ class AuthViewModel @Inject constructor(
                     if (authResult != null) {
                         // Authenticate with Firebase using Google ID token
                         val firebaseUser = googleAuthManager.firebaseAuthWithGoogle(authResult.idToken)
-
                         if (firebaseUser != null) {
+                            val firebaseIdToken = firebaseUser.getIdToken(true).await()?.token ?: return@launch
+                            Timber.d("Firebase Auth Token: $firebaseIdToken")
+
                             // Store Google auth and check if user exists
-                            userRepository.storeGoogleAuth(authResult.idToken, authResult.googleUserId)
+                            userRepository.storeGoogleAuth(authResult.idToken, authResult.googleUserId, firebaseIdToken)
 
                             try {
                                 // Try to authenticate existing user
                                 userRepository.authenticateWithGoogle(authResult.idToken, authResult.googleUserId)
+
                                 // User exists, proceed to main screen
                                 onSuccessfulSignIn(notificationPermissionHelper)
                             } catch (e: Exception) {

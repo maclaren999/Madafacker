@@ -191,11 +191,10 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun storeGoogleAuth(idToken: String, googleUserId: String) = withContext(Dispatchers.IO) {
-        Timber.d("Google Auth IDs: idToken: $idToken googleUserId: $googleUserId")
-        preferenceManager.updateAuthToken(idToken)
-        // Store Google User ID if neededfor future reference
-        // You might want to add this to your preference manager as well
+    override suspend fun storeGoogleAuth(googleIdToken: String, googleUserId: String, firebaseIdToken: String) =
+        withContext(Dispatchers.IO) {
+            Timber.d("Auth IDs: googleIdToken: $googleIdToken googleUserId: $googleUserId firebaseIdToken: $firebaseIdToken")
+            preferenceManager.updateAllAuthTokens(googleIdToken, googleUserId, firebaseIdToken)
     }
 
     override suspend fun createUserWithGoogle(nickname: String, idToken: String, googleUserId: String): User =
@@ -204,9 +203,9 @@ class UserRepositoryImpl @Inject constructor(
             val initialFcmToken = firebaseMessaging.token.await()
 
             try {
-                // The API endpoint remains the same, but the Google ID token will be sent in the header
                 val user = webService.createUser(CreateUserRequest(nickname, initialFcmToken))
-                preferenceManager.updateAuthToken(idToken)
+                // Note: We only update googleIdToken here since all tokens were already stored in storeGoogleAuth
+                preferenceManager.updateGoogleIdToken(idToken)
 
                 localDao.insertUser(user)
                 Timber.tag("USER_REPO").d("User created with Google Auth. User ID: $googleUserId")
@@ -218,7 +217,7 @@ class UserRepositoryImpl @Inject constructor(
                     val freshFcmToken = refreshFcmToken()
                     try {
                         val user = webService.createUser(CreateUserRequest(nickname, freshFcmToken))
-                        preferenceManager.updateAuthToken(idToken)
+                        preferenceManager.updateGoogleIdToken(idToken)
                         localDao.insertUser(user)
                         return@withContext user
                     } catch (retryException: Exception) {
@@ -230,12 +229,13 @@ class UserRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun authenticateWithGoogle(idToken: String, googleUserId: String): User =
+    override suspend fun authenticateWithGoogle(googleIdToken: String, googleUserId: String): User =
         withContext(Dispatchers.IO) {
             try {
-                // For existing users, just get current user info with the Google ID token in header
+                // For existing users, just get current user info with the Firebase ID token in header
                 val user = webService.getCurrentUser()
-                preferenceManager.updateAuthToken(idToken)
+                // Note: We only update googleIdToken here since firebaseIdToken was already stored in storeGoogleAuth
+                preferenceManager.updateGoogleIdToken(googleIdToken)
                 localDao.insertUser(user)
                 Timber.tag("USER_REPO").d("User authenticated with Google. User ID: $googleUserId")
                 return@withContext user
