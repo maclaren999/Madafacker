@@ -31,6 +31,7 @@ class PreferenceManagerImpl @Inject constructor(
             object AuthToken : PreferenceKey<String>(stringPreferencesKey("auth_token"))
             object FirebaseIdToken : PreferenceKey<String>(stringPreferencesKey("firebase_id_token"))
             object GoogleUserId : PreferenceKey<String>(stringPreferencesKey("google_user_id"))
+            object FirebaseUid : PreferenceKey<String>(stringPreferencesKey("firebase_uid"))
             object CurrentMode : PreferenceKey<String>(stringPreferencesKey("current_mode"))
             object UnsentDraftBody : PreferenceKey<String>(stringPreferencesKey("unsent_draft_body"))
             object UnsentDraftMode : PreferenceKey<String>(stringPreferencesKey("unsent_draft_mode"))
@@ -71,7 +72,14 @@ class PreferenceManagerImpl @Inject constructor(
             initialValue = null
         )
 
-    override suspend fun updateGoogleIdToken(googleIdToken: String) {
+    override val firebaseUid: StateFlow<String?> = dataStore.get<String>(PreferenceKey.FirebaseUid)
+        .stateIn(
+            scope = CoroutineScope(Dispatchers.IO),
+            started = SharingStarted.Eagerly,
+            initialValue = null
+        )
+
+    override suspend fun updateAuthToken(googleIdToken: String) {
         dataStore.set(PreferenceKey.AuthToken, googleIdToken)
     }
 
@@ -83,11 +91,21 @@ class PreferenceManagerImpl @Inject constructor(
         dataStore.set(PreferenceKey.GoogleUserId, googleUserId)
     }
 
-    override suspend fun updateAllAuthTokens(googleIdToken: String, googleUserId: String, firebaseIdToken: String) {
+    override suspend fun updateFirebaseUid(firebaseUid: String) {
+        dataStore.set(PreferenceKey.FirebaseUid, firebaseUid)
+    }
+
+    override suspend fun updateAllAuthTokens(
+        googleIdToken: String,
+        googleUserId: String,
+        firebaseIdToken: String,
+        firebaseUid: String
+    ) {
         dataStore.edit { preferences ->
             preferences[PreferenceKey.AuthToken.key] = googleIdToken
             preferences[PreferenceKey.GoogleUserId.key] = googleUserId
             preferences[PreferenceKey.FirebaseIdToken.key] = firebaseIdToken
+            preferences[PreferenceKey.FirebaseUid.key] = firebaseUid
         }
     }
 

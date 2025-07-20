@@ -57,7 +57,7 @@ class GoogleAuthManager @Inject constructor(
                 context = context
             )
         } catch (e: GetCredentialException) {
-            Timber.e(e, "Google authentication failed")
+            Timber.e(e, "Google authentication failed - ${e.localizedMessage}")
             throw e
         }
     }
@@ -68,33 +68,44 @@ class GoogleAuthManager @Inject constructor(
      * @return GoogleAuthResult containing the extracted credentials
      */
     fun extractAndStoreCredentials(response: GetCredentialResponse): GoogleAuthResult? {
-        val credential = response.credential
+        return try {
+            val credential = response.credential
 
-        return if (credential is CustomCredential &&
-            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-        ) {
-
-            try {
-                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                val idToken = googleIdTokenCredential.idToken
-                val googleUserId = googleIdTokenCredential.id
-
-                // Store credentials for later use
-                storedGoogleIdToken = idToken
-                storedGoogleUserId = googleUserId
-
-                Timber.d("Google Sign-In successful. User ID: $googleUserId")
-
-                GoogleAuthResult(
-                    idToken = idToken,
-                    googleUserId = googleUserId
-                )
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to extract Google credentials")
+            if (credential is CustomCredential &&
+                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+            ) {
+                extractGoogleIdTokenCredential(credential)
+            } else {
+                Timber.e("Unexpected credential type: ${credential.type}")
                 null
             }
-        } else {
-            Timber.e("Unexpected credential type: ${credential.type}")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to extract credentials")
+            null
+        }
+    }
+
+    /**
+     * Extracts Google ID token credential from custom credential.
+     * @param credential The custom credential containing Google ID token
+     * @return GoogleAuthResult with extracted credentials
+     */
+    private fun extractGoogleIdTokenCredential(credential: CustomCredential): GoogleAuthResult? {
+        return try {
+            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+            val idToken = googleIdTokenCredential.idToken
+            val googleUserId = googleIdTokenCredential.id
+
+            // Store credentials for later use
+            storedGoogleIdToken = idToken
+            storedGoogleUserId = googleUserId
+
+            GoogleAuthResult(
+                idToken = idToken,
+                googleUserId = googleUserId
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to create GoogleIdTokenCredential")
             null
         }
     }
@@ -138,17 +149,17 @@ class GoogleAuthManager @Inject constructor(
     suspend fun firebaseAuthWithGoogle(idToken: String): FirebaseUser? {
         return try {
             val credential = GoogleAuthProvider.getCredential(idToken, null)
-            val result = firebaseAuth.signInWithCredential(credential).await()
+            val authResult = firebaseAuth.signInWithCredential(credential).await()
 
-            if (result.user != null) {
-                Timber.d("Firebase authentication successful. User: ${result.user?.uid}")
-                result.user
+            val firebaseUser = authResult.user
+            if (firebaseUser != null) {
+                firebaseUser
             } else {
-                Timber.e("Firebase authentication failed: No user returned")
+                Timber.e("Firebase authentication failed - No user returned")
                 null
             }
         } catch (e: Exception) {
-            Timber.e(e, "Firebase authentication failed")
+            Timber.e(e, "Firebase authentication failed - ${e.localizedMessage}")
             throw e
         }
     }

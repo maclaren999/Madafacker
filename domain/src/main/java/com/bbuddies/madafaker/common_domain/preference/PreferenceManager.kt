@@ -12,12 +12,19 @@ interface PreferenceManager {
     val googleIdAuthToken: StateFlow<String?>
     val firebaseIdToken: StateFlow<String?>
     val googleUserId: StateFlow<String?>
+    val firebaseUid: StateFlow<String?>
     val currentMode: StateFlow<Mode>
 
-    suspend fun updateGoogleUserId(googleUserId: String)
-    suspend fun updateGoogleIdToken(googleIdToken: String)
+    suspend fun updateAuthToken(googleIdToken: String)
     suspend fun updateFirebaseIdToken(firebaseIdToken: String)
-    suspend fun updateAllAuthTokens(googleIdToken: String, googleUserId: String, firebaseIdToken: String)
+    suspend fun updateGoogleUserId(googleUserId: String)
+    suspend fun updateFirebaseUid(firebaseUid: String)
+    suspend fun updateAllAuthTokens(
+        googleIdToken: String,
+        googleUserId: String,
+        firebaseIdToken: String,
+        firebaseUid: String
+    )
     suspend fun updateCurrentMode(mode: Mode)
     suspend fun updateMode(mode: Mode)
     suspend fun clearUserData()
