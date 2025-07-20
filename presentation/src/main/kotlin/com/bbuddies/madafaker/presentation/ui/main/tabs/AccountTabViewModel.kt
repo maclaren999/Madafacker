@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,11 +71,11 @@ class AccountTabViewModel @Inject constructor(
         }
 
         try {
-            context.startActivity(Intent.createChooser(emailIntent, "Send Email"))
+            context.startActivity(Intent.createChooser(emailIntent, context.getString(R.string.email_chooser_title)))
             _showDeleteAccountDialog.value = false
         } catch (e: Exception) {
             viewModelScope.launch {
-                _warningsFlow.emit { _ -> "No email app found. Please contact group.byte.buddies@gmail.com directly." }
+                _warningsFlow.emit { ctx -> ctx.getString(R.string.error_send_email_app_not_found) }
             }
         }
     }
@@ -86,7 +87,12 @@ class AccountTabViewModel @Inject constructor(
                 _showLogoutDialog.value = false
                 onLogoutComplete()
             } catch (e: Exception) {
-                _warningsFlow.emit { _ -> "Failed to logout: ${e.localizedMessage}" }
+                _warningsFlow.emit { ctx ->
+                    ctx.getString(
+                        R.string.error_logout_failed,
+                        e.localizedMessage ?: "Unknown error"
+                    )
+                }
             }
         }
     }

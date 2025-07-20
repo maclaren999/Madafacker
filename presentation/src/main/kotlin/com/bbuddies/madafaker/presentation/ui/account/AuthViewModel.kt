@@ -2,6 +2,7 @@ package com.bbuddies.madafaker.presentation.ui.account
 
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.auth.GoogleAuthManager
 import com.bbuddies.madafaker.presentation.auth.GoogleAuthResult
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
@@ -132,7 +133,12 @@ class AuthViewModel @Inject constructor(
                 onSignOutComplete()
             } catch (e: Exception) {
                 Timber.e(e, "Sign out failed")
-                _warningsFlow.emit { "Sign out failed: ${e.localizedMessage}" }
+                _warningsFlow.emit { ctx ->
+                    ctx.getString(
+                        R.string.error_sign_out_failed,
+                        e.localizedMessage ?: "Unknown error"
+                    )
+                }
             }
         }
     }
@@ -247,7 +253,10 @@ class AuthViewModel @Inject constructor(
             FirebaseAuthResult.Success(firebaseUser.uid, firebaseIdToken)
         } catch (e: Exception) {
             Timber.e(e, "Firebase authentication failed")
-            FirebaseAuthResult.Failure(e, "Firebase authentication failed. Please try again.")
+            FirebaseAuthResult.Failure(
+                e,
+                "Firebase authentication failed. Please try again."
+            ) // This will be handled by context in the UI
         }
     }
 

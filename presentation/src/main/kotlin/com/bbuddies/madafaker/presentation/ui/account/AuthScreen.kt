@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.bbuddies.madafaker.presentation.NavigationItem
+import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.MfResult
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -176,7 +178,7 @@ fun InitialAuthContent(
     ) {
         // Welcome section
         Text(
-            text = "Welcome to Madafaker",
+            text = stringResource(R.string.auth_welcome_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,
@@ -184,7 +186,7 @@ fun InitialAuthContent(
         )
 
         Text(
-            text = "Share random thoughts with strangers and discover unexpected perspectives",
+            text = stringResource(R.string.auth_welcome_subtitle),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -211,7 +213,7 @@ fun PostGoogleAuthContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Choose your nickname",
+            text = stringResource(R.string.auth_choose_nickname_title),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Medium,
             modifier = Modifier.padding(bottom = 16.dp)
@@ -240,7 +242,7 @@ fun LoadingContent() {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Setting up your account...",
+            text = stringResource(R.string.auth_setting_up_account),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center
         )
@@ -271,8 +273,8 @@ fun NicknameInputBlock(
         onValueChange = {
             onNicknameChange(it)
         },
-        label = { Text("Enter the desired nickname") },
-        placeholder = { Text("Your nickname") },
+        label = { Text(stringResource(R.string.auth_nickname_input_label)) },
+        placeholder = { Text(stringResource(R.string.auth_nickname_input_placeholder)) },
         singleLine = true,
         trailingIcon = {
             Text(
@@ -296,7 +298,7 @@ fun NicknameInputBlock(
         shape = RoundedCornerShape(8.dp),
         supportingText = {
             when (validationResult) {
-                is MfResult.Loading -> Text("Validating nickname...", color = Color.Gray)
+                is MfResult.Loading -> Text(stringResource(R.string.auth_validating_nickname), color = Color.Gray)
                 is MfResult.Error -> Text(
                     validationResult.getErrorString.invoke(LocalContext.current),
                     color = Color.Red
@@ -325,10 +327,10 @@ fun GoogleSignInButton(
         shape = RoundedCornerShape(8.dp)
     ) {
         if (isLoading) {
-            Text("Signing in...")
+            Text(stringResource(R.string.auth_signing_in))
         } else {
             Text(
-                text = "Log In with Google",
+                text = stringResource(R.string.auth_login_with_google),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
             )
@@ -354,10 +356,10 @@ fun CreateAccountButton(
         shape = RoundedCornerShape(8.dp)
     ) {
         if (isLoading) {
-            Text("Creating account...")
+            Text(stringResource(R.string.auth_creating_account))
         } else {
             Text(
-                text = "Create Account",
+                text = stringResource(R.string.auth_create_account),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
             )
