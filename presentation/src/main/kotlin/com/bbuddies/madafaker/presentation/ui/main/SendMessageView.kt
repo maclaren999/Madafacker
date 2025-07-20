@@ -116,7 +116,7 @@ private fun ModeToggleCard(
                         Mode.SHADOW -> stringResource(R.string.mode_shadow)
                     },
                     color = MainScreenTheme.TextPrimary,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.titleMedium
                 )
                 Text(
                     text = when (currentMode) {

@@ -38,7 +38,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -158,11 +157,10 @@ fun NotificationPermissionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Title
+            // Title - Using H2 style
             Text(
                 text = stringResource(R.string.notification_permission_title),
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
 
@@ -189,7 +187,7 @@ fun NotificationPermissionScreen(
             ) {
                 Text(
                     text = stringResource(R.string.notification_permission_enable),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
 
@@ -205,7 +203,7 @@ fun NotificationPermissionScreen(
             ) {
                 Text(
                     text = stringResource(R.string.notification_permission_skip),
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
         }

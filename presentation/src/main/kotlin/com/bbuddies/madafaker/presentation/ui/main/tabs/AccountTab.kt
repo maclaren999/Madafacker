@@ -140,11 +140,10 @@ private fun ProfileSection(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // User Name
+            // User Name - Using H2 style
             Text(
                 text = user?.name ?: stringResource(R.string.account_unknown_user),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineMedium,
                 color = MainScreenTheme.TextPrimary
             )
 
@@ -218,8 +217,7 @@ private fun AccountActionsSection(
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = stringResource(R.string.account_logout_button),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.labelLarge
             )
         }
 
@@ -243,8 +241,7 @@ private fun AccountActionsSection(
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = stringResource(R.string.account_delete_button),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.labelLarge,
                 color = Color.Red
             )
         }

@@ -32,7 +32,6 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -154,7 +153,7 @@ private fun MessageCard(message: InboxMessage) {
             Text(
                 text = message.body,
                 color = MainScreenTheme.TextPrimary,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+                style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
                 maxLines = 6,
                 overflow = TextOverflow.Ellipsis

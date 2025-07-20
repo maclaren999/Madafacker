@@ -29,11 +29,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.R
@@ -175,11 +173,10 @@ fun InitialAuthContent(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Welcome section
+        // Welcome section - Using H1 style
         Text(
             text = stringResource(R.string.auth_welcome_title),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineLarge,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -213,8 +210,7 @@ fun PostGoogleAuthContent(
     ) {
         Text(
             text = stringResource(R.string.auth_choose_nickname_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -330,12 +326,14 @@ fun GoogleSignInButton(
         shape = RoundedCornerShape(8.dp)
     ) {
         if (isLoading) {
-            Text(stringResource(R.string.auth_signing_in))
+            Text(
+                text = stringResource(R.string.auth_signing_in),
+                style = MaterialTheme.typography.labelLarge
+            )
         } else {
             Text(
                 text = stringResource(R.string.auth_login_with_google),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.labelLarge
             )
         }
     }
@@ -359,12 +357,14 @@ fun CreateAccountButton(
         shape = RoundedCornerShape(8.dp)
     ) {
         if (isLoading) {
-            Text(stringResource(R.string.auth_creating_account))
+            Text(
+                text = stringResource(R.string.auth_creating_account),
+                style = MaterialTheme.typography.labelLarge
+            )
         } else {
             Text(
                 text = stringResource(R.string.auth_create_account),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.labelLarge
             )
         }
     }
