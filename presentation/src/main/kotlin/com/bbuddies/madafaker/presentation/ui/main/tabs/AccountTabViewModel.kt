@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import com.bbuddies.madafaker.notification_domain.repository.AnalyticsRepository
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AccountTabViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val analyticsRepository: AnalyticsRepository
 ) : BaseViewModel() {
 
     private val _showDeleteAccountDialog = MutableStateFlow(false)
@@ -22,6 +24,19 @@ class AccountTabViewModel @Inject constructor(
 
     private val _showLogoutDialog = MutableStateFlow(false)
     val showLogoutDialog: StateFlow<Boolean> = _showLogoutDialog
+
+    // Feedback form state
+    private val _showFeedbackDialog = MutableStateFlow(false)
+    val showFeedbackDialog: StateFlow<Boolean> = _showFeedbackDialog
+
+    private val _feedbackText = MutableStateFlow("")
+    val feedbackText: StateFlow<String> = _feedbackText
+
+    private val _selectedRating = MutableStateFlow<Int?>(null)
+    val selectedRating: StateFlow<Int?> = _selectedRating
+
+    private val _isSubmittingFeedback = MutableStateFlow(false)
+    val isSubmittingFeedback: StateFlow<Boolean> = _isSubmittingFeedback
 
     val currentUser = userRepository.currentUser
 
@@ -39,6 +54,24 @@ class AccountTabViewModel @Inject constructor(
 
     fun dismissLogoutDialog() {
         _showLogoutDialog.value = false
+    }
+
+    fun onFeedbackClick() {
+        _showFeedbackDialog.value = true
+    }
+
+    fun dismissFeedbackDialog() {
+        _showFeedbackDialog.value = false
+    }
+
+    fun onFeedbackTextChange(text: String) {
+        if (text.length <= 500) { // Character limit
+            _feedbackText.value = text
+        }
+    }
+
+    fun onRatingChange(rating: Int?) {
+        _selectedRating.value = rating
     }
 
     fun sendDeleteAccountEmail(context: Context, user: User?) {
@@ -87,6 +120,50 @@ class AccountTabViewModel @Inject constructor(
                 onLogoutComplete()
             } catch (e: Exception) {
                 _warningsFlow.emit { _ -> "Failed to logout: ${e.localizedMessage}" }
+            }
+        }
+    }
+
+    fun submitFeedback() {
+        val rating = _selectedRating.value
+        val text = _feedbackText.value.trim()
+
+        // Validate that at least one field is provided
+        if (rating == null && text.isEmpty()) {
+            viewModelScope.launch {
+                _warningsFlow.emit { _ -> "Please provide either a rating or feedback text." }
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            _isSubmittingFeedback.value = true
+
+            try {
+                // Track feedback submission with Firebase Analytics
+                val parameters = mutableMapOf<String, Any>().apply {
+                    rating?.let { put("rating", it) }
+                    put("feedback_length", text.length)
+                    put("has_rating", rating != null)
+                    put("has_text", text.isNotEmpty())
+                    put("timestamp", System.currentTimeMillis())
+
+                    // Add user ID if available
+                    currentUser.value?.id?.let { put("user_id", it) }
+                }
+
+                analyticsRepository.trackCustomEvent("feedback_submitted", parameters)
+
+                // Clear form and close dialog on success
+                _feedbackText.value = ""
+                _selectedRating.value = null
+                _showFeedbackDialog.value = false
+                _warningsFlow.emit { _ -> "Thank you for your feedback!" }
+
+            } catch (e: Exception) {
+                _warningsFlow.emit { _ -> "Failed to submit feedback. Please try again." }
+            } finally {
+                _isSubmittingFeedback.value = false
             }
         }
     }

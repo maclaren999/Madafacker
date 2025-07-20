@@ -363,6 +363,7 @@ Very Low Engagement (<10% open rate): 1 notification/day
 - `notification_ignored` - Unread after 12 hours
 - `notification_feedback_prompt_sent` - Special re-engagement notification sent
 - `notification_feedback_submitted` - User completed feedback form
+- `feedback_submitted` - User submitted feedback via Account Tab (✅ Implemented)
 - `message_rated` - User rated message (dislike/like/superlike)
 - `message_replied` - User sent reply to message
 
@@ -583,6 +584,17 @@ class NotificationFrequencyManager {
 ```
 
 ### 12.9 Feedback Form Design
+
+**Account Tab Feedback Form (✅ Implemented):**
+
+- **Star Rating System:** 1-5 stars (optional)
+- **Text Feedback:** Free-form text input, 500 character limit (optional)
+- **Form Validation:** Requires either rating OR text feedback
+- **Firebase Analytics Integration:**
+  - Event: `feedback_submitted`
+  - Parameters: `rating`, `feedback_length`, `user_id`, `timestamp`, `has_rating`, `has_text`
+- **UI/UX:** Material Design dialog with loading states and success feedback
+- **Accessibility:** Follows existing app patterns and MVVM architecture
 
 **Dormant User Feedback Options:**
 
