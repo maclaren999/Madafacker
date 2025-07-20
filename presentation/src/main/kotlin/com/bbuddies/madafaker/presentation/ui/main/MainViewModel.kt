@@ -11,6 +11,7 @@ import com.bbuddies.madafaker.common_domain.repository.DraftRepository
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.bbuddies.madafaker.common_domain.utils.NetworkConnectivityMonitor
+import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.base.suspendUiStateOf
@@ -183,7 +184,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 is UiState.Error -> {
-                    showError(result.message ?: "Failed to send message")
+                    showError { ctx -> result.message ?: ctx.getString(R.string.error_send_message_failed) }
                 }
 
                 is UiState.Loading -> {} // Won't happen with suspendUiStateOf
@@ -252,7 +253,7 @@ class MainViewModel @Inject constructor(
             try {
                 messageRepository.refreshMessages()
             } catch (e: Exception) {
-                showError("Failed to refresh messages: ${e.message}")
+                showError { ctx -> ctx.getString(R.string.error_refresh_messages_failed, e.message ?: "Unknown error") }
             }
         }
     }
@@ -263,9 +264,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    private fun showError(message: String) {
+    private fun showError(messageProvider: (android.content.Context) -> String) {
         viewModelScope.launch {
-            _warningsFlow.emit { _ -> message }
+            _warningsFlow.emit(messageProvider)
         }
     }
 }
