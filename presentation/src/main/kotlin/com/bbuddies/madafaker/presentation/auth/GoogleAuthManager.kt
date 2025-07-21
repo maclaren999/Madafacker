@@ -8,6 +8,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
+import com.bbuddies.madafaker.common_domain.auth.TokenRefreshService
 import com.bbuddies.madafaker.presentation.BuildConfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -27,7 +28,7 @@ import javax.inject.Singleton
 @Singleton
 class GoogleAuthManager @Inject constructor(
     @ApplicationContext private val context: Context
-) {
+) : TokenRefreshService {
     private val webClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
     private val credentialManager = CredentialManager.create(context)
     private val firebaseAuth = FirebaseAuth.getInstance()
@@ -201,8 +202,32 @@ class GoogleAuthManager @Inject constructor(
      * Checks if user is currently signed in to Firebase.
      * @return true if signed in, false otherwise
      */
-    fun isSignedIn(): Boolean {
+    override fun isSignedIn(): Boolean {
         return firebaseAuth.currentUser != null
+    }
+
+    /**
+     * Refreshes the Firebase ID token for the current user.
+     * @param forceRefresh Whether to force refresh the token even if it's not expired
+     * @return Fresh Firebase ID token if successful
+     * @throws IllegalStateException if user is not signed in
+     * @throws Exception if token refresh fails
+     */
+    override suspend fun refreshFirebaseIdToken(forceRefresh: Boolean): String {
+        val currentUser = firebaseAuth.currentUser
+            ?: throw IllegalStateException("User is not signed in to Firebase")
+
+        return try {
+            val tokenResult = currentUser.getIdToken(forceRefresh).await()
+            val token = tokenResult?.token
+                ?: throw IllegalStateException("Failed to get Firebase ID token")
+
+            Timber.d("Firebase ID token refreshed successfully")
+            token
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to refresh Firebase ID token")
+            throw e
+        }
     }
 }
 

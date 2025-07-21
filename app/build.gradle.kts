@@ -68,10 +68,19 @@ dependencies {
     implementation(project(":data"))
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+
+    // Firebase BOM
+    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.messaging.ktx)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.config)
+
     implementation(libs.work.runtime.ktx)
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.hilt)

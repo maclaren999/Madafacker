@@ -18,14 +18,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -54,6 +59,10 @@ fun AccountTab(
     val currentUser by viewModel.currentUser.collectAsState()
     val showDeleteDialog by viewModel.showDeleteAccountDialog.collectAsState()
     val showLogoutDialog by viewModel.showLogoutDialog.collectAsState()
+    val showFeedbackDialog by viewModel.showFeedbackDialog.collectAsState()
+    val feedbackText by viewModel.feedbackText.collectAsState()
+    val selectedRating by viewModel.selectedRating.collectAsState()
+    val isSubmittingFeedback by viewModel.isSubmittingFeedback.collectAsState()
 
     ScreenWithWarnings(
         warningsFlow = viewModel.warningsFlow
@@ -78,6 +87,7 @@ fun AccountTab(
             AccountActionsSection(
                 onDeleteAccountClick = viewModel::onDeleteAccountClick,
                 onLogoutClick = viewModel::onLogoutClick,
+                onFeedbackClick = viewModel::onFeedbackClick,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -102,6 +112,19 @@ fun AccountTab(
                 viewModel.performLogout(onNavigateToAuth)
             },
             onDismiss = viewModel::dismissLogoutDialog
+        )
+    }
+
+    // Feedback Dialog
+    if (showFeedbackDialog) {
+        FeedbackDialog(
+            feedbackText = feedbackText,
+            selectedRating = selectedRating,
+            isSubmitting = isSubmittingFeedback,
+            onFeedbackTextChange = viewModel::onFeedbackTextChange,
+            onRatingChange = viewModel::onRatingChange,
+            onSubmit = viewModel::submitFeedback,
+            onDismiss = viewModel::dismissFeedbackDialog
         )
     }
 }
@@ -192,6 +215,7 @@ private fun ProfileSection(
 private fun AccountActionsSection(
     onDeleteAccountClick: () -> Unit,
     onLogoutClick: () -> Unit,
+    onFeedbackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -218,6 +242,30 @@ private fun AccountActionsSection(
             Text(
                 text = stringResource(R.string.account_logout_button),
                 style = MaterialTheme.typography.labelLarge
+            )
+        }
+
+        // Send Feedback Button
+        Button(
+            onClick = onFeedbackClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary
+            ),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = "Send Feedback",
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Send Feedback",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
             )
         }
 
@@ -349,4 +397,149 @@ private fun LogoutConfirmationDialog(
             }
         }
     )
+}
+
+@Composable
+private fun FeedbackDialog(
+    feedbackText: String,
+    selectedRating: Int?,
+    isSubmitting: Boolean,
+    onFeedbackTextChange: (String) -> Unit,
+    onRatingChange: (Int?) -> Unit,
+    onSubmit: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = { if (!isSubmitting) onDismiss() },
+        title = {
+            Text(
+                text = "Send Feedback",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Star Rating
+                Text(
+                    text = "Rate your experience (optional):",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                StarRating(
+                    rating = selectedRating,
+                    onRatingChange = onRatingChange,
+                    enabled = !isSubmitting
+                )
+
+                // Feedback Text Input
+                Text(
+                    text = "Tell us about your experience (optional):",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                OutlinedTextField(
+                    value = feedbackText,
+                    onValueChange = onFeedbackTextChange,
+                    placeholder = { Text("Tell us about your experience...") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(120.dp),
+                    enabled = !isSubmitting,
+                    maxLines = 4,
+                    supportingText = {
+                        Text(
+                            text = "${feedbackText.length}/500",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (feedbackText.length > 450) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                    }
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onSubmit,
+                enabled = !isSubmitting && (selectedRating != null || feedbackText.trim().isNotEmpty()),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                if (isSubmitting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                Text(if (isSubmitting) "Submitting..." else "Submit")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isSubmitting
+            ) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+private fun StarRating(
+    rating: Int?,
+    onRatingChange: (Int?) -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        for (i in 1..5) {
+            IconButton(
+                onClick = {
+                    if (enabled) {
+                        onRatingChange(if (rating == i) null else i)
+                    }
+                },
+                enabled = enabled
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Star $i",
+                    tint = if (rating != null && i <= rating) {
+                        Color(0xFFFFD700) // Gold color for filled stars
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                    },
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
+
+        if (rating != null) {
+            Spacer(modifier = Modifier.width(8.dp))
+            TextButton(
+                onClick = { if (enabled) onRatingChange(null) },
+                enabled = enabled
+            ) {
+                Text(
+                    text = "Clear",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+        }
+    }
 }

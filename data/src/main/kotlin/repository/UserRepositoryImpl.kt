@@ -1,5 +1,6 @@
 package repository
 
+import com.bbuddies.madafaker.common_domain.auth.TokenRefreshService
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
@@ -29,7 +30,8 @@ import javax.inject.Singleton
 class UserRepositoryImpl @Inject constructor(
     private val webService: MadafakerApi,
     private val preferenceManager: PreferenceManager,
-    private val localDao: MadafakerDao // Add this for local caching
+    private val localDao: MadafakerDao, // Add this for local caching
+    private val tokenRefreshService: TokenRefreshService
 ) : UserRepository {
 
     val firebaseMessaging by lazy { FirebaseMessaging.getInstance() }
@@ -59,7 +61,7 @@ class UserRepositoryImpl @Inject constructor(
             }
             .stateIn(
                 scope = repositoryScope,
-                started = SharingStarted.Lazily,
+                started = SharingStarted.Eagerly,
                 initialValue = AuthenticationState.Loading
             )
 
@@ -96,7 +98,7 @@ class UserRepositoryImpl @Inject constructor(
         .map { it is AuthenticationState.Authenticated }
         .stateIn(
             scope = repositoryScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.Eagerly,
             initialValue = false
         )
 
@@ -109,15 +111,13 @@ class UserRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getCurrentUser(): User? = withContext(Dispatchers.IO) {
+        // Cache-only lookup - network fetching is handled by authenticationState flow
         preferenceManager.googleIdAuthToken.value?.let { token ->
             try {
-                val user = webService.getCurrentUser() // authToken added in AuthInterceptor
-                // Cache user locally
-                localDao.insertUser(user) // Direct use of domain model
-                user
-            } catch (exception: Exception) {
-                // Fallback to local cache if network fails
                 localDao.getUserById(token)
+            } catch (exception: Exception) {
+                Timber.e(exception, "Error getting user from cache")
+                null
             }
         }
     }
@@ -198,7 +198,27 @@ class UserRepositoryImpl @Inject constructor(
         firebaseUid: String
     ) = withContext(Dispatchers.IO) {
         preferenceManager.updateAllAuthTokens(googleIdToken, googleUserId, firebaseIdToken, firebaseUid)
+        Timber.tag("USER_REPO")
+            .d("Auth googleIdToken: $googleIdToken \n googleUserId: $googleUserId \n firebaseIdToken: $firebaseIdToken \n firebaseUid: $firebaseUid")
     }
+
+    override suspend fun refreshFirebaseIdToken(): String = withContext(Dispatchers.IO) {
+        try {
+            // Get fresh token from Firebase
+            val newToken = tokenRefreshService.refreshFirebaseIdToken()
+
+            // Update stored token
+            preferenceManager.updateFirebaseIdToken(newToken)
+
+            Timber.tag("USER_REPO").d("Firebase ID token refreshed and updated in preferences")
+            newToken
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to refresh Firebase ID token")
+            throw e
+        }
+    }
+
+
 
     override suspend fun createUserWithGoogle(nickname: String, idToken: String, googleUserId: String): User =
         withContext(Dispatchers.IO) {
