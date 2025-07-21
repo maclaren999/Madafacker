@@ -61,7 +61,7 @@ class UserRepositoryImpl @Inject constructor(
             }
             .stateIn(
                 scope = repositoryScope,
-                started = SharingStarted.Lazily,
+                started = SharingStarted.Eagerly,
                 initialValue = AuthenticationState.Loading
             )
 
@@ -98,7 +98,7 @@ class UserRepositoryImpl @Inject constructor(
         .map { it is AuthenticationState.Authenticated }
         .stateIn(
             scope = repositoryScope,
-            started = SharingStarted.Lazily,
+            started = SharingStarted.Eagerly,
             initialValue = false
         )
 
@@ -111,15 +111,13 @@ class UserRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getCurrentUser(): User? = withContext(Dispatchers.IO) {
+        // Cache-only lookup - network fetching is handled by authenticationState flow
         preferenceManager.googleIdAuthToken.value?.let { token ->
             try {
-                val user = webService.getCurrentUser() // authToken added in AuthInterceptor
-                // Cache user locally
-                localDao.insertUser(user) // Direct use of domain model
-                user
-            } catch (exception: Exception) {
-                // Fallback to local cache if network fails
                 localDao.getUserById(token)
+            } catch (exception: Exception) {
+                Timber.e(exception, "Error getting user from cache")
+                null
             }
         }
     }

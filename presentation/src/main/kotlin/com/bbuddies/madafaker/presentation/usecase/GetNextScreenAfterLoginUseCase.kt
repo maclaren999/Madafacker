@@ -11,7 +11,9 @@ class GetNextScreenAfterLoginUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(): NavigationItem {
-        val currentUser = userRepository.getCurrentUser()
+        // Use awaitCurrentUser to wait for authentication state to complete
+        // This avoids duplicate API calls by reusing the authenticationState flow
+        val currentUser = userRepository.awaitCurrentUser()
 
         return when {
             currentUser == null -> NavigationItem.Account
