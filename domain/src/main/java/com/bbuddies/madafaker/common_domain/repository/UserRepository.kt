@@ -64,6 +64,14 @@ interface UserRepository {
         firebaseIdToken: String,
         firebaseUid: String
     )
+
+    /**
+     * Refreshes the Firebase ID token and updates stored preferences.
+     * @return New Firebase ID token if successful
+     * @throws Exception if refresh fails
+     */
+    suspend fun refreshFirebaseIdToken(): String
+
     suspend fun createUserWithGoogle(nickname: String, idToken: String, googleUserId: String): User
     suspend fun authenticateWithGoogle(googleIdToken: String, googleUserId: String): User
 }
