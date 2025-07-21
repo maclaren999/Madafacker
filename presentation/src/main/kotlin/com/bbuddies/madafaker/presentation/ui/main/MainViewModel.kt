@@ -14,10 +14,10 @@ import com.bbuddies.madafaker.common_domain.usecase.CreateReplyUseCase
 import com.bbuddies.madafaker.common_domain.utils.NetworkConnectivityMonitor
 import com.bbuddies.madafaker.notification_domain.repository.NotificationManagerRepository
 import com.bbuddies.madafaker.notification_domain.usecase.TrackNotificationEventUseCase
-import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.base.suspendUiStateOf
+import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +38,7 @@ class MainViewModel @Inject constructor(
     private val preferenceManager: PreferenceManager,
     private val networkMonitor: NetworkConnectivityMonitor,
     private val draftRepository: DraftRepository,
-    private val sharedTextManagerImpl: SharedTextManager
+    private val sharedTextManagerImpl: SharedTextManager,
     private val createReplyUseCase: CreateReplyUseCase,
     private val trackNotificationEventUseCase: TrackNotificationEventUseCase,
     private val notificationManagerRepository: NotificationManagerRepository
@@ -199,7 +199,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 is UiState.Error -> {
-                    showError { ctx -> result.message ?: ctx.getString(R.string.error_send_message_failed) }
+                    showError(result.message ?: "Failed to send message")
                 }
 
                 is UiState.Loading -> {} // Won't happen with suspendUiStateOf

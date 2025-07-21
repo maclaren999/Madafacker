@@ -89,13 +89,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        // Handle new notification intents when app is already running
-        // This will be handled by the navigation system
-    }
-
     private fun handleNotificationIntent(
         intent: Intent,
         deepLinkData: androidx.compose.runtime.MutableState<DeepLinkData?>
@@ -118,6 +111,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         // Handle shared text when app is already running (singleTop launch mode)
         handleSharedText(intent)
     }
