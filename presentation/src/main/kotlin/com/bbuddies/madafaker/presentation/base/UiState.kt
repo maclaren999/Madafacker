@@ -14,8 +14,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.bbuddies.madafaker.presentation.R
 
 sealed class UiState<out T> {
     data object Loading : UiState<Nothing>()
@@ -42,7 +44,7 @@ fun <T> UiState<T>.HandleState(
         is UiState.Loading -> DefaultLoadingContent()
         is UiState.Success -> content(data)
         is UiState.Error -> DefaultErrorContent(
-            message = message ?: exception.localizedMessage ?: "An error occurred",
+            message = message ?: exception.localizedMessage ?: stringResource(R.string.error_default),
             onRetry = onRetry
         )
     }
@@ -80,7 +82,7 @@ private fun DefaultErrorContent(
         if (onRetry != null) {
             Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = onRetry) {
-                Text("Retry")
+                Text(stringResource(R.string.button_retry))
             }
         }
     }

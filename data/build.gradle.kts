@@ -34,7 +34,12 @@ android {
 dependencies {
     implementation(project(":domain"))
 
+    // Firebase BOM
+    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging.ktx)
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.config)
+
     api(libs.retrofit)
     api(libs.okhttp.logging.interceptor)
     api(libs.okhttp)

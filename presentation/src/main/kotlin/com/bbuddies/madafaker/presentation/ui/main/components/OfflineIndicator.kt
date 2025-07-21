@@ -15,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.bbuddies.madafaker.presentation.R
 
 @Composable
 @Deprecated("Not used")
@@ -41,7 +43,7 @@ fun OfflineIndicator(
                 modifier = Modifier.size(16.dp)
             )
             Text(
-                text = "Offline",
+                text = stringResource(R.string.offline_status),
                 color = Color.White,
                 style = MaterialTheme.typography.bodySmall
             )

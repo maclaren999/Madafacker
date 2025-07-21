@@ -37,12 +37,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.bbuddies.madafaker.presentation.NavigationItem
+import com.bbuddies.madafaker.presentation.R
 
 @Composable
 fun NotificationPermissionScreen(
@@ -158,7 +160,7 @@ fun NotificationPermissionScreen(
 
             // Title
             Text(
-                text = "Stay Connected",
+                text = stringResource(R.string.notification_permission_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
@@ -168,7 +170,7 @@ fun NotificationPermissionScreen(
 
             // Description
             Text(
-                text = "Get notified when someone sends you a message or replies to your posts. We promise no spam!",
+                text = stringResource(R.string.notification_permission_description),
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -186,7 +188,7 @@ fun NotificationPermissionScreen(
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "Enable Notifications",
+                    text = stringResource(R.string.notification_permission_enable),
                     style = MaterialTheme.typography.titleMedium
                 )
             }
@@ -202,7 +204,7 @@ fun NotificationPermissionScreen(
                 )
             ) {
                 Text(
-                    text = "Maybe Later",
+                    text = stringResource(R.string.notification_permission_skip),
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -222,16 +224,16 @@ fun NotificationPermissionScreen(
                                 onDismissSettingsPrompt()
                             }
                         ) {
-                            Text("Settings", color = Color.White)
+                            Text(stringResource(R.string.notification_permission_settings), color = Color.White)
                         }
                     },
                     dismissAction = {
                         TextButton(onClick = onDismissSettingsPrompt) {
-                            Text("Dismiss", color = Color.White)
+                            Text(stringResource(R.string.notification_permission_dismiss), color = Color.White)
                         }
                     }
                 ) {
-                    Text("Notifications are essential for the best experience. Enable them in Settings.")
+                    Text(stringResource(R.string.notification_permission_snackbar))
                 }
             }
         }

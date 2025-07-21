@@ -305,8 +305,8 @@ Below are the canonical endpoints as documented in Postman. Note that server cur
 
 ## 10  Naming – Modes
 
-| Positive Mode | Unfiltered Mode |
-| ------------- | --------------- |
+| Filtered Mode | Unfiltered Mode |
+|---------------|-----------------|
 | **Shine**     | **Shadow**      |
 
 *(Locked for MVP)*
@@ -318,5 +318,336 @@ Below are the canonical endpoints as documented in Postman. Note that server cur
 3. **Economy mechanics (coin sink/inflation control):** Deferred to Phase 2 backlog.
 4. **Translation vs. locale restriction:** ML-driven auto‑detect deferred to Phase 2.
 5. **Tablet / foldable layouts:** Not a priority for MVP.
+
+## 12. Adaptive Notification System
+
+### 12.1 Feature Overview
+
+The notification system delivers incoming messages via silent push notifications with generic placeholder content to maintain privacy and
+intrigue. The system adapts notification frequency based on user engagement patterns while respecting timezone and sleep schedules.
+
+**Core Principles:**
+- Privacy-first: Actual message content hidden until app is opened
+- Engagement-driven: Frequency adapts based on user behavior
+- Mode-aware: Different presentation for Shine vs Shadow modes
+- Silent delivery: No sound/vibration, visible in notification tray only
+
+### 12.2 Notification Content & Placeholders
+
+**Shine Mode Placeholders (Supportive/Empathetic):**
+- "Someone shared a thought with you ✨"
+- "A stranger left you something to consider 💭"
+- "Fresh perspective from the universe 🌟"
+- "You've got a random message waiting 🎲"
+- "Someone reached out to you ☀️"
+- "A soul dropped a line for you 📝"
+- "Something meaningful just arrived 🌸"
+- "A human moment awaits ⚡"
+
+**Shadow Mode Placeholders (Edgy/Mysterious):**
+- "Someone shared their unfiltered thoughts 🌙"
+- "A wild message appeared from the shadows 🎪"
+- "Raw thoughts from a stranger 🔮"
+- "Someone dropped their guard for you 🎯"
+- "Unfiltered wisdom just landed 🌊"
+- "A stranger's honest take awaits 🎭"
+- "Something real just surfaced 🌑"
+- "Truth from the underground 🔥"
+
+**Visual Styling:**
+- **Shine Mode:** Warm colors (gold/yellow accent), sun icon
+- **Shadow Mode:** Cool colors (purple/blue accent), moon icon
+- **Notification Icon:** Mode-specific small icon in status bar
+
+### 12.3 Frequency Management System
+
+**Base Frequency:** 1-4 notifications per day (configurable via Firebase Remote Config)
+
+**Engagement-Based Adaptation:**
+```
+High Engagement (>80% open rate): 3-4 notifications/day
+Medium Engagement (40-80% open rate): 2-3 notifications/day
+Low Engagement (10-40% open rate): 1-2 notifications/day
+Very Low Engagement (<10% open rate): 1 notification/day
+```
+
+**Timing Constraints:**
+- **Nighttime Blackout:** No notifications between 10 PM - 8 AM (user's timezone)
+- **Minimum Interval:** 3 hours between notifications
+- **Maximum Interval:** 18 hours (to ensure daily engagement)
+
+**Dormant User Re-engagement:**
+- After 7 days of ignored notifications: Send special feedback prompt
+- Placeholder: "Why are you ignoring me? 🥺 Tap to let us know"
+- Links to in-app feedback form with detailed options
+
+### 12.4 User Feedback Tracking
+
+**Tracked Events:**
+- `notification_received` - FCM delivery confirmed
+- `notification_opened` - User taps notification
+- `notification_dismissed` - User swipes away notification
+- `notification_ignored` - Unread after 12 hours
+- `notification_feedback_prompt_sent` - Special re-engagement notification sent
+- `notification_feedback_submitted` - User completed feedback form
+- `feedback_submitted` - User submitted feedback via Account Tab (✅ Implemented)
+- `message_rated` - User rated message (dislike/like/superlike)
+- `message_replied` - User sent reply to message
+
+**Client-Side Logic:**
+- Track engagement metrics locally using DataStore
+- Calculate engagement rate over rolling 7-day window
+- Use Firebase Remote Config for frequency parameters
+- All events sent to Firebase Analytics
+
+### 12.5 UI/UX Behavior
+
+**Notification Tray:**
+- Mode-specific icon and accent color
+- Generic placeholder text only (randomly selected by client)
+- Silent delivery (no sound/vibration)
+- Notifications remain up to 12 hours if not opened
+
+**Deep Link Behavior:**
+- Notification tap → Navigate to Inbox tab
+- Target message highlighted with:
+  - **Larger, bold text**
+  - **Expanded state** showing 3 rating buttons + reply TextField
+  - **Reply hint:** "Tap to reply to this message..."
+
+**Rating Interaction:**
+- After selection, button is highlighted with background color
+- Visual feedback confirms rating was recorded
+- Rating options:
+  - Dislike (👎)
+  - Like (👍)
+  - Superlike (❤️)
+- Rating analytics event sent only after 10 seconds (or when screen closed) in case if user changes mind
+
+**Simplified Analytics:**
+- Direct Firebase Analytics integration (no local storage)
+- Real-time event tracking for immediate insights
+- Backend analytics via BigQuery export from Firebase
+
+### 12.6 Technical Implementation
+
+**Firebase Messaging Service Updates:**
+```kotlin
+// Enhanced notification data payload
+{
+  "messageId": "msg_123",
+  "mode": "shine|shadow",
+  "actualContent": "hidden_until_opened",
+  "timestamp": "ISO8601"
+}
+```
+
+**Notification Channel Configuration:**
+```kotlin
+NotificationChannel(
+  channelId,
+  "Message Notifications",
+  NotificationManager.IMPORTANCE_DEFAULT
+).apply {
+  setSound(null, null) // Silent
+  enableVibration(false)
+  setShowBadge(true)
+}
+```
+
+**Remote Config Parameters:**
+- `notification_frequency_base`: Default daily frequency
+- `engagement_thresholds`: JSON object with engagement brackets
+- `nighttime_start_hour`: Blackout period start (default: 22)
+- `nighttime_end_hour`: Blackout period end (default: 8)
+- `placeholder_messages_shine`: Array of Shine mode placeholders
+- `placeholder_messages_shadow`: Array of Shadow mode placeholders
+
+### 12.7 Simplified Analytics Integration
+
+**Direct Firebase Analytics Events (No Local Storage):**
+```kotlin
+// Real-time event tracking
+"notification_received" -> {
+  "message_id": "msg_123",
+  "mode": "shine|shadow",
+  "user_timezone": "UTC_offset"
+}
+
+"notification_opened" -> {
+  "message_id": "msg_123",
+  "mode": "shine|shadow",
+  "time_to_open": "seconds"
+}
+
+"notification_dismissed" -> {
+  "message_id": "msg_123",
+  "mode": "shine|shadow",
+  "time_in_tray": "seconds"
+}
+
+"notification_ignored" -> {
+  "message_id": "msg_123",
+  "mode": "shine|shadow",
+  "hours_ignored": 24
+}
+
+"message_rated" -> {
+  "message_id": "msg_123",
+  "rating": "dislike|like|superlike",
+  "mode": "shine|shadow",
+  "via_notification": "boolean"
+}
+
+"message_replied" -> {
+  "message_id": "msg_123",
+  "mode": "shine|shadow",
+  "via_notification": "boolean",
+  "reply_length": "characters"
+}
+```
+
+**Backend Analytics via BigQuery:**
+- Firebase Analytics automatically exports to BigQuery
+- Backend queries notification data using SQL
+- Real-time dashboard capabilities
+- No custom API endpoints needed for analytics data
+
+### 12.8 Configuration Management
+
+**Firebase Remote Config Setup:**
+- A/B test different placeholder sets
+- Experiment with frequency algorithms
+- Adjust timing constraints by region
+- Test engagement threshold brackets
+
+## 13. Implementation Status (Simplified Notification System)
+
+### 13.1 Completed Features ✅
+
+**Firebase Cloud Messaging Setup:**
+- ✅ Enhanced FCM service with silent notification support
+- ✅ Notification channels configured for silent delivery (no sound/vibration)
+- ✅ Data payload structure implemented (messageId, mode, timestamp)
+- ✅ Mode-specific notification handling
+
+**Notification UI Components:**
+- ✅ Mode-specific placeholder message arrays (Shine vs Shadow)
+- ✅ Mode-specific styling (warm colors/sun icon for Shine, cool colors/moon icon for Shadow)
+- ✅ HighlightedMessageCard component with expanded state
+- ✅ Visual accents (mode-specific border/background) for targeted messages
+
+**Deep Link Navigation:**
+- ✅ Notification tap navigation to Inbox tab
+- ✅ Message highlighting with expanded state in Inbox
+- ✅ Deep link intent handling in MainActivity
+- ✅ Navigation state management for notification-triggered flows
+
+**Simplified Event Tracking:**
+- ✅ Direct Firebase Analytics integration (no local storage)
+- ✅ Comprehensive event tracking: notification_received, notification_opened, notification_dismissed, notification_ignored, message_rated,
+  message_replied
+- ✅ Real-time analytics without local database complexity
+- ✅ BigQuery-ready data structure for backend analytics
+
+**Remote Config Integration:**
+- ✅ Firebase Remote Config setup for placeholder messages
+- ✅ Configuration management for notification parameters
+- ✅ Fallback to local messages when Remote Config unavailable
+- ✅ Default configuration values for frequency and timing
+
+### 13.2 Simplified Architecture ✅
+
+**Repository Interface:**
+
+- `getPlaceholderMessages(mode: Mode)` - Firebase Remote Config
+- `getNotificationConfig()` - Firebase Remote Config
+
+**Use Case Pattern (Direct Analytics):**
+- `trackNotificationReceived(messageId, mode)`
+- `trackNotificationOpened(messageId, mode, timeToOpen)`
+- `trackNotificationDismissed(messageId, mode, timeInTray)`
+- `trackNotificationIgnored(messageId, mode, hoursIgnored)`
+- `trackMessageRated(messageId, mode, rating, viaNotification)`
+- `trackMessageReplied(messageId, mode, replyLength, viaNotification)`
+
+**Clean Architecture Maintained:**
+- Domain layer: Pure business logic and interfaces
+- Data layer: Firebase integrations only (Analytics + Remote Config)
+- Presentation layer: UI components and navigation
+- App layer: Dependency injection and notification management
+
+### 13.5 Backend Integration Strategy
+
+**Firebase Analytics + BigQuery:**
+
+- Backend accesses notification analytics via BigQuery export
+- Real-time dashboard capabilities through Firebase Console
+- Advanced analytics queries using BigQuery SQL
+
+### 13.6 Production Readiness ✅
+
+**Ready for:**
+
+1. **Firebase Console Setup:** Configure Remote Config values
+2. **BigQuery Export:** Enable Firebase Analytics export
+3. **Testing:** Manual notification testing via Firebase Console
+
+**Client-Side Frequency Logic:**
+
+```kotlin
+class NotificationFrequencyManager {
+  fun calculateOptimalFrequency(): Int {
+    val engagementRate = getEngagementRate()
+    val remoteConfig = getRemoteConfig()
+    return when {
+      engagementRate > 0.8 -> remoteConfig.highEngagementFreq
+      engagementRate > 0.4 -> remoteConfig.mediumEngagementFreq
+      engagementRate > 0.1 -> remoteConfig.lowEngagementFreq
+      else -> remoteConfig.veryLowEngagementFreq
+    }
+  }
+}
+```
+
+### 12.9 Feedback Form Design
+
+**Account Tab Feedback Form (✅ Implemented):**
+
+- **Star Rating System:** 1-5 stars (optional)
+- **Text Feedback:** Free-form text input, 500 character limit (optional)
+- **Form Validation:** Requires either rating OR text feedback
+- **Firebase Analytics Integration:**
+  - Event: `feedback_submitted`
+  - Parameters: `rating`, `feedback_length`, `user_id`, `timestamp`, `has_rating`, `has_text`
+- **UI/UX:** Material Design dialog with loading states and success feedback
+- **Accessibility:** Follows existing app patterns and MVVM architecture
+
+**Dormant User Feedback Options:**
+
+- **Frequency Issues:**
+  - "Too many notifications"
+  - "Too few notifications"
+  - "Bad timing (wrong hours)"
+- **Content Issues:**
+  - "Messages aren't interesting"
+  - "Wrong content mode for me"
+  - "Messages feel repetitive"
+- **Technical Issues:**
+  - "App is too slow"
+  - "Notifications don't work properly"
+  - "Hard to use interface"
+- **Personal Reasons:**
+  - "Too busy right now"
+  - "Lost interest in the app"
+  - "Privacy concerns"
+- **Open Input Field:** "Tell us more..." (optional, 200 char limit)
+
+**Form Behavior:**
+
+- Multiple selection allowed
+- Submit triggers `notification_feedback_submitted` event
+- Results inform frequency algorithm adjustments
+- Anonymous feedback stored for product improvement
 
 ---

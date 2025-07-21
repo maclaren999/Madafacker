@@ -11,11 +11,16 @@ import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.DraftRepository
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import com.bbuddies.madafaker.common_domain.usecase.CreateReplyUseCase
 import com.bbuddies.madafaker.common_domain.utils.NetworkConnectivityMonitor
+import com.bbuddies.madafaker.notification_domain.repository.NotificationManagerRepository
+import com.bbuddies.madafaker.notification_domain.usecase.TrackNotificationEventUseCase
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.base.suspendUiStateOf
+import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
@@ -43,7 +48,11 @@ class MainViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val preferenceManager: PreferenceManager,
     private val networkMonitor: NetworkConnectivityMonitor,
-    private val draftRepository: DraftRepository
+    private val draftRepository: DraftRepository,
+    private val sharedTextManagerImpl: SharedTextManager,
+    private val createReplyUseCase: CreateReplyUseCase,
+    private val trackNotificationEventUseCase: TrackNotificationEventUseCase,
+    private val notificationManagerRepository: NotificationManagerRepository
 ) : BaseViewModel(), MainScreenContract {
 
     private val _draftMessage = MutableStateFlow("")
@@ -58,10 +67,22 @@ class MainViewModel @Inject constructor(
     private val _isSending = MutableStateFlow(false)
     override val isSending: StateFlow<Boolean> = _isSending
 
+    private val _isReplySending = MutableStateFlow(false)
+    override val isReplySending: StateFlow<Boolean> = _isReplySending
+
+    private val _replyError = MutableStateFlow<String?>(null)
+    override val replyError: StateFlow<String?> = _replyError
+
+    private val _highlightedMessageId = MutableStateFlow<String?>(null)
+    override val highlightedMessageId: StateFlow<String?> = _highlightedMessageId
+
     private val _moderationDialog = MutableStateFlow<ModerationDialogState?>(null)
     val moderationDialog: StateFlow<ModerationDialogState?> = _moderationDialog
 
     override val currentMode = preferenceManager.currentMode
+
+    // Expose SharedTextManager to the UI
+    override val sharedTextManager = sharedTextManagerImpl
 
     val authState = userRepository.authenticationState
 
@@ -100,6 +121,7 @@ class MainViewModel @Inject constructor(
         observeMessages()
         restoreDraft()
         setupDraftAutoSave()
+        setupSharedTextHandling()
     }
 
     private fun restoreDraft() {
@@ -140,6 +162,37 @@ class MainViewModel @Inject constructor(
             draftRepository.saveDraft(draft)
         } catch (e: Exception) {
             // Silently fail - draft saving is not critical
+        }
+    }
+
+    /**
+     * Sets up handling of shared text from external apps.
+     * When shared text is available, it pre-populates the draft message.
+     */
+    private fun setupSharedTextHandling() {
+        viewModelScope.launch {
+            sharedTextManagerImpl.sharedText.collect { sharedText ->
+                if (sharedText != null && sharedTextManagerImpl.hasUnconsumedSharedText.value) {
+                    // Only consume shared text if current draft is empty or very short
+                    // to avoid overwriting user's work
+                    val currentDraft = _draftMessage.value
+                    if (currentDraft.isBlank() || currentDraft.length < 10) {
+                        val consumedText = sharedTextManagerImpl.consumeSharedText()
+                        if (consumedText != null) {
+                            // Truncate if too long to fit within app limits
+                            val truncatedText = if (consumedText.length > AppConfig.MAX_MESSAGE_LENGTH) {
+                                consumedText.take(AppConfig.MAX_MESSAGE_LENGTH - 3) + "..."
+                            } else {
+                                consumedText
+                            }
+                            _draftMessage.value = truncatedText
+                        }
+                    } else {
+                        // Clear shared text without consuming if draft already has content
+                        sharedTextManagerImpl.clearSharedText()
+                    }
+                }
+            }
         }
     }
 
@@ -294,6 +347,101 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             preferenceManager.updateCurrentMode(Mode.SHADOW)
             dismissModerationDialog()
+        }
+    }
+
+    override fun onSendReply(messageId: String, replyText: String, isPublic: Boolean) {
+        viewModelScope.launch {
+            _isReplySending.value = true
+            _replyError.value = null
+
+            try {
+                val result = createReplyUseCase(
+                    body = replyText,
+                    parentId = messageId,
+                    isPublic = isPublic
+                )
+
+                result.fold(
+                    onSuccess = { reply ->
+                        showSuccess("Reply sent successfully!")
+
+                        // Track reply analytics
+                        viewModelScope.launch {
+                            try {
+                                trackNotificationEventUseCase.trackMessageReplied(
+                                    messageId = messageId,
+                                    mode = currentMode.value,
+                                    replyLength = replyText.length,
+                                    viaNotification = false // This is from the inbox, not notification
+                                )
+                            } catch (e: Exception) {
+                                // Silently fail analytics tracking
+                            }
+                        }
+
+                        // Optionally refresh messages to show the new reply
+                        refreshMessages()
+                    },
+                    onFailure = { error ->
+                        _replyError.value = error.message ?: "Failed to send reply"
+                    }
+                )
+            } catch (e: Exception) {
+                _replyError.value = e.message ?: "Failed to send reply"
+            } finally {
+                _isReplySending.value = false
+            }
+        }
+    }
+
+    override fun clearReplyError() {
+        _replyError.value = null
+    }
+
+    override fun onInboxViewed() {
+        viewModelScope.launch {
+            try {
+                // Auto-dismiss all notifications
+                notificationManagerRepository.dismissAllNotifications()
+
+                // Get most recent unread message for highlighting
+                val mostRecentUnread = messageRepository.getMostRecentUnreadMessage()
+                _highlightedMessageId.value = mostRecentUnread?.id
+
+                // Track organic inbox viewing - use simple analytics for now
+                // TODO: Replace with proper trackCustomEvent when available
+
+                // Mark all messages as read after a delay (user has seen them)
+                delay(2000) // 2 second delay to ensure user has seen the content
+                messageRepository.markAllIncomingMessagesAsRead()
+
+                // TODO: Refactor highlight behaviour to reflect where user focus is
+                // Clear highlighting after messages are marked as read
+                _highlightedMessageId.value = null
+
+            } catch (e: Exception) {
+                // Silently handle errors - don't disrupt user experience
+            }
+        }
+    }
+
+    override fun markMessageAsRead(messageId: String) {
+        viewModelScope.launch {
+            try {
+                messageRepository.markMessageAsRead(messageId)
+
+                // Track message viewed - simplified for now
+                // TODO: Add proper message viewed tracking
+
+                // If this was the highlighted message, clear highlighting
+                if (_highlightedMessageId.value == messageId) {
+                    _highlightedMessageId.value = null
+                }
+
+            } catch (e: Exception) {
+                // Silently handle errors
+            }
         }
     }
 }

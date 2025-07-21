@@ -1,59 +1,74 @@
 package com.bbuddies.madafaker
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Intent
 import android.util.Log
-import androidx.core.app.NotificationCompat
-import com.bbuddies.madafaker.presentation.MainActivity
+import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.notification.NotificationManager
+import com.bbuddies.madafaker.notification_domain.model.NotificationPayload
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
+@AndroidEntryPoint
 class MadafakerFirebaseMessagingService : FirebaseMessagingService() {
 
     companion object {
         private const val TAG = "MadafakerFirebaseMsgService"
     }
 
+    @Inject
+    lateinit var notificationManager: NotificationManager
+
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
+
     override fun onMessageReceived(message: RemoteMessage) {
-        if (message.data.size > 0) {
-            Log.d(TAG, "Message Data payload: " + message.data)
+        Log.d(TAG, "Message received with data: ${message.data}")
+
+        // Handle data payload for silent notifications
+        if (message.data.isNotEmpty()) {
+            handleDataPayload(message.data)
         }
+
+        // Legacy notification handling (fallback)
         if (message.notification != null) {
-            sendNotification(
-                message.notification!!.body, message.notification!!.title
-            )
+            Log.d(TAG, "Received legacy notification: ${message.notification}")
         }
     }
 
+    private fun handleDataPayload(data: Map<String, String>) {
+        try {
+            val messageId = data["messageId"] ?: return
+            val modeString = data["mode"] ?: "shine"
+            val timestamp = data["timestamp"] ?: ""
+            val actualContent = data["actualContent"]
+
+            val mode = Mode.fromApiValue(modeString)
+
+            val payload = NotificationPayload(
+                messageId = messageId,
+                mode = mode,
+                timestamp = timestamp,
+                actualContent = actualContent
+            )
+
+            // Show notification using our custom manager
+            coroutineScope.launch {
+                notificationManager.showNotification(payload)
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling notification payload", e)
+        }
+    }
+
+    // Legacy notification method - kept for backward compatibility
     private fun sendNotification(messageBody: String?, title: String?) {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        val pendingIntent = PendingIntent.getActivity(
-            this, 0 /* Request code */, intent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val channelId = getString(R.string.default_notification_channel_id)
-        val notificationBuilder: NotificationCompat.Builder =
-            NotificationCompat.Builder(this, channelId)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle(title)
-                .setContentText(messageBody)
-                .setAutoCancel(true)
-                .setContentIntent(pendingIntent)
-        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-
-        // Since android Oreo notification channel is needed.
-        val channel = NotificationChannel(
-            channelId,
-            "Channel human readable title",
-            NotificationManager.IMPORTANCE_DEFAULT
-        )
-        notificationManager.createNotificationChannel(channel)
-        notificationManager.notify(0 /* ID of notification */, notificationBuilder.build())
+        Log.d(TAG, "Legacy notification method called - consider updating backend to use data payload")
+        // This method is now deprecated in favor of data payload handling
     }
 
 

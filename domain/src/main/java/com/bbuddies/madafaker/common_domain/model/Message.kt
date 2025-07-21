@@ -16,7 +16,11 @@ data class Message(
     val localState: MessageState = MessageState.SENT,
     val localCreatedAt: Long = System.currentTimeMillis(),
     val tempId: String? = null,
-    val needsSync: Boolean = false
+    val needsSync: Boolean = false,
+
+    // Read state tracking
+    val isRead: Boolean = false,
+    val readAt: Long? = null
 )
 
 // Separate client-only states

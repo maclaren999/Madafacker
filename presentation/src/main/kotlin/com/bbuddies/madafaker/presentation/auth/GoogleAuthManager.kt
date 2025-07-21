@@ -1,15 +1,22 @@
 package com.bbuddies.madafaker.presentation.auth
 
 import android.content.Context
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
+import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
+import com.bbuddies.madafaker.common_domain.auth.TokenRefreshService
 import com.bbuddies.madafaker.presentation.BuildConfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,9 +28,10 @@ import javax.inject.Singleton
 @Singleton
 class GoogleAuthManager @Inject constructor(
     @ApplicationContext private val context: Context
-) {
+) : TokenRefreshService {
     private val webClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
     private val credentialManager = CredentialManager.create(context)
+    private val firebaseAuth = FirebaseAuth.getInstance()
 
     // Store Google credentials for later use in account creation
     private var storedGoogleIdToken: String? = null
@@ -50,7 +58,7 @@ class GoogleAuthManager @Inject constructor(
                 context = context
             )
         } catch (e: GetCredentialException) {
-            Timber.e(e, "Google authentication failed")
+            Timber.e(e, "Google authentication failed - ${e.localizedMessage}")
             throw e
         }
     }
@@ -61,33 +69,44 @@ class GoogleAuthManager @Inject constructor(
      * @return GoogleAuthResult containing the extracted credentials
      */
     fun extractAndStoreCredentials(response: GetCredentialResponse): GoogleAuthResult? {
-        val credential = response.credential
+        return try {
+            val credential = response.credential
 
-        return if (credential is CustomCredential &&
-            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-        ) {
-
-            try {
-                val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
-                val idToken = googleIdTokenCredential.idToken
-                val googleUserId = googleIdTokenCredential.id
-
-                // Store credentials for later use
-                storedGoogleIdToken = idToken
-                storedGoogleUserId = googleUserId
-
-                Timber.d("Google Sign-In successful. User ID: $googleUserId")
-
-                GoogleAuthResult(
-                    idToken = idToken,
-                    googleUserId = googleUserId
-                )
-            } catch (e: Exception) {
-                Timber.e(e, "Failed to extract Google credentials")
+            if (credential is CustomCredential &&
+                credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+            ) {
+                extractGoogleIdTokenCredential(credential)
+            } else {
+                Timber.e("Unexpected credential type: ${credential.type}")
                 null
             }
-        } else {
-            Timber.e("Unexpected credential type: ${credential.type}")
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to extract credentials")
+            null
+        }
+    }
+
+    /**
+     * Extracts Google ID token credential from custom credential.
+     * @param credential The custom credential containing Google ID token
+     * @return GoogleAuthResult with extracted credentials
+     */
+    private fun extractGoogleIdTokenCredential(credential: CustomCredential): GoogleAuthResult? {
+        return try {
+            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+            val idToken = googleIdTokenCredential.idToken
+            val googleUserId = googleIdTokenCredential.id
+
+            // Store credentials for later use
+            storedGoogleIdToken = idToken
+            storedGoogleUserId = googleUserId
+
+            GoogleAuthResult(
+                idToken = idToken,
+                googleUserId = googleUserId
+            )
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to create GoogleIdTokenCredential")
             null
         }
     }
@@ -121,6 +140,94 @@ class GoogleAuthManager @Inject constructor(
      */
     fun hasStoredCredentials(): Boolean {
         return storedGoogleIdToken != null && storedGoogleUserId != null
+    }
+
+    /**
+     * Authenticates with Firebase using the Google ID token.
+     * @param idToken The Google ID token to authenticate with
+     * @return FirebaseUser if successful, null otherwise
+     */
+    suspend fun firebaseAuthWithGoogle(idToken: String): FirebaseUser? {
+        return try {
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            val authResult = firebaseAuth.signInWithCredential(credential).await()
+
+            val firebaseUser = authResult.user
+            if (firebaseUser != null) {
+                firebaseUser
+            } else {
+                Timber.e("Firebase authentication failed - No user returned")
+                null
+            }
+        } catch (e: Exception) {
+            Timber.e(e, "Firebase authentication failed - ${e.localizedMessage}")
+            throw e
+        }
+    }
+
+    /**
+     * Signs out the user from both Firebase and clears credential state.
+     */
+    suspend fun signOut() {
+        try {
+            // Firebase sign out
+            firebaseAuth.signOut()
+
+            // Clear stored credentials
+            clearStoredCredentials()
+
+            // Clear credential state from Credential Manager
+            val clearRequest = ClearCredentialStateRequest()
+            credentialManager.clearCredentialState(clearRequest)
+
+            Timber.d("User signed out successfully")
+        } catch (e: ClearCredentialException) {
+            Timber.e(e, "Failed to clear credential state: ${e.localizedMessage}")
+            throw e
+        } catch (e: Exception) {
+            Timber.e(e, "Sign out failed")
+            throw e
+        }
+    }
+
+    /**
+     * Gets the current Firebase user.
+     * @return FirebaseUser if signed in, null otherwise
+     */
+    fun getCurrentFirebaseUser(): FirebaseUser? {
+        return firebaseAuth.currentUser
+    }
+
+    /**
+     * Checks if user is currently signed in to Firebase.
+     * @return true if signed in, false otherwise
+     */
+    override fun isSignedIn(): Boolean {
+        return firebaseAuth.currentUser != null
+    }
+
+    /**
+     * Refreshes the Firebase ID token for the current user.
+     * @param forceRefresh Whether to force refresh the token even if it's not expired
+     * @return Fresh Firebase ID token if successful
+     * @throws IllegalStateException if user is not signed in
+     * @throws Exception if token refresh fails
+     */
+    override suspend fun refreshFirebaseIdToken(forceRefresh: Boolean): String {
+        val currentUser = firebaseAuth.currentUser
+            ?: throw IllegalStateException("User is not signed in to Firebase")
+
+        return try {
+            val tokenResult = currentUser.getIdToken(forceRefresh).await()
+            val token = tokenResult?.token
+                ?: throw IllegalStateException("Failed to get Firebase ID token")
+
+            Timber.d("Firebase ID token refreshed successfully")
+            token
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to refresh Firebase ID token")
+            throw e
+        }
     }
 }
 

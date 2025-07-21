@@ -4,6 +4,7 @@ import android.content.Context
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.presentation.base.UiState
+import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import kotlinx.coroutines.flow.StateFlow
 
 interface MainScreenContract {
@@ -18,8 +19,18 @@ interface MainScreenContract {
     // Mode
     val currentMode: StateFlow<Mode>
 
+    // Reply composition
+    val isReplySending: StateFlow<Boolean>
+    val replyError: StateFlow<String?>
+
+    // Message highlighting
+    val highlightedMessageId: StateFlow<String?>
+
     // Warnings (from BaseViewModel)
     val warningsFlow: StateFlow<((context: Context) -> String?)?>
+
+    // Shared text manager for external text sharing
+    val sharedTextManager: SharedTextManager
 
     // Actions
     fun onSendMessage(message: String)
@@ -27,4 +38,12 @@ interface MainScreenContract {
     fun toggleMode()
     fun refreshMessages()
     fun clearDraft() // New: manually clear draft
+
+    // Reply actions
+    fun onSendReply(messageId: String, replyText: String, isPublic: Boolean = true)
+    fun clearReplyError()
+
+    // Message highlighting and read state
+    fun onInboxViewed()
+    fun markMessageAsRead(messageId: String)
 }

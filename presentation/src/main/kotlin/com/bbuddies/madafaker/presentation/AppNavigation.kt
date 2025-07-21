@@ -39,6 +39,7 @@ fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     startDestination: String = NavigationItem.Splash.route,
+    deepLinkData: DeepLinkData? = null
 ) {
     NavHost(
         modifier = modifier,
@@ -56,6 +57,7 @@ fun AppNavHost(
             MainScreen(
                 navController = navController,
                 viewModel = hiltViewModel<MainViewModel>(),
+                deepLinkData = deepLinkData,
                 modifier = Modifier
                     .fillMaxSize()
                     // Handle navigation bars and keyboard for main screen

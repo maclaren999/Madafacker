@@ -1,5 +1,6 @@
 package com.bbuddies.madafaker.presentation
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -12,17 +13,32 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
+import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.presentation.theme.MadafakerTheme
+import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var sharedTextManager: SharedTextManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Handle shared text from external apps
+        handleSharedText(intent)
+
 //        setupGoogleAuth()
 
         // Enable edge-to-edge display
@@ -41,6 +57,14 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
+            val navController = rememberNavController()
+            val deepLinkData = remember { mutableStateOf<DeepLinkData?>(null) }
+
+            // Handle notification deep link
+            LaunchedEffect(Unit) {
+                handleNotificationIntent(intent, deepLinkData)
+            }
+
             MadafakerTheme {
                 // Create a surface that handles the background and basic insets
                 Surface(
@@ -55,8 +79,9 @@ class MainActivity : ComponentActivity() {
                             .windowInsetsPadding(WindowInsets.statusBars)
                     ) {
                         AppNavHost(
-                            navController = rememberNavController(),
-                            modifier = Modifier.fillMaxSize()
+                            navController = navController,
+                            modifier = Modifier.fillMaxSize(),
+                            deepLinkData = deepLinkData.value
                         )
                     }
                 }
@@ -64,7 +89,56 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun handleNotificationIntent(
+        intent: Intent,
+        deepLinkData: androidx.compose.runtime.MutableState<DeepLinkData?>
+    ) {
+        val messageId = intent.getStringExtra("message_id")
+        val notificationId = intent.getStringExtra("notification_id")
+        val modeString = intent.getStringExtra("mode")
+
+        if (messageId != null && notificationId != null && modeString != null) {
+            val mode = Mode.valueOf(modeString)
+
+            // Set deep link data for navigation
+            deepLinkData.value = DeepLinkData(
+                messageId = messageId,
+                notificationId = notificationId,
+                mode = mode
+            )
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        // Handle shared text when app is already running (singleTop launch mode)
+        handleSharedText(intent)
+    }
+
+    /**
+     * Handles shared text from external apps via ACTION_SEND intent.
+     * Extracts text from intent extras and passes it to SharedTextManager.
+     */
+    private fun handleSharedText(intent: Intent?) {
+        if (intent?.action == Intent.ACTION_SEND && intent.type == "text/plain") {
+            val sharedText = intent.getStringExtra(Intent.EXTRA_TEXT)
+            if (!sharedText.isNullOrBlank()) {
+                Timber.d("Received shared text: ${sharedText.take(50)}...")
+                sharedTextManager.setSharedText(sharedText)
+            } else {
+                Timber.w("Received ACTION_SEND intent but no text found")
+            }
+        }
+    }
+
 }
+
+data class DeepLinkData(
+    val messageId: String,
+    val notificationId: String,
+    val mode: Mode
+)
 
 @Preview(showBackground = true)
 @Composable

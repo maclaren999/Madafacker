@@ -6,14 +6,13 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
-import com.bbuddies.madafaker.common_domain.exception.ModerationException
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
-import com.bbuddies.madafaker.common_domain.service.ContentFilterService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -22,6 +21,7 @@ import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.dto.toDomainModel
 import remote.api.request.CreateMessageRequest
+import remote.api.request.CreateReplyRequest
 import retrofit2.HttpException
 import timber.log.Timber
 import worker.SendMessageWorker
@@ -205,5 +205,92 @@ class MessageRepositoryImpl @Inject constructor(
             ExistingWorkPolicy.REPLACE,
             workRequest
         )
+    }
+
+    override suspend fun createReply(body: String, parentId: String, isPublic: Boolean): Reply {
+        // Ensure user is authenticated
+        val user = userRepository.awaitCurrentUser()
+            ?: throw IllegalStateException("No authenticated user available")
+
+        try {
+            // Create reply via API
+            val request = CreateReplyRequest(
+                body = body,
+                public = isPublic,
+                parentId = parentId
+            )
+
+            val replyDto = webService.createReply(request)
+            val reply = replyDto.toDomainModel()
+
+            // Store locally
+            localDao.insertReply(reply)
+
+            return reply
+
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to create reply")
+            throw e
+        }
+    }
+
+    override suspend fun getReplyById(id: String): Reply? {
+        return try {
+            // Try local first
+            val localReply = localDao.getReplyById(id)
+            if (localReply != null) {
+                return localReply
+            }
+
+            // Fallback to API
+            val replyDto = webService.getReplyById(id)
+            val reply = replyDto.toDomainModel()
+
+            // Cache locally
+            localDao.insertReply(reply)
+
+            reply
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get reply: $id")
+            null
+        }
+    }
+
+    override suspend fun getRepliesByParentId(parentId: String): List<Reply> {
+        return try {
+            // For now, return from local database
+            // In a full implementation, you might want to sync with server
+            localDao.getRepliesByParentId(parentId)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get replies for parent: $parentId")
+            emptyList()
+        }
+    }
+
+    override suspend fun getMostRecentUnreadMessage(): Message? {
+        return try {
+            val user = userRepository.awaitCurrentUser() ?: return null
+            localDao.getMostRecentUnreadMessage(user.id)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get most recent unread message")
+            null
+        }
+    }
+
+    override suspend fun markMessageAsRead(messageId: String) {
+        try {
+            localDao.markMessageAsRead(messageId, System.currentTimeMillis())
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to mark message as read: $messageId")
+        }
+    }
+
+    override suspend fun markAllIncomingMessagesAsRead() {
+        try {
+            val user = userRepository.awaitCurrentUser() ?: return
+            localDao.markAllIncomingMessagesAsRead(user.id, System.currentTimeMillis())
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to mark all incoming messages as read")
+        }
     }
 }

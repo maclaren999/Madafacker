@@ -1,7 +1,7 @@
 [versions]
 compileSdk = "35"
 minSdk = "27"
-agp = "8.9.3"
+agp = "8.11.1"
 kotlin = "2.1.21"
 jetbrainsKotlinJvm = "2.1.21"
 activityCompose = "1.10.1"
@@ -26,6 +26,7 @@ identityGoogleId = "1.1.1"
 glide = "4.12.0"
 onesignal = "4.6.3"
 mockito = "4.6.1"
+mockk = "1.13.8"
 timber = "4.7.1"
 chucker = "4.0.0"
 leakcanary = "2.7"
@@ -79,6 +80,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 
 # Asynchronous programming
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 
 # Dependency Injection
 hilt = { group = "com.google.dagger", name = "hilt-android", version.ref = "daggerHilt" }
@@ -114,6 +116,7 @@ firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging
 firebase-analytics = { group = "com.google.firebase", name = "firebase-analytics-ktx" }
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics-ktx" }
 firebase-messaging-ktx = { group = "com.google.firebase", name = "firebase-messaging-ktx", version.ref = "firebaseMessagingKtx" }
+firebase-config = { group = "com.google.firebase", name = "firebase-config-ktx" }
 # Credential Manager
 credentials = { group = "androidx.credentials", name = "credentials", version.ref = "credentials" }
 credentials-play-services = { group = "androidx.credentials", name = "credentials-play-services-auth", version.ref = "credentials" }
@@ -121,6 +124,7 @@ google-identity = { group = "com.google.android.libraries.identity.googleid", na
 
 # Mocking (testing)
 mockito = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 
 # Logging
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }

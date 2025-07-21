@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,22 +42,40 @@ import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
+import com.bbuddies.madafaker.presentation.ui.components.HighlightedMessageCard
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenTheme
 
 @Composable
-fun InboxTab(viewModel: MainScreenContract) {
+fun InboxTab(
+    viewModel: MainScreenContract,
+    highlightedMessageId: String? = null
+) {
     val incomingMessages by viewModel.incomingMessages.collectAsState()
+    val isReplySending by viewModel.isReplySending.collectAsState()
+    val replyError by viewModel.replyError.collectAsState()
 
     incomingMessages.HandleState(
         onRetry = viewModel::refreshMessages
     ) { messages ->
-        InboxMessageList(messages.toInboxMessages())
+        InboxMessageList(
+            messages = messages.toInboxMessages(),
+            highlightedMessageId = highlightedMessageId,
+            viewModel = viewModel,
+            isReplySending = isReplySending,
+            replyError = replyError
+        )
     }
 }
 
 @Composable
-private fun InboxMessageList(messages: List<InboxMessage>) {
+private fun InboxMessageList(
+    messages: List<InboxMessage>,
+    highlightedMessageId: String? = null,
+    viewModel: MainScreenContract,
+    isReplySending: Boolean,
+    replyError: String?
+) {
     if (messages.isEmpty()) {
         InboxEmptyState()
         return
@@ -68,7 +87,24 @@ private fun InboxMessageList(messages: List<InboxMessage>) {
             .padding(horizontal = 16.dp)
     ) {
         items(messages) { msg ->
-            MessageCard(msg)
+            val isHighlighted = highlightedMessageId == msg.id
+            if (isHighlighted) {
+                HighlightedMessageCard(
+                    message = msg,
+                    onSendReply = { messageId, replyText, isPublic ->
+                        viewModel.onSendReply(messageId, replyText, isPublic)
+                    },
+                    isReplySending = isReplySending,
+                    replyError = replyError
+                )
+
+                // Mark highlighted message as read when displayed
+                LaunchedEffect(msg.id) {
+                    viewModel.markMessageAsRead(msg.id)
+                }
+            } else {
+                MessageCard(msg)
+            }
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
@@ -207,6 +243,7 @@ private fun Message.toInboxMessage(): InboxMessage {
         id = id,
         author = "user_${authorId.take(8)}", // Simplified author display
         body = body,
+        mode = mode,
         up = if (AppConfig.USE_MOCK_API) (0..20).random() else null,
         down = if (AppConfig.USE_MOCK_API) (0..5).random() else null,
         hearts = if (AppConfig.USE_MOCK_API) (0..15).random() else null
@@ -222,6 +259,7 @@ data class InboxMessage(
     val id: String,
     val author: String,
     val body: String,
+    val mode: String,
     val up: Int?,
     val down: Int?,
     val hearts: Int?

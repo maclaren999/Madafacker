@@ -16,8 +16,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavHostController
+import com.bbuddies.madafaker.presentation.R
 import kotlinx.coroutines.delay
 
 
@@ -50,7 +52,7 @@ fun SplashScreen(navController: NavHostController, splashViewModel: SplashViewMo
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Hi, $userName!", textAlign = TextAlign.Center,
+                    text = stringResource(R.string.splash_greeting, userName), textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.headlineLarge
                 )
             }
