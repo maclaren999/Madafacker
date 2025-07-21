@@ -2,10 +2,12 @@ package com.bbuddies.madafaker.presentation.ui.account
 
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import com.bbuddies.madafaker.presentation.BuildConfig
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.auth.GoogleAuthManager
 import com.bbuddies.madafaker.presentation.auth.GoogleAuthResult
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
+import com.bbuddies.madafaker.presentation.utils.ClipboardManager
 import com.bbuddies.madafaker.presentation.utils.NotificationPermissionHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,7 +27,8 @@ enum class AuthUiState {
 class AuthViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val notificationPermissionHelper: NotificationPermissionHelper,
-    private val googleAuthManager: GoogleAuthManager
+    private val googleAuthManager: GoogleAuthManager,
+    private val clipboardManager: ClipboardManager
 ) : BaseViewModel() {
 
     private val _authUiState = MutableStateFlow(AuthUiState.INITIAL)
@@ -266,7 +269,7 @@ class AuthViewModel @Inject constructor(
      */
     private suspend fun storeAllAuthenticationData(
         googleAuthResult: GoogleAuthResult,
-        firebaseAuthResult: FirebaseAuthResult.Success
+        firebaseAuthResult: FirebaseAuthResult.Success,
     ) {
         userRepository.storeGoogleAuth(
             googleAuthResult.idToken,
@@ -274,6 +277,9 @@ class AuthViewModel @Inject constructor(
             firebaseAuthResult.firebaseIdToken,
             firebaseAuthResult.firebaseUid
         )
+        if (BuildConfig.DEBUG) {
+            clipboardManager.setText(firebaseAuthResult.firebaseIdToken)
+        }
     }
 
     /**

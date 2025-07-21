@@ -198,6 +198,8 @@ class UserRepositoryImpl @Inject constructor(
         firebaseUid: String
     ) = withContext(Dispatchers.IO) {
         preferenceManager.updateAllAuthTokens(googleIdToken, googleUserId, firebaseIdToken, firebaseUid)
+        Timber.tag("USER_REPO")
+            .d("Auth googleIdToken: $googleIdToken \n googleUserId: $googleUserId \n firebaseIdToken: $firebaseIdToken \n firebaseUid: $firebaseUid")
     }
 
     override suspend fun createUserWithGoogle(nickname: String, idToken: String, googleUserId: String): User =

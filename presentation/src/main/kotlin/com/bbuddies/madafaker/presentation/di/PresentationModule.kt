@@ -27,4 +27,10 @@ object PresentationModule {
     fun provideSharedTextManager(): SharedTextManager {
         return SharedTextManager()
     }
+
+    @Provides
+    @Singleton
+    fun provideClipboardManager(@ApplicationContext context: Context): com.bbuddies.madafaker.presentation.utils.ClipboardManager {
+        return com.bbuddies.madafaker.presentation.utils.ClipboardManager(context)
+    }
 }
