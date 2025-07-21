@@ -4,7 +4,9 @@ import com.bbuddies.madafaker.common_domain.model.User
 import remote.api.dto.MessageDto
 import remote.api.dto.ModerationRequestDto
 import remote.api.dto.ModerationResponseDto
+import remote.api.dto.ReplyDto
 import remote.api.request.CreateMessageRequest
+import remote.api.request.CreateReplyRequest
 import remote.api.request.CreateUserRequest
 import remote.api.response.NameAvailabilityResponse
 import retrofit2.http.Body
