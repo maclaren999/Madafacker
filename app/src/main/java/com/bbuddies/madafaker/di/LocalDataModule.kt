@@ -45,7 +45,7 @@ class LocalDataModule {
         MadafakerDatabase::class.java,
         "madafaker_db"
     )
-        .fallbackToDestructiveMigration(false) // Add this for development to handle schema changes
+        .fallbackToDestructiveMigration(true) // Allow destructive migration for development
         .build()
 
     @Provides

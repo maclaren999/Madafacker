@@ -1,9 +1,10 @@
 package remote.api
 
-import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
 import remote.api.dto.MessageDto
+import remote.api.dto.ReplyDto
 import remote.api.request.CreateMessageRequest
+import remote.api.request.CreateReplyRequest
 import remote.api.request.CreateUserRequest
 import remote.api.response.NameAvailabilityResponse
 import retrofit2.http.Body
@@ -32,8 +33,8 @@ interface MadafakerApi {
     suspend fun getOutcomingMessages(): List<MessageDto>
 
     @Headers(CONTENT_TYPE)
-    @GET("/api/reply/:{id}")
-    suspend fun getReplyById(@Path("id") id: String): Reply
+    @GET("/api/reply/{id}")
+    suspend fun getReplyById(@Path("id") id: String): ReplyDto
 
 
     ///UPDATE
@@ -56,7 +57,7 @@ interface MadafakerApi {
 
     @Headers(CONTENT_TYPE)
     @POST("/api/reply")
-    suspend fun createReply(@Body body: String? = null, isPublic: Boolean, parentId: String? = null)//TODO
+    suspend fun createReply(@Body request: CreateReplyRequest): ReplyDto
 
     @Headers(CONTENT_TYPE)
     @GET("/api/user/check-name-availability")

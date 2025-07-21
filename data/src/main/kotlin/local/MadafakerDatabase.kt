@@ -30,7 +30,7 @@ class Converters {
         Reply::class,
         User::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
