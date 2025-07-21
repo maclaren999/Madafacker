@@ -15,11 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
@@ -44,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.R
+import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
+import com.bbuddies.madafaker.presentation.design.components.MadafakerTextButton
 
 @Composable
 fun NotificationPermissionScreen(
@@ -178,34 +177,20 @@ fun NotificationPermissionScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             // Enable Notifications Button
-            Button(
+            MadafakerPrimaryButton(
+                text = stringResource(R.string.notification_permission_enable),
                 onClick = onRequestPermission,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.notification_permission_enable),
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Skip Button
-            TextButton(
+            MadafakerTextButton(
+                text = stringResource(R.string.notification_permission_skip),
                 onClick = onSkip,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            ) {
-                Text(
-                    text = stringResource(R.string.notification_permission_skip),
-                    style = MaterialTheme.typography.labelLarge
-                )
-            }
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         // Settings prompt snackbar
