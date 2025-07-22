@@ -21,7 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.presentation.theme.MadafakerTheme
+import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
