@@ -1,6 +1,7 @@
-package com.bbuddies.madafaker.presentation.ui.components
+package com.bbuddies.madafaker.presentation.ui.main.components
 
 import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -36,12 +37,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.presentation.ui.main.tabs.InboxMessage
 
 @Composable
 fun HighlightedMessageCard(
@@ -248,7 +249,7 @@ fun HighlightedMessageCard(
 
 @Composable
 private fun RatingButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
     isSelected: Boolean,
     color: Color,
@@ -260,7 +261,7 @@ private fun RatingButton(
             containerColor = if (isSelected) color.copy(alpha = 0.2f) else Color.Transparent,
             contentColor = if (isSelected) color else MaterialTheme.colorScheme.onSurface
         ),
-        border = androidx.compose.foundation.BorderStroke(
+        border = BorderStroke(
             width = if (isSelected) 2.dp else 1.dp,
             color = if (isSelected) color else MaterialTheme.colorScheme.outline
         )
