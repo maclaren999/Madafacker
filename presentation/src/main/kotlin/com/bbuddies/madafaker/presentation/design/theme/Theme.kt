@@ -48,7 +48,7 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun MadafakerTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = isSystemInDarkTheme(), // TODO: Follow the scheme of app's "MODE"
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
