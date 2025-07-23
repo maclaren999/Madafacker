@@ -3,6 +3,7 @@ package com.bbuddies.madafaker.presentation.ui.main
 import android.content.Context
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +27,10 @@ interface MainScreenContract {
     // Message highlighting
     val highlightedMessageId: StateFlow<String?>
 
+    // Message replying state
+    val replyingMessageId: StateFlow<String?>
+    val userRepliesForMessage: StateFlow<List<Reply>>
+
     // Warnings (from BaseViewModel)
     val warningsFlow: StateFlow<((context: Context) -> String?)?>
 
@@ -46,4 +51,8 @@ interface MainScreenContract {
     // Message highlighting and read state
     fun onInboxViewed()
     fun markMessageAsRead(messageId: String)
+
+    // Message interaction
+    fun onMessageTapped(messageId: String)
+    fun onMessageReplyingClosed()
 }

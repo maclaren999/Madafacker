@@ -20,11 +20,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenTheme
-import com.bbuddies.madafaker.presentation.ui.main.components.HighlightedMessageCard
 import com.bbuddies.madafaker.presentation.ui.main.components.InboxMessage
 import com.bbuddies.madafaker.presentation.ui.main.components.MessageCard
 import com.bbuddies.madafaker.presentation.ui.main.components.toInboxMessages
@@ -37,6 +37,8 @@ fun InboxTab(
     val incomingMessages by viewModel.incomingMessages.collectAsState()
     val isReplySending by viewModel.isReplySending.collectAsState()
     val replyError by viewModel.replyError.collectAsState()
+    val replyingMessageId by viewModel.replyingMessageId.collectAsState()
+    val userRepliesForMessage by viewModel.userRepliesForMessage.collectAsState()
 
     incomingMessages.HandleState(
         onRetry = viewModel::refreshMessages
@@ -44,6 +46,8 @@ fun InboxTab(
         InboxMessageList(
             messages = messages.toInboxMessages(),
             highlightedMessageId = highlightedMessageId,
+            replyingMessageId = replyingMessageId,
+            userRepliesForMessage = userRepliesForMessage,
             viewModel = viewModel,
             isReplySending = isReplySending,
             replyError = replyError
@@ -55,6 +59,8 @@ fun InboxTab(
 private fun InboxMessageList(
     messages: List<InboxMessage>,
     highlightedMessageId: String? = null,
+    replyingMessageId: String? = null,
+    userRepliesForMessage: List<Reply>,
     viewModel: MainScreenContract,
     isReplySending: Boolean,
     replyError: String?
@@ -71,23 +77,32 @@ private fun InboxMessageList(
     ) {
         items(messages) { msg ->
             val isHighlighted = highlightedMessageId == msg.id
-            if (isHighlighted) {
-                HighlightedMessageCard(
-                    message = msg,
-                    onSendReply = { messageId, replyText, isPublic ->
-                        viewModel.onSendReply(messageId, replyText, isPublic)
-                    },
-                    isReplySending = isReplySending,
-                    replyError = replyError
-                )
+            val isReplying = replyingMessageId == msg.id
 
-                // Mark highlighted message as read when displayed
+            MessageCard(
+                message = msg,
+                isReplying = isReplying,
+                userReplies = if (isReplying) userRepliesForMessage else emptyList(),
+                onMessageTapped = {
+                    viewModel.onMessageTapped(msg.id)
+                },
+                onSendReply = { messageId, replyText, isPublic ->
+                    viewModel.onSendReply(messageId, replyText, isPublic)
+                },
+                onReplyingClosed = {
+                    viewModel.onMessageReplyingClosed()
+                },
+                isReplySending = isReplySending,
+                replyError = replyError
+            )
+
+            // Mark highlighted message as read when displayed
+            if (isHighlighted) {
                 LaunchedEffect(msg.id) {
                     viewModel.markMessageAsRead(msg.id)
                 }
-            } else {
-                MessageCard(msg)
             }
+
             Spacer(modifier = Modifier.height(20.dp))
         }
     }

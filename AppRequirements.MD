@@ -383,10 +383,18 @@ Very Low Engagement (<10% open rate): 1 notification/day
 
 **Deep Link Behavior:**
 - Notification tap → Navigate to Inbox tab
-- Target message highlighted with:
-  - **Larger, bold text**
-  - **Expanded state** showing 3 rating buttons + reply TextField
-  - **Reply hint:** "Tap to reply to this message..."
+- Target message highlighted with existing highlighting system (most recent unread)
+- Users can tap any message to enter "Replying" state
+
+**Interactive Message States:**
+
+- **Default State:** Simple MessageCard with tap-to-interact functionality
+- **Replying State:** Enhanced interactive card triggered by tapping, featuring:
+  - **User's Previous Replies:** Display existing replies from current user in condensed format
+  - **Rating Buttons:** Three options (Dislike, Like, Superlike) with visual feedback
+  - **Reply Input:** Text field with "Tap to reply to this message..." placeholder
+  - **Action Buttons:** Send Reply button
+  - **Database Integration:** Fetches user replies by matching authorId with current user ID
 
 **Rating Interaction:**
 - After selection, button is highlighted with background color
@@ -533,5 +541,63 @@ NotificationChannel(
 - Submit triggers `notification_feedback_submitted` event
 - Results inform frequency algorithm adjustments
 - Anonymous feedback stored for product improvement
+
+## 15 Recent Updates
+
+### 15.1 MessageCard Refactor (v1.1)
+
+**Overview:**
+Completed refactor to consolidate message interaction functionality into a single MessageCard component with multiple states, replacing the
+separate HighlightedMessageCard component.
+
+**Key Changes:**
+
+- **New "Replying" State:** Added interactive state to MessageCard triggered by tapping
+- **Unified Component:** Replaced HighlightedMessageCard with enhanced MessageCard functionality
+- **Database Integration:** Added methods to fetch user's existing replies for messages
+- **State Management:** Implemented replyingMessageId tracking similar to existing highlightedMessageId
+- **Preserved Highlighting:** Maintained existing logic for highlighting last unread and notification-driven messages
+
+**Technical Implementation:**
+
+- Added `getRepliesByParentIdAndAuthor()` to DAO and repository layers
+- Enhanced MainScreenContract with replying state management methods
+- Updated InboxTab to use unified MessageCard with conditional rendering
+- Maintained simple MessageCard styling as base with interactive elements in Replying state
+- Integrated with existing reply creation and analytics systems
+
+**User Experience:**
+
+- Tap any message to enter interactive "Replying" state
+- View existing user replies in condensed format
+- Rate messages and compose replies in unified interface
+- Close interaction to return to simple card view
+- Seamless integration with notification highlighting system
+
+### 15.2 Theme Mode Integration (v1.1)
+
+**Overview:**
+Integrated app theme directly with the Mode system, making dark/light theme automatically follow the current mode selection (SHINE/SHADOW).
+
+**Key Changes:**
+
+- **Direct Mode Dependency:** Theme now directly uses `currentMode` from PreferenceManager
+- **Automatic Theme Switching:** SHADOW mode = dark theme, SHINE mode = light theme
+- **Reactive Updates:** Theme changes immediately when user toggles between modes
+- **Dependency Injection:** MainActivity now injects PreferenceManager for theme access
+
+**Technical Implementation:**
+
+- Modified `MadafakerTheme` to accept `Mode` parameter instead of `darkTheme: Boolean`
+- Updated `MainActivity` to inject `PreferenceManager` and observe `currentMode`
+- Theme automatically recomposes when mode changes via `collectAsState()`
+- Maintained fallback to system theme when mode is null
+
+**User Experience:**
+
+- SHINE mode automatically applies light theme
+- SHADOW mode automatically applies dark theme
+- Instant theme switching when toggling modes
+- Consistent visual experience aligned with content filtering mode
 
 ---

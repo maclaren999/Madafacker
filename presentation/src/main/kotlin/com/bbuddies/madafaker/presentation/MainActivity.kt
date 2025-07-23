@@ -14,6 +14,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -21,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.presentation.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -32,6 +35,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var sharedTextManager: SharedTextManager
+
+    @Inject
+    lateinit var preferenceManager: PreferenceManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,13 +65,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             val deepLinkData = remember { mutableStateOf<DeepLinkData?>(null) }
+            val currentMode by preferenceManager.currentMode.collectAsState()
 
             // Handle notification deep link
             LaunchedEffect(Unit) {
                 handleNotificationIntent(intent, deepLinkData)
             }
 
-            MadafakerTheme {
+            MadafakerTheme(mode = currentMode) {
                 // Create a surface that handles the background and basic insets
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -143,7 +150,7 @@ data class DeepLinkData(
 @Preview(showBackground = true)
 @Composable
 fun MainActivityPreview() {
-    MadafakerTheme {
+    MadafakerTheme(Mode.SHINE) {
         // Preview content
     }
 }
