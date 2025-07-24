@@ -5,13 +5,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -50,17 +52,8 @@ class MainActivity : ComponentActivity() {
         // Enable edge-to-edge display
         enableEdgeToEdge()
 
-        // Optional: Make status bar and navigation bar transparent
+        // Make status bar and navigation bar transparent
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        // Set status bar icons to dark
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController.apply {
-            // Dark status bar icons (for light backgrounds)
-            isAppearanceLightStatusBars = true
-            // Dark navigation bar icons (for light backgrounds)
-            isAppearanceLightNavigationBars = true
-        }
 
         setContent {
             val navController = rememberNavController()
@@ -73,24 +66,33 @@ class MainActivity : ComponentActivity() {
             }
 
             MadafakerTheme(mode = currentMode) {
-                // Create a surface that handles the background and basic insets
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
                 ) {
-                    // Only apply status bar padding at the top level
-                    // Let individual screens handle their own insets as needed
+                    // Status bar background
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .windowInsetsPadding(WindowInsets.statusBars)
-                    ) {
-                        AppNavHost(
-                            navController = navController,
-                            modifier = Modifier.fillMaxSize(),
-                            deepLinkData = deepLinkData.value
-                        )
-                    }
+                            .windowInsetsTopHeight(WindowInsets.statusBars)
+                            .background(MaterialTheme.colorScheme.background)
+                    )
+
+                    // Navigation bar background
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .windowInsetsBottomHeight(WindowInsets.navigationBars)
+                            .background(MaterialTheme.colorScheme.background)
+                    )
+
+                    // Main content
+                    AppNavHost(
+                        navController = navController,
+                        modifier = Modifier.fillMaxSize(),
+                        deepLinkData = deepLinkData.value
+                    )
                 }
             }
         }
