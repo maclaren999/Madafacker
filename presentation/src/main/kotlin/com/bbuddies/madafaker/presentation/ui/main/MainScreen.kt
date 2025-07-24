@@ -4,9 +4,12 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Surface
@@ -26,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.DeepLinkData
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
@@ -108,7 +112,11 @@ fun MainScreen(
                     )
                 }
 
-                Column(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.systemBars)
+                ) {
                     // Add offline indicator at the top
 
                     MainScreenTabs(
@@ -170,6 +178,12 @@ private class PreviewMainViewModel : MainScreenContract {
     private val _highlightedMessageId = MutableStateFlow<String?>(null)
     override val highlightedMessageId: StateFlow<String?> = _highlightedMessageId
 
+    private val _replyingMessageId = MutableStateFlow<String?>(null)
+    override val replyingMessageId: StateFlow<String?> = _replyingMessageId
+
+    private val _userRepliesForMessage = MutableStateFlow<List<Reply>>(emptyList())
+    override val userRepliesForMessage: StateFlow<List<Reply>> = _userRepliesForMessage
+
     private val _warningsFlow = MutableStateFlow<((android.content.Context) -> String?)?>(null)
     override val warningsFlow: StateFlow<((android.content.Context) -> String?)?> = _warningsFlow
 
@@ -186,6 +200,8 @@ private class PreviewMainViewModel : MainScreenContract {
     override fun clearReplyError() {}
     override fun onInboxViewed() {}
     override fun markMessageAsRead(messageId: String) {}
+    override fun onMessageTapped(messageId: String) {}
+    override fun onMessageReplyingClosed() {}
 }
 
 @Preview(showBackground = true)

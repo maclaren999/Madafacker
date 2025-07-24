@@ -5,15 +5,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -21,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,6 +38,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var sharedTextManager: SharedTextManager
 
+    @Inject
+    lateinit var preferenceManager: PreferenceManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -44,46 +52,47 @@ class MainActivity : ComponentActivity() {
         // Enable edge-to-edge display
         enableEdgeToEdge()
 
-        // Optional: Make status bar and navigation bar transparent
+        // Make status bar and navigation bar transparent
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        // Set status bar icons to dark
-        val windowInsetsController = WindowCompat.getInsetsController(window, window.decorView)
-        windowInsetsController.apply {
-            // Dark status bar icons (for light backgrounds)
-            isAppearanceLightStatusBars = true
-            // Dark navigation bar icons (for light backgrounds)
-            isAppearanceLightNavigationBars = true
-        }
 
         setContent {
             val navController = rememberNavController()
             val deepLinkData = remember { mutableStateOf<DeepLinkData?>(null) }
+            val currentMode by preferenceManager.currentMode.collectAsState()
 
             // Handle notification deep link
             LaunchedEffect(Unit) {
                 handleNotificationIntent(intent, deepLinkData)
             }
 
-            MadafakerTheme {
-                // Create a surface that handles the background and basic insets
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+            MadafakerTheme(mode = currentMode) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
                 ) {
-                    // Only apply status bar padding at the top level
-                    // Let individual screens handle their own insets as needed
+                    // Status bar background
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .windowInsetsPadding(WindowInsets.statusBars)
-                    ) {
-                        AppNavHost(
-                            navController = navController,
-                            modifier = Modifier.fillMaxSize(),
-                            deepLinkData = deepLinkData.value
-                        )
-                    }
+                            .windowInsetsTopHeight(WindowInsets.statusBars)
+                            .background(MaterialTheme.colorScheme.background)
+                    )
+
+                    // Navigation bar background
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .windowInsetsBottomHeight(WindowInsets.navigationBars)
+                            .background(MaterialTheme.colorScheme.background)
+                    )
+
+                    // Main content
+                    AppNavHost(
+                        navController = navController,
+                        modifier = Modifier.fillMaxSize(),
+                        deepLinkData = deepLinkData.value
+                    )
                 }
             }
         }
@@ -143,7 +152,7 @@ data class DeepLinkData(
 @Preview(showBackground = true)
 @Composable
 fun MainActivityPreview() {
-    MadafakerTheme {
+    MadafakerTheme(Mode.SHINE) {
         // Preview content
     }
 }

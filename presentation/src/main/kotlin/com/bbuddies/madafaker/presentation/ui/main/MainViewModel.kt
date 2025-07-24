@@ -5,6 +5,7 @@ import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.UnsentDraft
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.DraftRepository
@@ -64,6 +65,13 @@ class MainViewModel @Inject constructor(
 
     private val _highlightedMessageId = MutableStateFlow<String?>(null)
     override val highlightedMessageId: StateFlow<String?> = _highlightedMessageId
+
+    // Message replying state
+    private val _replyingMessageId = MutableStateFlow<String?>(null)
+    override val replyingMessageId: StateFlow<String?> = _replyingMessageId
+
+    private val _userRepliesForMessage = MutableStateFlow<List<Reply>>(emptyList())
+    override val userRepliesForMessage: StateFlow<List<Reply>> = _userRepliesForMessage
 
     override val currentMode = preferenceManager.currentMode
 
@@ -378,5 +386,31 @@ class MainViewModel @Inject constructor(
                 // Silently handle errors
             }
         }
+    }
+
+    override fun onMessageTapped(messageId: String) {
+        viewModelScope.launch {
+            try {
+                // Set the replying message
+                _replyingMessageId.value = messageId
+
+                // Fetch user's existing replies for this message
+                val userReplies = messageRepository.getUserRepliesForMessage(messageId)
+                _userRepliesForMessage.value = userReplies
+
+                // Clear highlighting if this message was highlighted
+                if (_highlightedMessageId.value == messageId) {
+                    _highlightedMessageId.value = null
+                }
+
+            } catch (e: Exception) {
+                // Silently handle errors
+            }
+        }
+    }
+
+    override fun onMessageReplyingClosed() {
+        _replyingMessageId.value = null
+        _userRepliesForMessage.value = emptyList()
     }
 }

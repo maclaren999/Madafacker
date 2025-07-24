@@ -383,10 +383,18 @@ Very Low Engagement (<10% open rate): 1 notification/day
 
 **Deep Link Behavior:**
 - Notification tap → Navigate to Inbox tab
-- Target message highlighted with:
-  - **Larger, bold text**
-  - **Expanded state** showing 3 rating buttons + reply TextField
-  - **Reply hint:** "Tap to reply to this message..."
+- Target message highlighted with existing highlighting system (most recent unread)
+- Users can tap any message to enter "Replying" state
+
+**Interactive Message States:**
+
+- **Default State:** Simple MessageCard with tap-to-interact functionality
+- **Replying State:** Enhanced interactive card triggered by tapping, featuring:
+  - **User's Previous Replies:** Display existing replies from current user in condensed format
+  - **Rating Buttons:** Three options (Dislike, Like, Superlike) with visual feedback
+  - **Reply Input:** Text field with "Tap to reply to this message..." placeholder
+  - **Action Buttons:** Send Reply button
+  - **Database Integration:** Fetches user replies by matching authorId with current user ID
 
 **Rating Interaction:**
 - After selection, button is highlighted with background color
@@ -494,95 +502,6 @@ NotificationChannel(
 - Adjust timing constraints by region
 - Test engagement threshold brackets
 
-## 13. Implementation Status (Simplified Notification System)
-
-### 13.1 Completed Features ✅
-
-**Firebase Cloud Messaging Setup:**
-- ✅ Enhanced FCM service with silent notification support
-- ✅ Notification channels configured for silent delivery (no sound/vibration)
-- ✅ Data payload structure implemented (messageId, mode, timestamp)
-- ✅ Mode-specific notification handling
-
-**Notification UI Components:**
-- ✅ Mode-specific placeholder message arrays (Shine vs Shadow)
-- ✅ Mode-specific styling (warm colors/sun icon for Shine, cool colors/moon icon for Shadow)
-- ✅ HighlightedMessageCard component with expanded state
-- ✅ Visual accents (mode-specific border/background) for targeted messages
-
-**Deep Link Navigation:**
-- ✅ Notification tap navigation to Inbox tab
-- ✅ Message highlighting with expanded state in Inbox
-- ✅ Deep link intent handling in MainActivity
-- ✅ Navigation state management for notification-triggered flows
-
-**Simplified Event Tracking:**
-- ✅ Direct Firebase Analytics integration (no local storage)
-- ✅ Comprehensive event tracking: notification_received, notification_opened, notification_dismissed, notification_ignored, message_rated,
-  message_replied
-- ✅ Real-time analytics without local database complexity
-- ✅ BigQuery-ready data structure for backend analytics
-
-**Remote Config Integration:**
-- ✅ Firebase Remote Config setup for placeholder messages
-- ✅ Configuration management for notification parameters
-- ✅ Fallback to local messages when Remote Config unavailable
-- ✅ Default configuration values for frequency and timing
-
-### 13.2 Simplified Architecture ✅
-
-**Repository Interface:**
-
-- `getPlaceholderMessages(mode: Mode)` - Firebase Remote Config
-- `getNotificationConfig()` - Firebase Remote Config
-
-**Use Case Pattern (Direct Analytics):**
-- `trackNotificationReceived(messageId, mode)`
-- `trackNotificationOpened(messageId, mode, timeToOpen)`
-- `trackNotificationDismissed(messageId, mode, timeInTray)`
-- `trackNotificationIgnored(messageId, mode, hoursIgnored)`
-- `trackMessageRated(messageId, mode, rating, viaNotification)`
-- `trackMessageReplied(messageId, mode, replyLength, viaNotification)`
-
-**Clean Architecture Maintained:**
-- Domain layer: Pure business logic and interfaces
-- Data layer: Firebase integrations only (Analytics + Remote Config)
-- Presentation layer: UI components and navigation
-- App layer: Dependency injection and notification management
-
-### 13.5 Backend Integration Strategy
-
-**Firebase Analytics + BigQuery:**
-
-- Backend accesses notification analytics via BigQuery export
-- Real-time dashboard capabilities through Firebase Console
-- Advanced analytics queries using BigQuery SQL
-
-### 13.6 Production Readiness ✅
-
-**Ready for:**
-
-1. **Firebase Console Setup:** Configure Remote Config values
-2. **BigQuery Export:** Enable Firebase Analytics export
-3. **Testing:** Manual notification testing via Firebase Console
-
-**Client-Side Frequency Logic:**
-
-```kotlin
-class NotificationFrequencyManager {
-  fun calculateOptimalFrequency(): Int {
-    val engagementRate = getEngagementRate()
-    val remoteConfig = getRemoteConfig()
-    return when {
-      engagementRate > 0.8 -> remoteConfig.highEngagementFreq
-      engagementRate > 0.4 -> remoteConfig.mediumEngagementFreq
-      engagementRate > 0.1 -> remoteConfig.lowEngagementFreq
-      else -> remoteConfig.veryLowEngagementFreq
-    }
-  }
-}
-```
-
 ### 12.9 Feedback Form Design
 
 **Account Tab Feedback Form (✅ Implemented):**
@@ -622,5 +541,63 @@ class NotificationFrequencyManager {
 - Submit triggers `notification_feedback_submitted` event
 - Results inform frequency algorithm adjustments
 - Anonymous feedback stored for product improvement
+
+## 15 Recent Updates
+
+### 15.1 MessageCard Refactor (v1.1)
+
+**Overview:**
+Completed refactor to consolidate message interaction functionality into a single MessageCard component with multiple states, replacing the
+separate HighlightedMessageCard component.
+
+**Key Changes:**
+
+- **New "Replying" State:** Added interactive state to MessageCard triggered by tapping
+- **Unified Component:** Replaced HighlightedMessageCard with enhanced MessageCard functionality
+- **Database Integration:** Added methods to fetch user's existing replies for messages
+- **State Management:** Implemented replyingMessageId tracking similar to existing highlightedMessageId
+- **Preserved Highlighting:** Maintained existing logic for highlighting last unread and notification-driven messages
+
+**Technical Implementation:**
+
+- Added `getRepliesByParentIdAndAuthor()` to DAO and repository layers
+- Enhanced MainScreenContract with replying state management methods
+- Updated InboxTab to use unified MessageCard with conditional rendering
+- Maintained simple MessageCard styling as base with interactive elements in Replying state
+- Integrated with existing reply creation and analytics systems
+
+**User Experience:**
+
+- Tap any message to enter interactive "Replying" state
+- View existing user replies in condensed format
+- Rate messages and compose replies in unified interface
+- Close interaction to return to simple card view
+- Seamless integration with notification highlighting system
+
+### 15.2 Theme Mode Integration (v1.1)
+
+**Overview:**
+Integrated app theme directly with the Mode system, making dark/light theme automatically follow the current mode selection (SHINE/SHADOW).
+
+**Key Changes:**
+
+- **Direct Mode Dependency:** Theme now directly uses `currentMode` from PreferenceManager
+- **Automatic Theme Switching:** SHADOW mode = dark theme, SHINE mode = light theme
+- **Reactive Updates:** Theme changes immediately when user toggles between modes
+- **Dependency Injection:** MainActivity now injects PreferenceManager for theme access
+
+**Technical Implementation:**
+
+- Modified `MadafakerTheme` to accept `Mode` parameter instead of `darkTheme: Boolean`
+- Updated `MainActivity` to inject `PreferenceManager` and observe `currentMode`
+- Theme automatically recomposes when mode changes via `collectAsState()`
+- Maintained fallback to system theme when mode is null
+
+**User Experience:**
+
+- SHINE mode automatically applies light theme
+- SHADOW mode automatically applies dark theme
+- Instant theme switching when toggling modes
+- Consistent visual experience aligned with content filtering mode
 
 ---
