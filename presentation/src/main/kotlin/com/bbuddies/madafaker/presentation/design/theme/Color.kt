@@ -19,6 +19,30 @@ val ButtonOrangeEnd = Color(0xFFFF6B00)
 val TextPrimary = Color(0xFF131313)
 val HeadingPrimary = Color(0xFFB81A17)
 
+// Background Gradients for SHINE and SHADOW modes
+// SHINE mode gradient (BG sun)
+val ShineGradientColors = listOf(
+    Color(0xFFFBF1AD), // #FBF1AD
+    Color(0xFFFBEC65), // #FBEC65
+    Color(0xFFFB6000)  // #FB6000
+)
+
+// SHADOW mode gradient (BG moon)
+val ShadowGradientColors = listOf(
+    Color(0xFF111111), // #111111
+    Color(0xFF000000)  // #000000
+)
+
+// SHINE mode background gradient
+val ShineBackgroundGradient = Brush.verticalGradient(
+    colors = ShineGradientColors
+)
+
+// SHADOW mode background gradient
+val ShadowBackgroundGradient = Brush.verticalGradient(
+    colors = ShadowGradientColors
+)
+
 // Button Gradient
 val ButtonGradient = Brush.radialGradient(
     colors = listOf(
@@ -26,6 +50,5 @@ val ButtonGradient = Brush.radialGradient(
         ButtonOrangeMiddle,
         ButtonOrangeEnd
     ),
-    center = androidx.compose.ui.geometry.Offset(0.87f, 0f),
-    radius = 1.0f
+    center = androidx.compose.ui.geometry.Offset(0.87f, 0f)
 )

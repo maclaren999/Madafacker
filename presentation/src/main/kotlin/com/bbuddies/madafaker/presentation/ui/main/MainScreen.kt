@@ -1,13 +1,8 @@
 package com.bbuddies.madafaker.presentation.ui.main
 
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -18,13 +13,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.bbuddies.madafaker.common_domain.enums.Mode
@@ -34,6 +25,7 @@ import com.bbuddies.madafaker.presentation.DeepLinkData
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.base.UiState
+import com.bbuddies.madafaker.presentation.design.components.ModeBackground
 import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTabViewModel
 import com.bbuddies.madafaker.presentation.ui.main.tabs.InboxTab
@@ -54,6 +46,7 @@ fun MainScreen(
     val pagerState = rememberPagerState(pageCount = { MainTab.entries.size })
     val scope = rememberCoroutineScope()
     val highlightedMessageId by viewModel.highlightedMessageId.collectAsState()
+    val currentMode by viewModel.currentMode.collectAsState()
 
     // Handle deep link navigation to Inbox tab
     LaunchedEffect(deepLinkData) {
@@ -88,30 +81,10 @@ fun MainScreen(
         modifier = modifier
     ) {
         Surface(modifier = Modifier.fillMaxSize()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(MainScreenTheme.SunTop, MainScreenTheme.SunBottom)
-                        )
-                    )
+            ModeBackground(
+                mode = currentMode,
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Glowing sun at the top
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
-                        .align(Alignment.TopCenter)
-                ) {
-                    val radius = size.width * 0.6f
-                    drawCircle(
-                        color = MainScreenTheme.SunBody,
-                        radius = radius,
-                        center = Offset(x = size.width / 2, y = size.height * 1.2f)
-                    )
-                }
-
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
