@@ -26,9 +26,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.bbuddies.madafaker.presentation.design.theme.Black
 import com.bbuddies.madafaker.presentation.design.theme.LightGray
-import com.bbuddies.madafaker.presentation.design.theme.TextPrimary
 
 /**
  * Custom TextField with hand-drawn underline styling
@@ -57,7 +55,7 @@ fun MadafakerTextField(
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (enabled) TextPrimary else LightGray,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
         }
@@ -77,7 +75,7 @@ fun MadafakerTextField(
                     .onFocusChanged { isFocused = it.isFocused },
                 enabled = enabled,
                 textStyle = textStyle.copy(
-                    color = if (enabled) TextPrimary else LightGray
+                    color = MaterialTheme.colorScheme.onBackground
                 ),
                 keyboardOptions = keyboardOptions,
                 keyboardActions = keyboardActions,
@@ -126,11 +124,7 @@ private fun HandDrawnUnderline(
     isActive: Boolean = false,
     enabled: Boolean = true
 ) {
-    val color = when {
-        !enabled -> LightGray
-        isActive -> Black
-        else -> Color(0xFF9E9E9E)
-    }
+    val color = MaterialTheme.colorScheme.onBackground
 
     Canvas(modifier = modifier) {
         drawHandDrawnPath(color)

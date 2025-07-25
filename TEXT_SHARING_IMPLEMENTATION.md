@@ -150,7 +150,7 @@ private fun setupSharedTextHandling() {
 ### Input Validation
 
 - Text is trimmed and validated before processing
-- Length limits are enforced (280 characters max)
+- Length limits are enforced (AppConfig.MAX_MESSAGE_LENGTH characters max)
 - No executable content is processed (text only)
 
 ### Privacy

@@ -1,6 +1,5 @@
 package com.bbuddies.madafaker.presentation.ui.main
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,11 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,11 +31,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.UiState
+import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
+import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import com.bbuddies.madafaker.presentation.ui.main.tabs.MessageStateIndicator
 
 /* ----------  SEND MESSAGE VIEW  ---------- */
@@ -198,8 +197,8 @@ private fun ComposeMessageCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = stringResource(R.string.character_count, draftMessage.length),
-                    color = if (draftMessage.length > 280) {
+                    text = "${draftMessage.length}/${AppConfig.MAX_MESSAGE_LENGTH}",
+                    color = if (draftMessage.length > AppConfig.MAX_MESSAGE_LENGTH) {
                         Color(0xFFE53935)
                     } else {
                         MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
@@ -207,10 +206,10 @@ private fun ComposeMessageCard(
                     style = MaterialTheme.typography.labelSmall
                 )
 
-                SendButton(
-                    enabled = draftMessage.isNotBlank() && draftMessage.length <= 280 && !isSending,
-                    isLoading = isSending,
-                    onClick = onSend
+                MadafakerPrimaryButton(
+                    enabled = draftMessage.isNotBlank() && draftMessage.length <= AppConfig.MAX_MESSAGE_LENGTH && !isSending,
+                    onClick = onSend,
+                    text = "Send"
                 )
             }
         }
@@ -225,16 +224,11 @@ private fun SunnyTextField(
     currentMode: Mode,
     modifier: Modifier = Modifier
 ) {
-    BasicTextField(
+    MadafakerTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier
-            .background(
-                color = Color.White.copy(alpha = 0.8f),
-                shape = RoundedCornerShape(8.dp)
-            )
-            .padding(16.dp)
-            .defaultMinSize(minHeight = 120.dp),
+        singleLine = false,
+        modifier = modifier.padding(16.dp),
         textStyle = MaterialTheme.typography.bodyLarge.copy(
             color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Medium
@@ -245,57 +239,12 @@ private fun SunnyTextField(
         ),
         keyboardActions = KeyboardActions(
             onSend = {
-                if (value.isNotBlank() && value.length <= 280) {
+                if (value.isNotBlank() && value.length <= AppConfig.MAX_MESSAGE_LENGTH) {
                     onSend()
                 }
             }
         ),
-        decorationBox = { innerTextField ->
-            Box(modifier = Modifier.fillMaxWidth()) {
-                if (value.isEmpty()) {
-                    Text(
-                        text = when (currentMode) {
-                            Mode.SHINE -> stringResource(R.string.placeholder_positive)
-                            Mode.SHADOW -> stringResource(R.string.placeholder_shadow)
-                        },
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-                }
-                innerTextField()
-            }
-        }
     )
-}
-
-@Composable
-private fun SendButton(
-    enabled: Boolean,
-    isLoading: Boolean,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .clickable(enabled = enabled && !isLoading) { onClick() }
-            .padding(horizontal = 20.dp, vertical = 10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(16.dp),
-                strokeWidth = 2.dp,
-                color = Color.White
-            )
-        } else {
-            Text(
-                text = stringResource(R.string.button_send),
-                color = Color.White,
-                style = MaterialTheme.typography.labelMedium.copy(
-                    fontWeight = FontWeight.Bold
-                )
-            )
-        }
-    }
 }
 
 @Composable

@@ -1,8 +1,6 @@
 package com.bbuddies.madafaker.presentation.ui.main.components
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
@@ -51,6 +48,7 @@ import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
+import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 
 
 @Composable
@@ -185,31 +183,13 @@ fun MessageCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                BasicTextField(
+                MadafakerTextField(
                     value = replyText,
                     onValueChange = { replyText = it },
+                    singleLine = false,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            color = MaterialTheme.colorScheme.surface,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f),
-                            shape = RoundedCornerShape(8.dp)
-                        )
                         .padding(12.dp),
-                    decorationBox = { innerTextField ->
-                        if (replyText.isEmpty()) {
-                            Text(
-                                text = "Tap to reply to this message...",
-                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                        innerTextField()
-                    }
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))

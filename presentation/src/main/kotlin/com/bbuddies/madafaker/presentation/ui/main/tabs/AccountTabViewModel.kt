@@ -66,7 +66,7 @@ class AccountTabViewModel @Inject constructor(
     }
 
     fun onFeedbackTextChange(text: String) {
-        if (text.length <= 500) { // Character limit
+        if (text.length <= 2000) { // Character limit
             _feedbackText.value = text
         }
     }
