@@ -8,6 +8,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.bbuddies.madafaker.presentation.R
 
+
 // Font families
 val MontserratSemiBold = FontFamily(
     Font(R.font.montserrat_semibold, FontWeight.SemiBold)
@@ -33,7 +34,8 @@ val Typography = Typography(
         fontWeight = FontWeight.SemiBold,
         fontSize = 40.sp,
         lineHeight = 60.sp, // 150% of 40sp
-        letterSpacing = 0.sp
+        letterSpacing = 0.sp,
+        color = TextPrimary
     ),
 
     // H2 - Open Sans SemiBold, 18sp, 150% line height, 0% spacing

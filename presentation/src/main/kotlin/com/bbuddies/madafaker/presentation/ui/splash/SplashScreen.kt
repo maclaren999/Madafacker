@@ -4,11 +4,9 @@ package com.bbuddies.madafaker.presentation.ui.splash
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,27 +35,22 @@ fun SplashScreen(navController: NavHostController, splashViewModel: SplashViewMo
         }
     }
 
-    Surface(
-        modifier = modifier,
-        color = MaterialTheme.colorScheme.background
+    AnimatedVisibility(
+        visibleState = animationState,
+        exit = fadeOut(animationSpec = tween(durationMillis = 2000)),
+        modifier = modifier
     ) {
-        AnimatedVisibility(
-            visibleState = animationState,
-            exit = fadeOut(animationSpec = tween(durationMillis = 2000))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary),
-                contentAlignment = Alignment.Center
-            ) {
                 Text(
                     text = stringResource(R.string.splash_greeting, userName), textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.headlineLarge
                 )
             }
         }
-    }
 }
 
 

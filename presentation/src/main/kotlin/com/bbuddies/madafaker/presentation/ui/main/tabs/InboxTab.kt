@@ -24,7 +24,7 @@ import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
-import com.bbuddies.madafaker.presentation.ui.main.MainScreenTheme
+
 import com.bbuddies.madafaker.presentation.ui.main.components.InboxMessage
 import com.bbuddies.madafaker.presentation.ui.main.components.MessageCard
 import com.bbuddies.madafaker.presentation.ui.main.components.toInboxMessages
@@ -127,7 +127,7 @@ private fun InboxEmptyState() {
             Text(
                 text = stringResource(R.string.inbox_empty_title),
                 style = MaterialTheme.typography.headlineSmall,
-                color = MainScreenTheme.TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(bottom = 12.dp)
             )
@@ -135,7 +135,7 @@ private fun InboxEmptyState() {
             Text(
                 text = stringResource(R.string.inbox_empty_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MainScreenTheme.TextSecondary,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
                 lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
             )
@@ -145,7 +145,7 @@ private fun InboxEmptyState() {
             Text(
                 text = stringResource(R.string.inbox_empty_description),
                 style = MaterialTheme.typography.bodySmall,
-                color = MainScreenTheme.TextSecondary.copy(alpha = 0.8f),
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                 textAlign = TextAlign.Center,
                 lineHeight = MaterialTheme.typography.bodySmall.lineHeight
             )
