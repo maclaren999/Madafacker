@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,7 +24,6 @@ import com.bbuddies.madafaker.presentation.DeepLinkData
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.base.UiState
-import com.bbuddies.madafaker.presentation.design.components.ModeBackground
 import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTabViewModel
 import com.bbuddies.madafaker.presentation.ui.main.tabs.InboxTab
@@ -80,44 +78,38 @@ fun MainScreen(
         warningsFlow = viewModel.warningsFlow,
         modifier = modifier
     ) {
-        Surface(modifier = Modifier.fillMaxSize()) {
-            ModeBackground(
-                mode = currentMode,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.systemBars)
-                ) {
-                    // Add offline indicator at the top
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .windowInsetsPadding(WindowInsets.systemBars)
+        ) {
+            // Add offline indicator at the top
 
-                    MainScreenTabs(
-                        pagerState = pagerState,
-                        scope = scope
+            MainScreenTabs(
+                pagerState = pagerState,
+                scope = scope
+            )
+
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize()
+            ) { page ->
+                when (MainTab.entries[page]) {
+                    MainTab.WRITE -> WriteTab(viewModel)
+                    MainTab.MY_POSTS -> MyPostsTab(viewModel)
+                    MainTab.INBOX -> InboxTab(
+                        viewModel = viewModel,
+                        highlightedMessageId = highlightedMessageId
                     )
 
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.fillMaxSize()
-                    ) { page ->
-                        when (MainTab.entries[page]) {
-                            MainTab.WRITE -> WriteTab(viewModel)
-                            MainTab.MY_POSTS -> MyPostsTab(viewModel)
-                            MainTab.INBOX -> InboxTab(
-                                viewModel = viewModel,
-                                highlightedMessageId = highlightedMessageId
-                            )
-                            MainTab.ACCOUNT -> AccountTab(
-                                viewModel = hiltViewModel<AccountTabViewModel>(),
-                                onNavigateToAuth = {
-                                    navController.navigate(NavigationItem.Account.route) {
-                                        popUpTo(NavigationItem.Main.route) { inclusive = true }
-                                    }
-                                }
-                            )
+                    MainTab.ACCOUNT -> AccountTab(
+                        viewModel = hiltViewModel<AccountTabViewModel>(),
+                        onNavigateToAuth = {
+                            navController.navigate(NavigationItem.Account.route) {
+                                popUpTo(NavigationItem.Main.route) { inclusive = true }
+                            }
                         }
-                    }
+                    )
                 }
             }
         }
@@ -166,6 +158,7 @@ private class PreviewMainViewModel : MainScreenContract {
     override fun onDraftMessageChanged(message: String) {
         _draftMessage.value = message
     }
+
     override fun toggleMode() {}
     override fun refreshMessages() {}
     override fun clearDraft() {}
