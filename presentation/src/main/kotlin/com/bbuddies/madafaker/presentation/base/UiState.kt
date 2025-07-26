@@ -82,7 +82,10 @@ private fun DefaultErrorContent(
         if (onRetry != null) {
             Spacer(modifier = Modifier.height(16.dp))
             Button(onClick = onRetry) {
-                Text(stringResource(R.string.button_retry))
+                Text(
+                    text = stringResource(R.string.button_retry),
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }

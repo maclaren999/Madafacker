@@ -14,6 +14,7 @@ interface MessageRepository {
     suspend fun createReply(body: String, parentId: String, isPublic: Boolean = true): Reply
     suspend fun getReplyById(id: String): Reply?
     suspend fun getRepliesByParentId(parentId: String): List<Reply>
+    suspend fun getUserRepliesForMessage(parentId: String): List<Reply>
 
     suspend fun createMessage(body: String): Message
 

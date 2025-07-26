@@ -1,6 +1,5 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
@@ -41,7 +39,7 @@ import com.bbuddies.madafaker.common_domain.model.MessageState
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
-import com.bbuddies.madafaker.presentation.ui.main.MainScreenTheme
+
 
 @Composable
 fun MyPostsTab(viewModel: MainScreenContract) {
@@ -96,13 +94,13 @@ private fun EmptyStateView(
             Text(
                 text = title,
                 style = MaterialTheme.typography.headlineSmall,
-                color = MainScreenTheme.TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MainScreenTheme.TextSecondary,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 32.dp)
             )
@@ -124,15 +122,10 @@ private fun MyPostCard(message: Message) {
             modifier = Modifier
                 .width(4.dp)
                 .fillMaxHeight()
-                .background(MainScreenTheme.Stripe)
         )
 
         Column(
             modifier = Modifier
-                .background(
-                    color = MainScreenTheme.CardBg,
-                    shape = RoundedCornerShape(10.dp)
-                )
                 .padding(16.dp)
                 .weight(1f)
         ) {
@@ -143,7 +136,7 @@ private fun MyPostCard(message: Message) {
             ) {
                 Text(
                     text = stringResource(R.string.my_message),
-                    color = MainScreenTheme.TextSecondary,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                     style = MaterialTheme.typography.labelMedium,
                 )
 
@@ -152,7 +145,7 @@ private fun MyPostCard(message: Message) {
 
             Text(
                 text = message.body,
-                color = MainScreenTheme.TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
                 modifier = Modifier.padding(top = 4.dp, bottom = 12.dp),
                 maxLines = 6,
@@ -166,15 +159,19 @@ private fun MyPostCard(message: Message) {
                     horizontalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
                     // Mock reactions - these would come from the server in a real app
-                    Reaction(Icons.Outlined.ThumbUp, 0, MainScreenTheme.TextSecondary)
-                    Reaction(Icons.Outlined.KeyboardArrowDown, 0, MainScreenTheme.TextSecondary)
-                    Reaction(Icons.Outlined.FavoriteBorder, 0, MainScreenTheme.HeartRed)
+                    Reaction(Icons.Outlined.ThumbUp, 0, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
+                    Reaction(
+                        Icons.Outlined.KeyboardArrowDown,
+                        0,
+                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    )
+                    Reaction(Icons.Outlined.FavoriteBorder, 0, Color.Red)
 
                     Spacer(modifier = Modifier.weight(1f))
 
                     Text(
                         text = stringResource(R.string.replies_count, 0),
-                        color = MainScreenTheme.TextSecondary,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
@@ -186,7 +183,7 @@ private fun MyPostCard(message: Message) {
 @Composable
 fun MessageStateIndicator(messageState: MessageState) {
     val (text, color) = when (messageState) {
-        MessageState.PENDING -> stringResource(R.string.message_sending) to MainScreenTheme.SunBody
+        MessageState.PENDING -> stringResource(R.string.message_sending) to Color(0xFFFF9800)
         MessageState.SENT -> stringResource(R.string.message_delivered) to Color(0xFF4CAF50)
         MessageState.FAILED -> stringResource(R.string.message_failed) to Color(0xFFE53935)
     }

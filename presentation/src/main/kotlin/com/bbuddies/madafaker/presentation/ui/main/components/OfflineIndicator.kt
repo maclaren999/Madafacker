@@ -1,11 +1,9 @@
 package com.bbuddies.madafaker.presentation.ui.main.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.Icon
@@ -28,10 +26,6 @@ fun OfflineIndicator(
     if (!isOnline) {
         Row(
             modifier = modifier
-                .background(
-                    color = Color.Red.copy(alpha = 0.8f),
-                    shape = RoundedCornerShape(4.dp)
-                )
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -39,12 +33,12 @@ fun OfflineIndicator(
             Icon(
                 imageVector = Icons.Default.Info,
                 contentDescription = null,
-                tint = Color.White,
+                tint = Color.Red,
                 modifier = Modifier.size(16.dp)
             )
             Text(
                 text = stringResource(R.string.offline_status),
-                color = Color.White,
+                color = Color.Red,
                 style = MaterialTheme.typography.bodySmall
             )
         }

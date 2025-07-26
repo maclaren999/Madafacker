@@ -1,6 +1,5 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,7 +47,7 @@ import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
-import com.bbuddies.madafaker.presentation.ui.main.MainScreenTheme
+
 
 @Composable
 fun AccountTab(
@@ -137,9 +136,10 @@ private fun ProfileSection(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = MainScreenTheme.CardBg
+            containerColor = Color.Transparent
         ),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -149,26 +149,24 @@ private fun ProfileSection(
             Box(
                 modifier = Modifier
                     .size(80.dp)
-                    .clip(CircleShape)
-                    .background(MainScreenTheme.TextSecondary.copy(alpha = 0.1f)),
+                    .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.AccountCircle,
                     contentDescription = "Profile Avatar",
                     modifier = Modifier.size(64.dp),
-                    tint = MainScreenTheme.TextSecondary
+                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // User Name
+            // User Name - Using H2 style
             Text(
                 text = user?.name ?: stringResource(R.string.account_unknown_user),
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MainScreenTheme.TextPrimary
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -177,7 +175,7 @@ private fun ProfileSection(
             Text(
                 text = stringResource(R.string.account_user_id_prefix) + "${user?.id?.take(8) ?: "--------"}...",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MainScreenTheme.TextSecondary
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -186,7 +184,7 @@ private fun ProfileSection(
             Text(
                 text = stringResource(R.string.account_member_since_prefix) + "${user?.createdAt ?: "Unknown"}",
                 style = MaterialTheme.typography.bodySmall,
-                color = MainScreenTheme.TextSecondary.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -205,7 +203,7 @@ private fun ProfileSection(
                     text = "${user?.coins ?: 0}" + stringResource(R.string.account_coins_suffix),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
-                    color = MainScreenTheme.TextPrimary
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
         }
@@ -242,8 +240,7 @@ private fun AccountActionsSection(
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = stringResource(R.string.account_logout_button),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.labelLarge
             )
         }
 
@@ -291,8 +288,7 @@ private fun AccountActionsSection(
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = stringResource(R.string.account_delete_button),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
+                style = MaterialTheme.typography.labelLarge,
                 color = Color.Red
             )
         }

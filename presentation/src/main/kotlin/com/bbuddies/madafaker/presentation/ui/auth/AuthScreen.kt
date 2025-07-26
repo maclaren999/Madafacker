@@ -1,43 +1,32 @@
-package com.bbuddies.madafaker.presentation.ui.account
+package com.bbuddies.madafaker.presentation.ui.auth
 
 import android.content.Context
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
+import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
+import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -136,7 +125,6 @@ fun AuthScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Spacer(modifier = Modifier.weight(1f))
-            ProfileAvatar()
             Spacer(modifier = Modifier.height(32.dp))
 
             when (authUiState) {
@@ -175,11 +163,10 @@ fun InitialAuthContent(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Welcome section
+        // Welcome section - Using H1 style
         Text(
             text = stringResource(R.string.auth_welcome_title),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.headlineLarge,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -192,9 +179,13 @@ fun InitialAuthContent(
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
-        GoogleSignInButton(
+        MadafakerPrimaryButton(
+            text = if (isSigningIn)
+                stringResource(R.string.auth_signing_in)
+            else
+                stringResource(R.string.auth_login_with_google),
             onClick = onGoogleSignIn,
-            isLoading = isSigningIn,
+            enabled = !isSigningIn,
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -213,8 +204,7 @@ fun PostGoogleAuthContent(
     ) {
         Text(
             text = stringResource(R.string.auth_choose_nickname_title),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -226,10 +216,13 @@ fun PostGoogleAuthContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        CreateAccountButton(
+        MadafakerPrimaryButton(
+            text = if (isSigningIn)
+                stringResource(R.string.auth_creating_account)
+            else
+                stringResource(R.string.auth_create_account),
             onClick = onCreateAccount,
-            isLoading = isSigningIn,
-            isEnabled = validationResult is ValidationState.Success && draftNickname.isNotBlank(),
+            enabled = !isSigningIn && validationResult is ValidationState.Success && draftNickname.isNotBlank(),
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -249,123 +242,46 @@ fun LoadingContent() {
 }
 
 @Composable
-fun ProfileAvatar() {
-    Box(
-        modifier = Modifier
-            .size(80.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        // Placeholder for avatar
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
 fun NicknameInputBlock(
     draftNickname: String,
     validationResult: ValidationState?,
     onNicknameChange: (String) -> Unit,
 ) {
-    TextField(
+    MadafakerTextField(
         value = draftNickname,
-        onValueChange = {
-            onNicknameChange(it)
-        },
-        label = { Text(stringResource(R.string.auth_nickname_input_label)) },
-        placeholder = { Text(stringResource(R.string.auth_nickname_input_placeholder)) },
-        singleLine = true,
-        trailingIcon = {
-            Text(
-                text = "${draftNickname.length}/${NicknameDraftValidator.MAX_NICKNAME_LENGTH}",
-                modifier = Modifier.padding(end = 8.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        textStyle = MaterialTheme.typography.bodyLarge,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .background(
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.1f),
-                shape = RoundedCornerShape(8.dp)
-            ),
-        colors = TextFieldDefaults.colors(
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent
-        ),
-        shape = RoundedCornerShape(8.dp),
+        onValueChange = onNicknameChange,
+        label = stringResource(R.string.auth_nickname_input_label),
+        placeholder = stringResource(R.string.auth_nickname_input_placeholder),
+        modifier = Modifier.fillMaxWidth(),
         supportingText = {
-            when (validationResult) {
-                is ValidationState.Loading -> Text(
-                    stringResource(R.string.auth_validating_nickname),
-                    color = Color.Gray
+            Column {
+                // Character count
+                Text(
+                    text = "${draftNickname.length}/${NicknameDraftValidator.MAX_NICKNAME_LENGTH}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
 
-                is ValidationState.Error -> Text(
-                    validationResult.getErrorString.invoke(LocalContext.current),
-                    color = Color.Red
-                )
+                // Validation result
+                when (validationResult) {
+                    is ValidationState.Loading -> Text(
+                        text = stringResource(R.string.auth_validating_nickname),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
 
-                else -> {}
+                    is ValidationState.Error -> Text(
+                        text = validationResult.getErrorString.invoke(LocalContext.current),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Red
+                    )
+
+                    else -> {}
+                }
             }
         }
     )
 }
 
-@Composable
-fun GoogleSignInButton(
-    onClick: () -> Unit,
-    isLoading: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onClick,
-        enabled = !isLoading,
-        modifier = modifier
-            .height(48.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary
-        ),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        if (isLoading) {
-            Text(stringResource(R.string.auth_signing_in))
-        } else {
-            Text(
-                text = stringResource(R.string.auth_login_with_google),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}
 
-@Composable
-fun CreateAccountButton(
-    onClick: () -> Unit,
-    isLoading: Boolean,
-    isEnabled: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Button(
-        onClick = onClick,
-        enabled = !isLoading && isEnabled,
-        modifier = modifier
-            .height(48.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary
-        ),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        if (isLoading) {
-            Text(stringResource(R.string.auth_creating_account))
-        } else {
-            Text(
-                text = stringResource(R.string.auth_create_account),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}

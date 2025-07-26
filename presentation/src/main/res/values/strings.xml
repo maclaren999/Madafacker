@@ -43,7 +43,6 @@
     <string name="placeholder_positive">what positive message do you want to share?</string>
     <string name="placeholder_shadow">what\'s really on your mind?</string>
     <string name="button_send">send</string>
-    <string name="character_count">%d/280</string>
 
     <!-- Recent Messages -->
     <string name="recent_messages_title">your recent messages</string>

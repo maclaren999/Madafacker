@@ -8,5 +8,6 @@ object AppConfig {
     const val ENABLE_LOGGING = true
     const val ENABLE_ANALYTICS = false
 
+    //Product values
     const val MAX_MESSAGE_LENGTH = 1000
 }

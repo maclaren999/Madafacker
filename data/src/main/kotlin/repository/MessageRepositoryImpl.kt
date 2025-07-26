@@ -269,6 +269,20 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getUserRepliesForMessage(parentId: String): List<Reply> {
+        return try {
+            // Get current user
+            val user = userRepository.awaitCurrentUser()
+                ?: return emptyList()
+
+            // Get user's replies for this message
+            localDao.getRepliesByParentIdAndAuthor(parentId, user.id)
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to get user replies for message: $parentId")
+            emptyList()
+        }
+    }
+
     override suspend fun getMostRecentUnreadMessage(): Message? {
         return try {
             val user = userRepository.awaitCurrentUser() ?: return null

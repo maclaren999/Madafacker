@@ -4,7 +4,6 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,11 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
@@ -38,13 +34,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.R
+import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
+import com.bbuddies.madafaker.presentation.design.components.MadafakerTextButton
 
 @Composable
 fun NotificationPermissionScreen(
@@ -144,8 +141,7 @@ fun NotificationPermissionScreen(
             Box(
                 modifier = Modifier
                     .size(100.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer),
+                    .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
@@ -158,11 +154,10 @@ fun NotificationPermissionScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Title
+            // Title - Using H2 style
             Text(
                 text = stringResource(R.string.notification_permission_title),
                 style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
 
@@ -180,34 +175,20 @@ fun NotificationPermissionScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             // Enable Notifications Button
-            Button(
+            MadafakerPrimaryButton(
+                text = stringResource(R.string.notification_permission_enable),
                 onClick = onRequestPermission,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.notification_permission_enable),
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             // Skip Button
-            TextButton(
+            MadafakerTextButton(
+                text = stringResource(R.string.notification_permission_skip),
                 onClick = onSkip,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            ) {
-                Text(
-                    text = stringResource(R.string.notification_permission_skip),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         // Settings prompt snackbar

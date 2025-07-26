@@ -11,7 +11,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.bbuddies.madafaker.presentation.ui.account.AuthScreen
+import com.bbuddies.madafaker.presentation.ui.auth.AuthScreen
 import com.bbuddies.madafaker.presentation.ui.main.MainScreen
 import com.bbuddies.madafaker.presentation.ui.main.MainViewModel
 import com.bbuddies.madafaker.presentation.ui.permission.NotificationPermissionScreen

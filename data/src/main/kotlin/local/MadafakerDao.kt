@@ -69,6 +69,9 @@ interface MadafakerDao {
     @Query("SELECT * FROM replies WHERE parentId = :parentId ORDER BY createdAt ASC")
     suspend fun getRepliesByParentId(parentId: String): List<Reply>
 
+    @Query("SELECT * FROM replies WHERE parentId = :parentId AND authorId = :authorId ORDER BY createdAt ASC")
+    suspend fun getRepliesByParentIdAndAuthor(parentId: String, authorId: String): List<Reply>
+
     @Query("SELECT * FROM replies WHERE id = :replyId")
     suspend fun getReplyById(replyId: String): Reply?
 
