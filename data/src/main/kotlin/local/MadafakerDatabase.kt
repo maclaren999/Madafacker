@@ -14,13 +14,13 @@ import kotlinx.serialization.json.Json
 // Type converters for complex fields
 class Converters {
     @TypeConverter
-    fun fromReplyList(value: List<Reply>): String {
-        return Json.encodeToString(value)
+    fun fromReplyList(value: List<Reply>?): String? {
+        return value?.let { Json.encodeToString(it) }
     }
 
     @TypeConverter
-    fun toReplyList(value: String): List<Reply> {
-        return Json.decodeFromString(value)
+    fun toReplyList(value: String?): List<Reply>? {
+        return value?.let { Json.decodeFromString(it) }
     }
 }
 
@@ -30,16 +30,11 @@ class Converters {
         Reply::class,
         User::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class MadafakerDatabase : RoomDatabase() {
     abstract fun getMadafakerDao(): MadafakerDao
 
-//    // Future: When server supports push
-//    suspend fun handlePushNotification(messageId: String) {
-//        // Just refresh messages - no API changes needed
-//        refreshMessages()
-//    }
 }

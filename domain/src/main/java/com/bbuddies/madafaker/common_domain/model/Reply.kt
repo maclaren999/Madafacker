@@ -2,7 +2,9 @@ package com.bbuddies.madafaker.common_domain.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
+@Serializable
 @Entity(tableName = "replies")
 data class Reply(
     @PrimaryKey val id: String,

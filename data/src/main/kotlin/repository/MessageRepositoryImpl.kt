@@ -76,13 +76,20 @@ class MessageRepositoryImpl @Inject constructor(
         val localMessage = Message(
             id = tempId,
             body = body,
+            localState = MessageState.PENDING,
+            // Other fields are dumb defaults, as the message is temporary
             mode = currentMode.apiValue,
             isPublic = true,
             createdAt = System.currentTimeMillis().toString(),
+            updatedAt = System.currentTimeMillis().toString(),
             authorId = user.id,
-            localState = MessageState.PENDING,
+            replies = null,
             tempId = tempId,
-            needsSync = true
+            needsSync = true,
+            parentId = null,
+            localCreatedAt = System.currentTimeMillis(),
+            isRead = true,
+            readAt = System.currentTimeMillis(),
         )
 
         localDao.insertMessage(localMessage)

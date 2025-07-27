@@ -10,9 +10,13 @@ data class MessageDto(
     val id: String,
     val body: String,
     val mode: String,
-    val isPublic: Boolean,
+    val public: Boolean,
+    val wasSent: Boolean,
     val createdAt: String,
-    val authorId: String
+    val updatedAt: String,
+    val authorId: String,
+    val parentId: String? = null,
+    val replies: List<ReplyDto>? = null
 )
 
 // Extension functions for mapping
@@ -21,8 +25,10 @@ fun MessageDto.toDomainModel(): Message {
         id = id,
         body = body,
         mode = mode,
-        isPublic = isPublic,
+        isPublic = public,
         createdAt = createdAt,
+        updatedAt = updatedAt,
+        parentId = parentId,
         authorId = authorId,
         // Client-only fields get default values
         localState = MessageState.SENT,
@@ -31,18 +37,7 @@ fun MessageDto.toDomainModel(): Message {
         needsSync = false,
         // New messages from server are unread by default
         isRead = false,
-        readAt = null
-    )
-}
-
-fun Message.toNetworkDto(): MessageDto {
-    return MessageDto(
-        id = id,
-        body = body,
-        mode = mode,
-        isPublic = isPublic,
-        createdAt = createdAt,
-        authorId = authorId
-        // Client-only fields are excluded
+        readAt = null,
+        replies = replies?.map { it.toDomainModel() }
     )
 }
