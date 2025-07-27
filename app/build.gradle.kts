@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
     id(libs.plugins.daggerHilt.get().pluginId)
-    id(libs.plugins.kotlin.kapt.get().pluginId)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.google.gms.google.services)
 }
@@ -85,7 +85,7 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     implementation(libs.hilt)
     implementation(libs.hilt.navigation.compose)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(libs.hilt.work)
     implementation(libs.androidx.compose.runtime)
     debugImplementation(libs.chucker)
@@ -95,6 +95,3 @@ dependencies {
     implementation(libs.google.identity)
 }
 
-kapt {
-    correctErrorTypes = true
-}

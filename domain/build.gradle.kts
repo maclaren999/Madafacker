@@ -1,7 +1,7 @@
 plugins {
     id("java-library")
     alias(libs.plugins.jetbrainsKotlinJvm)
-    id(libs.plugins.kotlin.kapt.get().pluginId)
+    alias(libs.plugins.ksp)
     alias(libs.plugins.kotlinx.serialization)
 }
 
@@ -15,7 +15,7 @@ dependencies {
 
     // Room annotations for domain models
     api(libs.room.runtime)
-    kapt(libs.room.compiler)
+    ksp(libs.room.compiler)
 
     // Kotlinx Serialization for Room type converters
     implementation(libs.kotlinx.serialization.json)

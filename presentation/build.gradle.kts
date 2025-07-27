@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.compose.compiler)
     id(libs.plugins.daggerHilt.get().pluginId)
-    id(libs.plugins.kotlin.kapt.get().pluginId)
+    alias(libs.plugins.ksp)
 }
 
 val loadBuildConfigForBuildType = rootProject.extra["loadBuildConfigForBuildType"] as (String) -> Map<String, String>
@@ -52,7 +52,7 @@ android {
 
 dependencies {
     implementation(project(":domain"))
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.ui)
