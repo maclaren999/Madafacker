@@ -145,6 +145,18 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun refreshIncomingMessages() {
+        try {
+            // Fetch from server using existing API
+            val serverIncoming = webService.getIncomingMessages().map { it.toDomainModel() }
+
+            localDao.insertMessages(serverIncoming)
+
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to refresh from server")
+        }
+    }
+
 //    override suspend fun retryPendingMessages() {
 //        val pendingMessages = localDao.getMessagesByState(MessageState.PENDING)
 //        pendingMessages.forEach { message ->

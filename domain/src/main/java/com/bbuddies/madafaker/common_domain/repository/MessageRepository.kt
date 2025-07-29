@@ -10,6 +10,7 @@ interface MessageRepository {
     fun observeIncomingMessages(): Flow<List<Message>>
     fun observeOutgoingMessages(): Flow<List<Message>>
     suspend fun refreshMessages()
+    suspend fun refreshIncomingMessages()
 
     // Reply methods
     suspend fun createReply(body: String, parentId: String, isPublic: Boolean = true): Reply
