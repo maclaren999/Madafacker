@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bbuddies.madafaker.common_domain.AppConfig
+import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
@@ -60,10 +61,12 @@ fun MessageCard(
     onMessageTapped: (() -> Unit)? = null,
     onSendReply: ((messageId: String, replyText: String, isPublic: Boolean) -> Unit)? = null,
     onReplyingClosed: (() -> Unit)? = null,
+    onRateMessage: ((messageId: String, rating: MessageRating) -> Unit)? = null,
     isReplySending: Boolean = false,
-    replyError: String? = null
+    replyError: String? = null,
+    currentUserId: String? = null
 ) {
-    var selectedRating by remember { mutableStateOf<String?>(null) }
+    var selectedRating by remember { mutableStateOf<MessageRating?>(null) }
     var replyText by remember { mutableStateOf("") }
 
     val mode = Mode.fromApiValue(message.mode)
@@ -101,40 +104,56 @@ fun MessageCard(
                     modifier = Modifier.padding(top = 4.dp, bottom = 12.dp)
                 )
 
-                // Show existing user replies if any
-                if (userReplies.isNotEmpty()) {
-                    Text(
-                        text = "Your previous replies:",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
+                // Show all existing replies if any
+                message.replies?.let { allReplies ->
+                    if (allReplies.isNotEmpty()) {
+                        Text(
+                            text = "Replies (${allReplies.size}):",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
 
-                    userReplies.forEach { reply ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 4.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color.Transparent
-                            )
-                        ) {
-                            Text(
-                                text = reply.body,
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.padding(8.dp),
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
+                        allReplies.forEach { reply ->
+                            val isUserReply = currentUserId != null && reply.authorId == currentUserId
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (isUserReply)
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                                    else Color.Transparent
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(8.dp)
+                                ) {
+                                    Text(
+                                        text = if (isUserReply) "You" else "user_${reply.authorId.take(8)}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (isUserReply)
+                                            MaterialTheme.colorScheme.primary
+                                        else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                        modifier = Modifier.padding(bottom = 2.dp)
+                                    )
+                                    Text(
+                                        text = reply.body,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
                 }
 
                 // Rating buttons
                 Text(
-                    text = "Rate this message:",
+                    text = androidx.compose.ui.res.stringResource(com.bbuddies.madafaker.presentation.R.string.rating_prompt),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onBackground
@@ -148,26 +167,35 @@ fun MessageCard(
                 ) {
                     RatingButton(
                         icon = Icons.Default.Close,
-                        label = "Dislike",
-                        isSelected = selectedRating == "dislike",
+                        label = androidx.compose.ui.res.stringResource(com.bbuddies.madafaker.presentation.R.string.rating_dislike),
+                        isSelected = selectedRating == MessageRating.DISLIKE,
                         color = Color.Red,
-                        onClick = { selectedRating = "dislike" }
+                        onClick = {
+                            selectedRating = MessageRating.DISLIKE
+                            onRateMessage?.invoke(message.id, MessageRating.DISLIKE)
+                        }
                     )
 
                     RatingButton(
                         icon = Icons.Default.ThumbUp,
-                        label = "Like",
-                        isSelected = selectedRating == "like",
+                        label = androidx.compose.ui.res.stringResource(com.bbuddies.madafaker.presentation.R.string.rating_like),
+                        isSelected = selectedRating == MessageRating.LIKE,
                         color = Color.Green,
-                        onClick = { selectedRating = "like" }
+                        onClick = {
+                            selectedRating = MessageRating.LIKE
+                            onRateMessage?.invoke(message.id, MessageRating.LIKE)
+                        }
                     )
 
                     RatingButton(
                         icon = Icons.Default.Favorite,
-                        label = "Superlike",
-                        isSelected = selectedRating == "superlike",
+                        label = androidx.compose.ui.res.stringResource(com.bbuddies.madafaker.presentation.R.string.rating_superlike),
+                        isSelected = selectedRating == MessageRating.SUPERLIKE,
                         color = Color.Magenta,
-                        onClick = { selectedRating = "superlike" }
+                        onClick = {
+                            selectedRating = MessageRating.SUPERLIKE
+                            onRateMessage?.invoke(message.id, MessageRating.SUPERLIKE)
+                        }
                     )
                 }
 
@@ -279,6 +307,62 @@ fun MessageCard(
                 overflow = TextOverflow.Ellipsis
             )
 
+            // Show replies if they exist
+            message.replies?.let { replies ->
+                if (replies.isNotEmpty()) {
+                    Text(
+                        text = "Replies (${replies.size}):",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+
+                    // Show up to 3 replies
+                    replies.take(3).forEach { reply ->
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color.Transparent
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(8.dp)
+                            ) {
+                                Text(
+                                    text = "user_${reply.authorId.take(8)}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                    modifier = Modifier.padding(bottom = 2.dp)
+                                )
+                                Text(
+                                    text = reply.body,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onBackground,
+                                    maxLines = 3,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+
+                    // Show "and X more" if there are more than 3 replies
+                    if (replies.size > 3) {
+                        Text(
+                            text = "and ${replies.size - 3} more replies...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(24.dp)
@@ -368,7 +452,8 @@ private fun Message.toInboxMessage(): InboxMessage {
         mode = mode,
         up = if (AppConfig.USE_MOCK_API) (0..20).random() else null,
         down = if (AppConfig.USE_MOCK_API) (0..5).random() else null,
-        hearts = if (AppConfig.USE_MOCK_API) (0..15).random() else null
+        hearts = if (AppConfig.USE_MOCK_API) (0..15).random() else null,
+        replies = replies
     )
 }
 
@@ -384,5 +469,6 @@ data class InboxMessage(
     val mode: String,
     val up: Int?,
     val down: Int?,
-    val hearts: Int?
+    val hearts: Int?,
+    val replies: List<Reply>? = null
 )

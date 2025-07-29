@@ -2,6 +2,7 @@ package com.bbuddies.madafaker.presentation.ui.main
 
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.AppConfig
+import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
@@ -12,6 +13,7 @@ import com.bbuddies.madafaker.common_domain.repository.DraftRepository
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.bbuddies.madafaker.common_domain.usecase.CreateReplyUseCase
+import com.bbuddies.madafaker.common_domain.usecase.RateMessageUseCase
 import com.bbuddies.madafaker.common_domain.utils.NetworkConnectivityMonitor
 import com.bbuddies.madafaker.notification_domain.repository.NotificationManagerRepository
 import com.bbuddies.madafaker.notification_domain.usecase.TrackNotificationEventUseCase
@@ -41,6 +43,7 @@ class MainViewModel @Inject constructor(
     private val draftRepository: DraftRepository,
     private val sharedTextManagerImpl: SharedTextManager,
     private val createReplyUseCase: CreateReplyUseCase,
+    private val rateMessageUseCase: RateMessageUseCase,
     private val trackNotificationEventUseCase: TrackNotificationEventUseCase,
     private val notificationManagerRepository: NotificationManagerRepository
 ) : BaseViewModel(), MainScreenContract {
@@ -412,5 +415,24 @@ class MainViewModel @Inject constructor(
     override fun onMessageReplyingClosed() {
         _replyingMessageId.value = null
         _userRepliesForMessage.value = emptyList()
+    }
+
+    override fun onRateMessage(messageId: String, rating: MessageRating) {
+        viewModelScope.launch {
+            try {
+                val result = rateMessageUseCase(messageId, rating)
+
+                result.fold(
+                    onSuccess = {
+                        showSuccess("Message rated successfully!")
+                    },
+                    onFailure = { error ->
+                        showError("Failed to rate message: ${error.message}")
+                    }
+                )
+            } catch (e: Exception) {
+                showError("Failed to rate message: ${e.message}")
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.bbuddies.madafaker.common_domain.repository
 
+import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +18,9 @@ interface MessageRepository {
     suspend fun getUserRepliesForMessage(parentId: String): List<Reply>
 
     suspend fun createMessage(body: String): Message
+
+    // Rating methods
+    suspend fun rateMessage(messageId: String, rating: MessageRating)
 
     // Updated methods for pending messages
 //    suspend fun retryPendingMessages()

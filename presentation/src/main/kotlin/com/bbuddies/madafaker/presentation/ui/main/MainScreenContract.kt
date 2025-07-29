@@ -1,6 +1,7 @@
 package com.bbuddies.madafaker.presentation.ui.main
 
 import android.content.Context
+import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
@@ -47,6 +48,9 @@ interface MainScreenContract {
     // Reply actions
     fun onSendReply(messageId: String, replyText: String, isPublic: Boolean = true)
     fun clearReplyError()
+
+    // Rating actions
+    fun onRateMessage(messageId: String, rating: MessageRating)
 
     // Message highlighting and read state
     fun onInboxViewed()

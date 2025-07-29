@@ -164,6 +164,7 @@ private class PreviewMainViewModel : MainScreenContract {
     override fun clearDraft() {}
     override fun onSendReply(messageId: String, replyText: String, isPublic: Boolean) {}
     override fun clearReplyError() {}
+    override fun onRateMessage(messageId: String, rating: com.bbuddies.madafaker.common_domain.enums.MessageRating) {}
     override fun onInboxViewed() {}
     override fun markMessageAsRead(messageId: String) {}
     override fun onMessageTapped(messageId: String) {}

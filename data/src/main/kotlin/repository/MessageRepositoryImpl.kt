@@ -6,6 +6,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
@@ -250,6 +251,25 @@ class MessageRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Failed to get user replies for message: $parentId")
             emptyList()
+        }
+    }
+
+    override suspend fun rateMessage(messageId: String, rating: MessageRating) {
+        try {
+            // Ensure user is authenticated
+            val user = userRepository.awaitCurrentUser()
+                ?: throw IllegalStateException("No authenticated user available")
+
+            // Rate message via API
+            val request = remote.api.request.RateMessageRequest(rating = rating.apiValue)
+            webService.rateMessage(messageId, request)
+
+            // Note: The API doesn't return updated message data, so we don't update local storage
+            // The rating is fire-and-forget for now
+
+        } catch (e: Exception) {
+            Timber.e(e, "Failed to rate message: $messageId with rating: ${rating.apiValue}")
+            throw e
         }
     }
 

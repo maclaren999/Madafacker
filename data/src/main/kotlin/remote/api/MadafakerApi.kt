@@ -46,6 +46,10 @@ interface MadafakerApi {
     @PATCH("/api/reply")
     suspend fun updateReply(@Body id: String, isPublic: Boolean)
 
+    @Headers(CONTENT_TYPE)
+    @PATCH("/api/message/{id}/rate")
+    suspend fun rateMessage(@Path("id") messageId: String, @Body request: remote.api.request.RateMessageRequest)
+
     ////CREATE
     @Headers(CONTENT_TYPE)
     @POST("/api/user")

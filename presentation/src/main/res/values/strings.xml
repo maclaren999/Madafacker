@@ -172,6 +172,12 @@
     <string name="reaction_love">Love</string>
     <string name="reaction_report">Report</string>
 
+    <!-- Message Rating -->
+    <string name="rating_dislike">Dislike</string>
+    <string name="rating_like">Like</string>
+    <string name="rating_superlike">Superlike</string>
+    <string name="rating_prompt">Rate this message:</string>
+
     <!-- Moderation -->
     <string name="report_title">Report Message</string>
     <string name="report_reason_spam">Spam</string>

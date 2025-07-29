@@ -40,6 +40,11 @@ fun InboxTab(
     val replyingMessageId by viewModel.replyingMessageId.collectAsState()
     val userRepliesForMessage by viewModel.userRepliesForMessage.collectAsState()
 
+    // Get current user from viewModel if available
+    val currentUser = if (viewModel is com.bbuddies.madafaker.presentation.ui.main.MainViewModel) {
+        viewModel.currentUser.collectAsState().value
+    } else null
+
     incomingMessages.HandleState(
         onRetry = viewModel::refreshMessages
     ) { messages ->
@@ -50,7 +55,8 @@ fun InboxTab(
             userRepliesForMessage = userRepliesForMessage,
             viewModel = viewModel,
             isReplySending = isReplySending,
-            replyError = replyError
+            replyError = replyError,
+            currentUserId = currentUser?.id
         )
     }
 }
@@ -63,7 +69,8 @@ private fun InboxMessageList(
     userRepliesForMessage: List<Reply>,
     viewModel: MainScreenContract,
     isReplySending: Boolean,
-    replyError: String?
+    replyError: String?,
+    currentUserId: String? = null
 ) {
     if (messages.isEmpty()) {
         InboxEmptyState()
@@ -92,8 +99,12 @@ private fun InboxMessageList(
                 onReplyingClosed = {
                     viewModel.onMessageReplyingClosed()
                 },
+                onRateMessage = { messageId, rating ->
+                    viewModel.onRateMessage(messageId, rating)
+                },
                 isReplySending = isReplySending,
-                replyError = replyError
+                replyError = replyError,
+                currentUserId = currentUserId
             )
 
             // Mark highlighted message as read when displayed
