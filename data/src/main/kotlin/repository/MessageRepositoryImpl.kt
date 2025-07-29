@@ -147,15 +147,31 @@ class MessageRepositoryImpl @Inject constructor(
 
     override suspend fun refreshIncomingMessages() {
         try {
-            // Fetch from server using existing API
+            // Fetch only incoming messages from server
             val serverIncoming = webService.getIncomingMessages().map { it.toDomainModel() }
 
-            localDao.insertMessages(serverIncoming)
+            // Get current user to filter existing incoming messages
+            val user = userRepository.awaitCurrentUser() ?: return
 
+            // Convert server messages to local format
+            val incomingMessages = serverIncoming.map { serverMsg ->
+                serverMsg.copy(
+                    localState = MessageState.SENT,
+                    localCreatedAt = System.currentTimeMillis(),
+                    needsSync = false
+                )
+            }
+
+            // Remove existing incoming messages (not authored by current user) and insert fresh data
+            localDao.deleteIncomingMessages(user.id)
+            localDao.insertMessages(incomingMessages)
+
+            Timber.d("Refreshed ${incomingMessages.size} incoming messages")
         } catch (e: Exception) {
-            Timber.w(e, "Failed to refresh from server")
+            Timber.w(e, "Failed to refresh incoming messages from server")
         }
     }
+
 
 //    override suspend fun retryPendingMessages() {
 //        val pendingMessages = localDao.getMessagesByState(MessageState.PENDING)

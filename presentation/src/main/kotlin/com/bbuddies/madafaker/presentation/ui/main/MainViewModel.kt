@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -280,6 +281,17 @@ class MainViewModel @Inject constructor(
                 messageRepository.refreshMessages()
             } catch (e: Exception) {
                 showError("Failed to refresh messages: ${e.message}")
+            }
+        }
+    }
+
+    override fun refreshUserData() {
+        viewModelScope.launch {
+            try {
+                userRepository.getCurrentUser(forceRefresh = true)
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to refresh user data")
+                // Don't show error to user for background refresh
             }
         }
     }

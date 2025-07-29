@@ -222,4 +222,10 @@
     <string name="data_export_success">Data exported successfully</string>
     <string name="data_clear_cache">Clear Cache</string>
     <string name="data_cache_cleared">Cache cleared successfully</string>
+
+    <!-- Pull to Refresh -->
+    <string name="pull_to_refresh">Pull to refresh</string>
+    <string name="refreshing">Refreshing…</string>
+    <string name="refresh_complete">Refresh complete</string>
+    <string name="refresh_failed">Refresh failed</string>
 </resources>

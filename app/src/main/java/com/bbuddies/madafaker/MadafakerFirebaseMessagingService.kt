@@ -2,6 +2,7 @@ package com.bbuddies.madafaker
 
 import android.util.Log
 import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import com.bbuddies.madafaker.notification.NotificationManager
 import com.bbuddies.madafaker.notification_domain.model.NotificationPayload
 import com.google.firebase.messaging.FirebaseMessagingService
@@ -22,6 +23,9 @@ class MadafakerFirebaseMessagingService : FirebaseMessagingService() {
 
     @Inject
     lateinit var notificationManager: NotificationManager
+
+    @Inject
+    lateinit var messageRepository: MessageRepository
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
@@ -58,6 +62,14 @@ class MadafakerFirebaseMessagingService : FirebaseMessagingService() {
             // Show notification using our custom manager
             coroutineScope.launch {
                 notificationManager.showNotification(payload)
+
+                // Refresh incoming messages in the background
+                try {
+                    messageRepository.refreshIncomingMessages()
+                    Log.d(TAG, "Successfully refreshed incoming messages after notification")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Failed to refresh incoming messages after notification", e)
+                }
             }
 
         } catch (e: Exception) {

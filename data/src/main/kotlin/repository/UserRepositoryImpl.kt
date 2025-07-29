@@ -110,7 +110,20 @@ class UserRepositoryImpl @Inject constructor(
             is AuthenticationState.Error -> throw state.exception
         }
 
-    override suspend fun getCurrentUser(): User? = withContext(Dispatchers.IO) {
+    override suspend fun getCurrentUser(forceRefresh: Boolean): User? = withContext(Dispatchers.IO) {
+        if (forceRefresh) {
+            // Force refresh: fetch fresh data from server
+            try {
+                val freshUser = webService.getCurrentUser()
+                localDao.insertUser(freshUser)
+                Timber.d("Force refreshed user data from server")
+                return@withContext freshUser
+            } catch (e: Exception) {
+                Timber.e(e, "Failed to force refresh user data, falling back to cache")
+                // Fall through to cache lookup on error
+            }
+        }
+
         // Cache-only lookup - network fetching is handled by authenticationState flow
         preferenceManager.googleIdAuthToken.value?.let { token ->
             try {

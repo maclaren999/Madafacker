@@ -43,6 +43,7 @@ interface MainScreenContract {
     fun onDraftMessageChanged(message: String)
     fun toggleMode()
     fun refreshMessages()
+    fun refreshUserData()
     fun clearDraft() // New: manually clear draft
 
     // Reply actions

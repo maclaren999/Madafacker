@@ -7,11 +7,17 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,10 +36,12 @@ import com.bbuddies.madafaker.presentation.ui.main.tabs.InboxTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.MyPostsTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.WriteTab
 import com.bbuddies.madafaker.presentation.utils.SharedTextManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
     navController: NavHostController,
@@ -45,6 +53,34 @@ fun MainScreen(
     val scope = rememberCoroutineScope()
     val highlightedMessageId by viewModel.highlightedMessageId.collectAsState()
     val currentMode by viewModel.currentMode.collectAsState()
+
+    // Pull-to-refresh state
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullToRefreshState = rememberPullToRefreshState()
+
+    // Function to handle refresh with proper state management
+    val handleRefresh: () -> Unit = remember {
+        {
+            scope.launch {
+                if (!isRefreshing) {
+                    isRefreshing = true
+                    try {
+                        // Refresh both messages and user data for all tabs
+                        viewModel.refreshMessages()
+                        viewModel.refreshUserData()
+
+                        // Minimum delay to ensure smooth animation
+                        delay(600)
+                    } catch (e: Exception) {
+                        // Handle errors gracefully with shorter delay
+                        delay(400)
+                    }
+                    // Always reset the state
+                    isRefreshing = false
+                }
+            }
+        }
+    }
 
     // Handle deep link navigation to Inbox tab
     LaunchedEffect(deepLinkData) {
@@ -90,26 +126,32 @@ fun MainScreen(
                 scope = scope
             )
 
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize()
-            ) { page ->
-                when (MainTab.entries[page]) {
-                    MainTab.WRITE -> WriteTab(viewModel)
-                    MainTab.MY_POSTS -> MyPostsTab(viewModel)
-                    MainTab.INBOX -> InboxTab(
-                        viewModel = viewModel,
-                        highlightedMessageId = highlightedMessageId
-                    )
+            PullToRefreshBox(
+                isRefreshing = isRefreshing,
+                onRefresh = handleRefresh,
+                state = pullToRefreshState
+            ) {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize()
+                ) { page ->
+                    when (MainTab.entries[page]) {
+                        MainTab.WRITE -> WriteTab(viewModel)
+                        MainTab.MY_POSTS -> MyPostsTab(viewModel)
+                        MainTab.INBOX -> InboxTab(
+                            viewModel = viewModel,
+                            highlightedMessageId = highlightedMessageId
+                        )
 
-                    MainTab.ACCOUNT -> AccountTab(
-                        viewModel = hiltViewModel<AccountTabViewModel>(),
-                        onNavigateToAuth = {
-                            navController.navigate(NavigationItem.Account.route) {
-                                popUpTo(NavigationItem.Main.route) { inclusive = true }
+                        MainTab.ACCOUNT -> AccountTab(
+                            viewModel = hiltViewModel<AccountTabViewModel>(),
+                            onNavigateToAuth = {
+                                navController.navigate(NavigationItem.Account.route) {
+                                    popUpTo(NavigationItem.Main.route) { inclusive = true }
+                                }
                             }
-                        }
-                    )
+                        )
+                    }
                 }
             }
         }
@@ -161,6 +203,7 @@ private class PreviewMainViewModel : MainScreenContract {
 
     override fun toggleMode() {}
     override fun refreshMessages() {}
+    override fun refreshUserData() {}
     override fun clearDraft() {}
     override fun onSendReply(messageId: String, replyText: String, isPublic: Boolean) {}
     override fun clearReplyError() {}

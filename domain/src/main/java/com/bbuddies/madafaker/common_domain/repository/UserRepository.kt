@@ -39,9 +39,10 @@ interface UserRepository {
      * Checks local storage for User entity.
      * If User is not found, it will fetch from the server.
      *
+     * @param forceRefresh If true, bypasses cache and fetches fresh data from server
      * Returns null if user is not found.
      * */
-    suspend fun getCurrentUser(): User?
+    suspend fun getCurrentUser(forceRefresh: Boolean = false): User?
 
     /**
      * Creates a user on the server, handles FCM token retrieval internally,
