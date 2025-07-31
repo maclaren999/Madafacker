@@ -13,3 +13,5 @@ local.properties
 app/google-services.json
 app/secrets.json
 app/secrets.*.json
+app/debug.keystore
+*.keystore

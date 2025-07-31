@@ -26,8 +26,18 @@ android {
         }
     }
 
+    signingConfigs {
+        getByName("debug") {
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+        }
+    }
+
     buildTypes {
         debug {
+            signingConfig = signingConfigs.getByName("debug")
             val config = loadBuildConfigForBuildType("debug")
             //noinspection WrongGradleMethod
             config.forEach { (key, value) ->
