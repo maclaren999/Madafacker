@@ -24,10 +24,32 @@ jobs:
       - name: Create google-services.json
         run: echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
 
-      # Decode and create debug keystore from base64 secret
+      # Generate debug keystore (alternative approach)
       - name: Create debug keystore
         run: |
-          echo '${{ secrets.DEBUG_KEYSTORE_BASE64 }}' | base64 -d > app/debug.keystore
+          # Try to decode from base64 first
+          if [ ! -z "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" ]; then
+            echo "Attempting to decode keystore from base64..."
+            echo "${{ secrets.DEBUG_KEYSTORE_BASE64 }}" | base64 -d > app/debug.keystore
+            # Verify the keystore
+            if keytool -list -keystore app/debug.keystore -storepass android -alias androiddebugkey > /dev/null 2>&1; then
+              echo "✅ Successfully decoded keystore from base64"
+            else
+              echo "❌ Failed to decode keystore, generating new one..."
+              rm -f app/debug.keystore
+            fi
+          fi
+
+          # Generate new keystore if decoding failed or no secret provided
+          if [ ! -f app/debug.keystore ]; then
+            echo "Generating new debug keystore..."
+            keytool -genkey -v -keystore app/debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
+            echo "✅ Generated new debug keystore"
+          fi
+
+          # Verify final keystore
+          ls -la app/debug.keystore
+          keytool -list -keystore app/debug.keystore -storepass android
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
