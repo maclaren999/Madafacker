@@ -30,7 +30,7 @@ android {
         getByName("debug") {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
-            storeFile = file("debug.keystore")
+            storeFile = file("${projectDir}/debug.keystore")
             storePassword = "android"
         }
     }
