@@ -1,3 +1,5 @@
+import groovy.json.JsonSlurper
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -8,6 +10,37 @@ plugins {
 }
 
 val loadBuildConfigForBuildType = rootProject.extra["loadBuildConfigForBuildType"] as (String) -> Map<String, String>
+
+// Load keystore config from secrets.json
+fun loadKeystoreConfig(): Map<String, String> {
+    val configFile = File(projectDir, "secrets.json")
+    val config = mutableMapOf<String, String>()
+
+    if (configFile.exists()) {
+        try {
+            val jsonSlurper = JsonSlurper()
+            val fileConfig = jsonSlurper.parse(configFile) as Map<String, Any>
+            val debugConfig = fileConfig["debug"] as? Map<String, Any>
+            
+            if (debugConfig != null) {
+                config["keyAlias"] = debugConfig["DEBUG_KEYSTORE_ALIAS"]?.toString() ?: "androiddebugkey"
+                config["keyPassword"] = debugConfig["DEBUG_KEY_PASSWORD"]?.toString() ?: "android"
+                config["storePassword"] = debugConfig["DEBUG_KEYSTORE_PASSWORD"]?.toString() ?: "android"
+            }
+        } catch (e: Exception) {
+            println("Error loading keystore config: ${e.message}")
+        }
+    }
+
+    // Environment variables override
+    System.getenv("DEBUG_KEYSTORE_ALIAS")?.let { config["keyAlias"] = it }
+    System.getenv("DEBUG_KEY_PASSWORD")?.let { config["keyPassword"] = it }
+    System.getenv("DEBUG_KEYSTORE_PASSWORD")?.let { config["storePassword"] = it }
+
+    return config
+}
+
+val keystoreConfig = loadKeystoreConfig()
 
 android {
     namespace = "com.bbuddies.madafaker"
@@ -28,10 +61,10 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+            keyAlias = keystoreConfig["keyAlias"] ?: "androiddebugkey"
+            keyPassword = keystoreConfig["keyPassword"] ?: "android"
             storeFile = file("${projectDir}/debug.keystore")
-            storePassword = "android"
+            storePassword = keystoreConfig["storePassword"] ?: "android"
         }
     }
 
