@@ -12,6 +12,10 @@ val loadSecretsConfig = rootProject.extra["loadSecretsConfig"] as (String) -> Ma
 val debugSecrets = loadSecretsConfig("debug")
 val releaseSecrets = loadSecretsConfig("release")
 
+val majorVersion = 0
+val minorVersion = 0
+val patchVersion = 2
+
 android {
     namespace = "com.bbuddies.madafaker"
     compileSdk = libs.versions.compileSdk.get().toInt()
@@ -20,8 +24,8 @@ android {
         applicationId = "com.bbuddies.madafaker"
         minSdk = libs.versions.minSdk.get().toInt()
         targetSdk = libs.versions.compileSdk.get().toInt()
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = majorVersion * 10000 + minorVersion * 100 + patchVersion
+        versionName = "$majorVersion.$minorVersion.$patchVersion"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
