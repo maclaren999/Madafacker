@@ -1,5 +1,3 @@
-import groovy.json.JsonSlurper
-
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -9,38 +7,10 @@ plugins {
     alias(libs.plugins.google.gms.google.services)
 }
 
-val loadBuildConfigForBuildType = rootProject.extra["loadBuildConfigForBuildType"] as (String) -> Map<String, String>
-
-// Load keystore config from secrets.json
-fun loadKeystoreConfig(): Map<String, String> {
-    val configFile = File(projectDir, "secrets.json")
-    val config = mutableMapOf<String, String>()
-
-    if (configFile.exists()) {
-        try {
-            val jsonSlurper = JsonSlurper()
-            val fileConfig = jsonSlurper.parse(configFile) as Map<String, Any>
-            val debugConfig = fileConfig["debug"] as? Map<String, Any>
-            
-            if (debugConfig != null) {
-                config["keyAlias"] = debugConfig["DEBUG_KEYSTORE_ALIAS"]?.toString() ?: "androiddebugkey"
-                config["keyPassword"] = debugConfig["DEBUG_KEY_PASSWORD"]?.toString() ?: "android"
-                config["storePassword"] = debugConfig["DEBUG_KEYSTORE_PASSWORD"]?.toString() ?: "android"
-            }
-        } catch (e: Exception) {
-            println("Error loading keystore config: ${e.message}")
-        }
-    }
-
-    // Environment variables override
-    System.getenv("DEBUG_KEYSTORE_ALIAS")?.let { config["keyAlias"] = it }
-    System.getenv("DEBUG_KEY_PASSWORD")?.let { config["keyPassword"] = it }
-    System.getenv("DEBUG_KEYSTORE_PASSWORD")?.let { config["storePassword"] = it }
-
-    return config
-}
-
-val keystoreConfig = loadKeystoreConfig()
+// Load unified secrets configuration
+val loadSecretsConfig = rootProject.extra["loadSecretsConfig"] as (String) -> Map<String, Any>
+val debugSecrets = loadSecretsConfig("debug")
+val releaseSecrets = loadSecretsConfig("release")
 
 android {
     namespace = "com.bbuddies.madafaker"
@@ -61,29 +31,25 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            keyAlias = keystoreConfig["keyAlias"] ?: "androiddebugkey"
-            keyPassword = keystoreConfig["keyPassword"] ?: "android"
+            keyAlias = debugSecrets["DEBUG_KEYSTORE_ALIAS"]?.toString() ?: "androiddebugkey"
+            keyPassword = debugSecrets["DEBUG_KEY_PASSWORD"]?.toString() ?: "android"
             storeFile = file("${projectDir}/debug.keystore")
-            storePassword = keystoreConfig["storePassword"] ?: "android"
+            storePassword = debugSecrets["DEBUG_KEYSTORE_PASSWORD"]?.toString() ?: "android"
         }
     }
 
     buildTypes {
         debug {
             signingConfig = signingConfigs.getByName("debug")
-            val config = loadBuildConfigForBuildType("debug")
-            //noinspection WrongGradleMethod
-            config.forEach { (key, value) ->
-                buildConfigField("String", key, "\"$value\"")
-            }
+            // Only add safe values to BuildConfig (not keystore credentials)
+            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${debugSecrets["GOOGLE_WEB_CLIENT_ID"] ?: ""}\"")
+            buildConfigField("String", "API_BASE_URL", "\"${debugSecrets["API_BASE_URL"] ?: ""}\"")
         }
 
         release {
-            val config = loadBuildConfigForBuildType("release")
-            //noinspection WrongGradleMethod
-            config.forEach { (key, value) ->
-                buildConfigField("String", key, "\"$value\"")
-            }
+            // Only add safe values to BuildConfig (not keystore credentials)
+            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${releaseSecrets["GOOGLE_WEB_CLIENT_ID"] ?: ""}\"")
+            buildConfigField("String", "API_BASE_URL", "\"${releaseSecrets["API_BASE_URL"] ?: ""}\"")
         }
     }
     compileOptions {
