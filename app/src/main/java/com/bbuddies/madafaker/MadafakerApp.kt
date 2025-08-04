@@ -23,7 +23,7 @@ class MadafakerApp : Application(), Configuration.Provider {
         }
 
         // Initialize Firebase Crashlytics
-        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(!BuildConfig.DEBUG)
+        FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(true) //TODO: !BuildConfig.DEBUG
 
         // Set user identifier for crash reports (will be updated when user logs in)
         FirebaseCrashlytics.getInstance().setUserId("anonymous")
