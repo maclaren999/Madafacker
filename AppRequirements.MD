@@ -118,7 +118,8 @@ Establish four primary tabs in the bottom navigation bar to support the Write‑
 * **Legal:** Comply with GDPR/CCPA.
 * **Analytics:** Instrument Firebase Analytics to track key events (app*open, send\_message, receive\_notification, open\_notification,
   dismiss\_*notification, rate\_message, toggle\_mode) and funnel metrics for ongoing product improvement.
-* **Crash Reporting:** Integrate Firebase Crashlytics for real‑time crash and ANR monitoring.
+* **Crash Reporting:** ✅ **IMPLEMENTED** - Firebase Crashlytics integrated for real‑time crash and ANR monitoring with custom keys and user
+  identification.
 * **Spam/Flood Control:** 30‑second minimum send interval enforced server‑side.
 * **Kotlin Multiplatform Preparedness:** Structure the Android codebase (business logic, network layer) to facilitate a future migration to Kotlin Multiplatform (KMP) for shared modules across mobile platforms.
   Avoid Java libs - use Kotlin-based libs if possible.
