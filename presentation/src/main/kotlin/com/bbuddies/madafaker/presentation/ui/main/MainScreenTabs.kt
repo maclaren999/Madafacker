@@ -3,6 +3,7 @@ package com.bbuddies.madafaker.presentation.ui.main
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,15 +15,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.presentation.R
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 enum class MainTab(val titleRes: Int) {
     WRITE(R.string.tab_write),
-    MY_POSTS(R.string.tab_my_posts),
-    INBOX(R.string.tab_inbox),
+    MY_POSTS(R.string.tab_feed),
+    INBOX(R.string.tab_discussions),
     ACCOUNT(R.string.tab_account)
 }
 
@@ -33,25 +36,25 @@ fun MainScreenTabs(
     modifier: Modifier = Modifier
 ) {
     val tabs = MainTab.entries.toTypedArray()
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(vertical = 48.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
-        tabs.forEachIndexed { index, tab ->
-            TabItem(
-                tab = tab,
-                isSelected = pagerState.currentPage == index,
-                onClick = {
-                    scope.launch {
-                        pagerState.animateScrollToPage(index)
+        ) {
+            tabs.forEachIndexed { index, tab ->
+                TabItem(
+                    tab = tab,
+                    isSelected = pagerState.currentPage == index,
+                    onClick = {
+                        scope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
                     }
-                }
-            )
+                )
+            }
         }
-    }
 }
 
 @Composable
@@ -68,8 +71,22 @@ private fun TabItem(
 
     Text(
         text = stringResource(tab.titleRes),
+        style = MaterialTheme.typography.bodyMedium,
         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
         color = color,
         modifier = modifier.clickable { onClick() }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainScreenTabsPreview() {
+    // Создаем фиктивный PagerState и CoroutineScope для превью
+    val pagerState = PagerState { MainTab.entries.size }
+    val scope = CoroutineScope(Dispatchers.Main)
+
+    MainScreenTabs(
+        pagerState = pagerState,
+        scope = scope
     )
 }

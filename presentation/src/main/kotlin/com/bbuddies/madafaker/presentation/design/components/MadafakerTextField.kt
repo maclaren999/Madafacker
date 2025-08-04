@@ -25,8 +25,10 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.bbuddies.madafaker.presentation.design.theme.LightGray
+import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 
 /**
  * Custom TextField with hand-drawn underline styling
@@ -54,7 +56,7 @@ fun MadafakerTextField(
         if (label.isNotEmpty()) {
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -87,8 +89,8 @@ fun MadafakerTextField(
                         if (value.isEmpty() && placeholder.isNotEmpty()) {
                             Text(
                                 text = placeholder,
-                                style = textStyle,
-                                color = LightGray
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                         innerTextField()
@@ -200,4 +202,17 @@ private fun DrawScope.drawHandDrawnPath(color: Color) {
         path = path,
         color = color
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MadafakerTextFieldPreview() {
+    MadafakerTheme(Mode.SHINE) {
+        MadafakerTextField(
+            value = "",
+            onValueChange = {},
+            placeholder = "Placeholder",
+            label = "Label"
+        )
+    }
 }

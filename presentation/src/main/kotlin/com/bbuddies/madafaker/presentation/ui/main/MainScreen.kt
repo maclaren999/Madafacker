@@ -1,8 +1,11 @@
 package com.bbuddies.madafaker.presentation.ui.main
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -18,9 +21,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.bbuddies.madafaker.common_domain.enums.Mode
@@ -28,6 +35,8 @@ import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.DeepLinkData
 import com.bbuddies.madafaker.presentation.NavigationItem
+import com.bbuddies.madafaker.presentation.R
+import com.bbuddies.madafaker.presentation.base.MovingSunEffect
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTab
@@ -114,43 +123,62 @@ fun MainScreen(
         warningsFlow = viewModel.warningsFlow,
         modifier = modifier
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
-        ) {
-            // Add offline indicator at the top
+        Box(modifier = Modifier.fillMaxSize()) {
+            MovingSunEffect(
+                size = 64.dp,
+                alignment = Alignment.TopStart,
+                glowEnabled = true,
+                padding = 24.dp
+            )
 
+            Image(
+                painter = painterResource(id = R.drawable.blur_top_bar),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
             MainScreenTabs(
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 24.dp),
                 pagerState = pagerState,
                 scope = scope
             )
 
-            PullToRefreshBox(
-                isRefreshing = isRefreshing,
-                onRefresh = handleRefresh,
-                state = pullToRefreshState
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 72.dp)
+                    .windowInsetsPadding(WindowInsets.systemBars)
             ) {
-                HorizontalPager(
-                    state = pagerState,
-                    modifier = Modifier.fillMaxSize()
-                ) { page ->
-                    when (MainTab.entries[page]) {
-                        MainTab.WRITE -> WriteTab(viewModel)
-                        MainTab.MY_POSTS -> MyPostsTab(viewModel)
-                        MainTab.INBOX -> InboxTab(
-                            viewModel = viewModel,
-                            highlightedMessageId = highlightedMessageId
-                        )
+                // Add offline indicator at the top
 
-                        MainTab.ACCOUNT -> AccountTab(
-                            viewModel = hiltViewModel<AccountTabViewModel>(),
-                            onNavigateToAuth = {
-                                navController.navigate(NavigationItem.Account.route) {
-                                    popUpTo(NavigationItem.Main.route) { inclusive = true }
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    onRefresh = handleRefresh,
+                    state = pullToRefreshState
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        when (MainTab.entries[page]) {
+                            MainTab.WRITE -> WriteTab(viewModel)
+                            MainTab.MY_POSTS -> MyPostsTab(viewModel)
+                            MainTab.INBOX -> InboxTab(
+                                viewModel = viewModel,
+                                highlightedMessageId = highlightedMessageId
+                            )
+
+                            MainTab.ACCOUNT -> AccountTab(
+                                viewModel = hiltViewModel<AccountTabViewModel>(),
+                                onNavigateToAuth = {
+                                    navController.navigate(NavigationItem.Account.route) {
+                                        popUpTo(NavigationItem.Main.route) { inclusive = true }
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                 }
             }

@@ -20,6 +20,9 @@ import com.bbuddies.madafaker.presentation.design.theme.ButtonGradient
 import com.bbuddies.madafaker.presentation.design.theme.ButtonOrangeEnd
 import com.bbuddies.madafaker.presentation.design.theme.TextPrimary
 import com.bbuddies.madafaker.presentation.design.theme.White
+import androidx.compose.ui.tooling.preview.Preview
+import com.bbuddies.madafaker.presentation.design.theme.LightGray
+
 
 /**
  * Primary button with gradient background and custom styling
@@ -90,14 +93,14 @@ fun MadafakerSecondaryButton(
             .height(44.dp)
             .border(
                 width = 1.dp,
-                color = if (enabled) TextPrimary else Color(0xFF9E9E9E),
+                color = if (enabled) TextPrimary else LightGray,
                 shape = buttonShape
             ),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            contentColor = if (enabled) TextPrimary else Color(0xFF9E9E9E),
+            contentColor = if (enabled) TextPrimary else LightGray,
             disabledContainerColor = Color.Transparent,
-            disabledContentColor = Color(0xFF9E9E9E)
+            disabledContentColor = LightGray
         ),
         shape = buttonShape,
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
@@ -124,13 +127,51 @@ fun MadafakerTextButton(
         enabled = enabled,
         modifier = modifier.height(44.dp),
         colors = ButtonDefaults.textButtonColors(
-            contentColor = if (enabled) ButtonOrangeEnd else Color(0xFF9E9E9E)
+            contentColor = if (enabled)  TextPrimary else LightGray,
+            disabledContentColor =LightGray
         ),
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
     ) {
         Text(
             text = text,
             style = MaterialTheme.typography.labelLarge
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MadafakerPrimaryButtonPreview() {
+    MaterialTheme {
+        MadafakerPrimaryButton(
+            text = "Primary",
+            onClick = {},
+            enabled = true
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MadafakerSecondaryButtonPreview() {
+    MaterialTheme {
+
+        MadafakerSecondaryButton(
+            text = "Secondary",
+            onClick = {},
+            enabled = true
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MadafakerTextButtonPreview() {
+    MaterialTheme {
+        MadafakerTextButton(
+            text = "Text",
+            onClick = {},
+            enabled = true
         )
     }
 }

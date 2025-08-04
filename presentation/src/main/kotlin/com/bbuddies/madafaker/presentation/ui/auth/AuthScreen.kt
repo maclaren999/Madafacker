@@ -1,6 +1,7 @@
 package com.bbuddies.madafaker.presentation.ui.auth
 
 import android.content.Context
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -16,33 +17,40 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
-import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
+import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
+import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
+import com.bbuddies.madafaker.presentation.base.MovingSunEffect
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 @Preview
 @Composable
 fun AuthScreenPreview() {
-    AuthScreen(
-        authUiState = AuthUiState.INITIAL,
-        draftNickname = "Nickname",
-        validationResult = ValidationState.Success,
-        onNicknameChange = {},
-        onGoogleSignIn = {},
-        onCreateAccount = {},
-        warningsFlow = MutableStateFlow(null),
-        isSigningIn = false
-    )
+    MadafakerTheme(Mode.SHINE) {
+        AuthScreen(
+            authUiState = AuthUiState.POST_GOOGLE_AUTH,
+            draftNickname = "Nickname",
+            validationResult = ValidationState.Success,
+            onNicknameChange = {},
+            onGoogleSignIn = {},
+            onCreateAccount = {},
+            warningsFlow = MutableStateFlow(null),
+            isSigningIn = false
+        )
+    }
 }
 
 @Composable
@@ -67,11 +75,12 @@ fun AuthScreen(
             viewModel.onGoogleSignIn(
                 onSuccessfulSignIn = { notificationPermissionHelper ->
                     // Check if notification permission is already granted
-                    val nextDestination = if (notificationPermissionHelper.isNotificationPermissionGranted()) {
-                        NavigationItem.Main
-                    } else {
-                        NavigationItem.NotificationPermission
-                    }
+                    val nextDestination =
+                        if (notificationPermissionHelper.isNotificationPermissionGranted()) {
+                            NavigationItem.Main
+                        } else {
+                            NavigationItem.NotificationPermission
+                        }
 
                     navController.navigate(nextDestination.route) {
                         popUpTo(NavigationItem.Account.route) { inclusive = true }
@@ -83,11 +92,12 @@ fun AuthScreen(
             viewModel.onCreateAccount(
                 onSuccessfulCreation = { notificationPermissionHelper ->
                     // Check if notification permission is already granted
-                    val nextDestination = if (notificationPermissionHelper.isNotificationPermissionGranted()) {
-                        NavigationItem.Main
-                    } else {
-                        NavigationItem.NotificationPermission
-                    }
+                    val nextDestination =
+                        if (notificationPermissionHelper.isNotificationPermissionGranted()) {
+                            NavigationItem.Main
+                        } else {
+                            NavigationItem.NotificationPermission
+                        }
 
                     navController.navigate(nextDestination.route) {
                         popUpTo(NavigationItem.Account.route) { inclusive = true }
@@ -117,12 +127,26 @@ fun AuthScreen(
         warningsFlow = warningsFlow,
         modifier = modifier
     ) {
+        MovingSunEffect(
+            size = 300.dp,
+            alignment = Alignment.TopCenter,
+            glowEnabled = true,
+            padding = 80.dp
+        )
+
+        Image(painter = painterResource(id = R.drawable.blur),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.height(32.dp))
@@ -179,7 +203,7 @@ fun InitialAuthContent(
             modifier = Modifier.padding(bottom = 32.dp)
         )
 
-        MadafakerPrimaryButton(
+        MadafakerSecondaryButton(
             text = if (isSigningIn)
                 stringResource(R.string.auth_signing_in)
             else
@@ -216,7 +240,7 @@ fun PostGoogleAuthContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        MadafakerPrimaryButton(
+        MadafakerSecondaryButton(
             text = if (isSigningIn)
                 stringResource(R.string.auth_creating_account)
             else
@@ -235,7 +259,7 @@ fun LoadingContent() {
     ) {
         Text(
             text = stringResource(R.string.auth_setting_up_account),
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.headlineMedium,
             textAlign = TextAlign.Center
         )
     }
@@ -250,7 +274,6 @@ fun NicknameInputBlock(
     MadafakerTextField(
         value = draftNickname,
         onValueChange = onNicknameChange,
-        label = stringResource(R.string.auth_nickname_input_label),
         placeholder = stringResource(R.string.auth_nickname_input_placeholder),
         modifier = Modifier.fillMaxWidth(),
         supportingText = {
@@ -259,7 +282,7 @@ fun NicknameInputBlock(
                 Text(
                     text = "${draftNickname.length}/${NicknameDraftValidator.MAX_NICKNAME_LENGTH}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 4.dp)
                 )
 

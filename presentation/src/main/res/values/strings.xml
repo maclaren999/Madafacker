@@ -13,6 +13,8 @@
     <string name="tab_write">write</string>
     <string name="tab_inbox">inbox</string>
     <string name="tab_my_posts">my posts</string>
+    <string name="tab_feed">feed</string>
+    <string name="tab_discussions">discussions</string>
     <string name="tab_account">account</string>
 
     <!-- Loading and Error States -->
@@ -57,7 +59,7 @@
     <string name="auth_choose_nickname_title">Choose your nickname</string>
     <string name="auth_setting_up_account">Setting up your account...</string>
     <string name="auth_nickname_input_label">Enter the desired nickname</string>
-    <string name="auth_nickname_input_placeholder">Your nickname</string>
+    <string name="auth_nickname_input_placeholder">Enter the desired nickname</string>
     <string name="auth_validating_nickname">Validating nickname...</string>
     <string name="auth_signing_in">Signing in...</string>
     <string name="auth_login_with_google">Log In with Google</string>
