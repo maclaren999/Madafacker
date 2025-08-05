@@ -6,82 +6,161 @@ import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
+import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.common_domain.model.DeepLinkData
 import com.bbuddies.madafaker.presentation.ui.auth.AuthScreen
 import com.bbuddies.madafaker.presentation.ui.main.MainScreen
 import com.bbuddies.madafaker.presentation.ui.main.MainViewModel
 import com.bbuddies.madafaker.presentation.ui.permission.NotificationPermissionScreen
 import com.bbuddies.madafaker.presentation.ui.splash.SplashScreen
+import com.bbuddies.madafaker.presentation.navigation.actions.AuthNavigationAction
+import com.bbuddies.madafaker.presentation.navigation.actions.MainNavigationAction
+import com.bbuddies.madafaker.presentation.navigation.actions.NotificationPermissionNavigationAction
+import com.bbuddies.madafaker.presentation.navigation.actions.SplashNavigationAction
+import kotlinx.serialization.Serializable
 
-enum class MadafakerScreen {
-    SplashScreen,
-    MainScreen,
-    MessageScreen,
-    AuthScreen,
-    NotificationPermissionScreen,
-}
+// ============================================================================
+// TYPE-SAFE ROUTES using Kotlin Serialization
+// ============================================================================
 
-sealed class NavigationItem(val route: String) {
-    object Splash : NavigationItem(MadafakerScreen.SplashScreen.name)
-    object Main : NavigationItem(MadafakerScreen.MainScreen.name)
+@Serializable
+object SplashRoute
 
-    //    object Message : NavigationItem(MadafakerScreen.MessageScreen.name)
-    object Account : NavigationItem(MadafakerScreen.AuthScreen.name)
-    object NotificationPermission : NavigationItem(MadafakerScreen.NotificationPermissionScreen.name)
-}
+@Serializable
+object MainRoute
+
+@Serializable
+data class MainWithDeepLinkRoute(
+    val messageId: String,
+    val notificationId: String,
+    val mode: Mode
+)
+
+@Serializable
+object AuthRoute
+
+@Serializable
+data class AuthWithRedirectRoute(
+    val redirectRoute: String? = null
+)
+
+@Serializable
+object NotificationPermissionRoute
 
 @Composable
 fun AppNavHost(
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    startDestination: String = NavigationItem.Splash.route,
+    startDestination: Any = SplashRoute,
     deepLinkData: DeepLinkData? = null
 ) {
+    // Handle deep link navigation
+    LaunchedEffect(deepLinkData) {
+        if (deepLinkData != null && deepLinkData.isValid()) {
+            navController.navigateToMainWithDeepLink(
+                messageId = deepLinkData.messageId,
+                notificationId = deepLinkData.notificationId,
+                mode = deepLinkData.mode
+            )
+        }
+    }
+
     NavHost(
         modifier = modifier,
         navController = navController,
         startDestination = startDestination
     ) {
-        composable(NavigationItem.Splash.route) {
+        // Splash Screen
+        composable<SplashRoute> {
+            val splashNavAction = SplashNavigationAction(navController)
+
             SplashScreen(
-                navController = navController,
+                navAction = splashNavAction,
                 splashViewModel = hiltViewModel(),
                 modifier = Modifier.fillMaxSize()
             )
         }
-        composable(NavigationItem.Main.route) {
+
+        // Main Screen (simple)
+        composable<MainRoute> {
+            val mainNavAction = MainNavigationAction(navController)
+
             MainScreen(
-                navController = navController,
+                navAction = mainNavAction,
                 viewModel = hiltViewModel<MainViewModel>(),
-                deepLinkData = deepLinkData,
+                deepLinkData = null,
                 modifier = Modifier
                     .fillMaxSize()
-                    // Handle navigation bars and keyboard for main screen
                     .windowInsetsPadding(WindowInsets.navigationBars)
                     .windowInsetsPadding(WindowInsets.ime)
             )
         }
-//        composable(NavigationItem.Message.route) {
-//            MessageScreen(navController)
-//        }
-        composable(NavigationItem.Account.route) {
+
+        // Main Screen with Deep Link
+        composable<MainWithDeepLinkRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<MainWithDeepLinkRoute>()
+            val deepLink = DeepLinkData(
+                messageId = route.messageId,
+                notificationId = route.notificationId,
+                mode = route.mode
+            )
+            val mainNavAction = MainNavigationAction(navController)
+
+            MainScreen(
+                navAction = mainNavAction,
+                viewModel = hiltViewModel<MainViewModel>(),
+                deepLinkData = deepLink,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .windowInsetsPadding(WindowInsets.ime)
+            )
+        }
+
+        // Auth Screen (simple)
+        composable<AuthRoute> {
+            val authNavAction = AuthNavigationAction(navController)
+
             AuthScreen(
-                navController = navController,
+                navAction = authNavAction,
                 viewModel = hiltViewModel(),
+                redirectRoute = null,
                 modifier = Modifier
                     .fillMaxSize()
-                    // Handle keyboard insets for input screen
                     .windowInsetsPadding(WindowInsets.navigationBars)
                     .windowInsetsPadding(WindowInsets.ime)
             )
         }
-        composable(NavigationItem.NotificationPermission.route) {
+
+        // Auth Screen with Redirect
+        composable<AuthWithRedirectRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<AuthWithRedirectRoute>()
+            val authNavAction = AuthNavigationAction(navController)
+
+            AuthScreen(
+                navAction = authNavAction,
+                viewModel = hiltViewModel(),
+                redirectRoute = route.redirectRoute,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .windowInsetsPadding(WindowInsets.ime)
+            )
+        }
+
+        // Notification Permission Screen
+        composable<NotificationPermissionRoute> {
+            val permissionNavAction = NotificationPermissionNavigationAction(navController)
+
             NotificationPermissionScreen(
-                navController = navController,
+                navAction = permissionNavAction,
                 viewModel = hiltViewModel(),
                 modifier = Modifier
                     .fillMaxSize()
@@ -89,5 +168,48 @@ fun AppNavHost(
                     .windowInsetsPadding(WindowInsets.ime)
             )
         }
+    }
+}
+
+// ============================================================================
+// NAVIGATION EXTENSIONS
+// ============================================================================
+
+/**
+ * Extension functions for type-safe navigation
+ */
+fun NavHostController.navigateToMain() {
+    navigate(MainRoute)
+}
+
+fun NavHostController.navigateToMainWithDeepLink(
+    messageId: String,
+    notificationId: String,
+    mode: Mode
+) {
+    navigate(MainWithDeepLinkRoute(messageId, notificationId, mode))
+}
+
+fun NavHostController.navigateToAuth(redirectRoute: String? = null) {
+    if (redirectRoute != null) {
+        navigate(AuthWithRedirectRoute(redirectRoute))
+    } else {
+        navigate(AuthRoute)
+    }
+}
+
+fun NavHostController.navigateToNotificationPermission() {
+    navigate(NotificationPermissionRoute)
+}
+
+fun NavHostController.navigateToMainAndClearStack() {
+    navigate(MainRoute) {
+        popUpTo(0) { inclusive = true }
+    }
+}
+
+fun NavHostController.navigateToAuthAndClearStack() {
+    navigate(AuthRoute) {
+        popUpTo(0) { inclusive = true }
     }
 }

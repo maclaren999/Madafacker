@@ -17,6 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowCompat
 import androidx.navigation.compose.rememberNavController
 import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.common_domain.model.DeepLinkData
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.utils.SharedTextManager
@@ -76,16 +77,12 @@ class MainActivity : ComponentActivity() {
         val notificationId = intent.getStringExtra("notification_id")
         val modeString = intent.getStringExtra("mode")
 
-        if (messageId != null && notificationId != null && modeString != null) {
-            val mode = Mode.valueOf(modeString)
-
-            // Set deep link data for navigation
-            deepLinkData.value = DeepLinkData(
-                messageId = messageId,
-                notificationId = notificationId,
-                mode = mode
-            )
-        }
+        // Use the new factory method from DeepLinkData
+        deepLinkData.value = DeepLinkData.fromIntentExtras(
+            messageId = messageId,
+            notificationId = notificationId,
+            modeString = modeString
+        )
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -112,12 +109,6 @@ class MainActivity : ComponentActivity() {
     }
 
 }
-
-data class DeepLinkData(
-    val messageId: String,
-    val notificationId: String,
-    val mode: Mode
-)
 
 @Preview(showBackground = true)
 @Composable

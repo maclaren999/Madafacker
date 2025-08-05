@@ -16,13 +16,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.navigation.NavHostController
 import com.bbuddies.madafaker.presentation.R
+import com.bbuddies.madafaker.presentation.navigation.actions.SplashNavigationAction
 import kotlinx.coroutines.delay
 
 
 @Composable
-fun SplashScreen(navController: NavHostController, splashViewModel: SplashViewModel, modifier: Modifier = Modifier) {
+fun SplashScreen(
+    navAction: SplashNavigationAction,
+    splashViewModel: SplashViewModel,
+    modifier: Modifier = Modifier
+) {
     val navigationEvent by splashViewModel.navigationEvent.collectAsState()
     val userName = "Madafaker"
     val animationState = splashViewModel.animationState
@@ -30,8 +34,8 @@ fun SplashScreen(navController: NavHostController, splashViewModel: SplashViewMo
     LaunchedEffect(navigationEvent) {
         animationState.targetState = false
         delay(500)
-        navigationEvent?.let {
-            navController.navigate(it.route)
+        navigationEvent?.let { destination ->
+            navAction.navigateBasedOnDestination(destination)
         }
     }
 

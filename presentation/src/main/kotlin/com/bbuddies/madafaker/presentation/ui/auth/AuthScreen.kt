@@ -24,10 +24,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.R
+import com.bbuddies.madafaker.presentation.navigation.actions.AuthNavigationAction
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
@@ -55,8 +54,9 @@ fun AuthScreenPreview() {
 
 @Composable
 fun AuthScreen(
-    navController: NavController,
+    navAction: AuthNavigationAction,
     viewModel: AuthViewModel,
+    redirectRoute: String? = null,
     modifier: Modifier = Modifier
 ) {
     val authUiState by viewModel.authUiState.collectAsState()
@@ -74,34 +74,20 @@ fun AuthScreen(
         onGoogleSignIn = {
             viewModel.onGoogleSignIn(
                 onSuccessfulSignIn = { notificationPermissionHelper ->
-                    // Check if notification permission is already granted
-                    val nextDestination =
-                        if (notificationPermissionHelper.isNotificationPermissionGranted()) {
-                            NavigationItem.Main
-                        } else {
-                            NavigationItem.NotificationPermission
-                        }
-
-                    navController.navigate(nextDestination.route) {
-                        popUpTo(NavigationItem.Account.route) { inclusive = true }
-                    }
+                    navAction.navigateAfterSuccessfulAuth(
+                        notificationPermissionHelper = notificationPermissionHelper,
+                        redirectRoute = redirectRoute
+                    )
                 }
             )
         },
         onCreateAccount = {
             viewModel.onCreateAccount(
                 onSuccessfulCreation = { notificationPermissionHelper ->
-                    // Check if notification permission is already granted
-                    val nextDestination =
-                        if (notificationPermissionHelper.isNotificationPermissionGranted()) {
-                            NavigationItem.Main
-                        } else {
-                            NavigationItem.NotificationPermission
-                        }
-
-                    navController.navigate(nextDestination.route) {
-                        popUpTo(NavigationItem.Account.route) { inclusive = true }
-                    }
+                    navAction.navigateAfterSuccessfulAuth(
+                        notificationPermissionHelper = notificationPermissionHelper,
+                        redirectRoute = redirectRoute
+                    )
                 }
             )
         },

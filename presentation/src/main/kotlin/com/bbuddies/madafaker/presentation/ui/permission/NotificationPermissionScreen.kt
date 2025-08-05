@@ -42,9 +42,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.bbuddies.madafaker.presentation.NavigationItem
 import com.bbuddies.madafaker.presentation.R
+import com.bbuddies.madafaker.presentation.navigation.actions.NotificationPermissionNavigationAction
 import com.bbuddies.madafaker.presentation.base.MovingSunEffect
 import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
@@ -52,7 +51,7 @@ import com.bbuddies.madafaker.presentation.design.components.MadafakerTextButton
 
 @Composable
 fun NotificationPermissionScreen(
-    navController: NavController,
+    navAction: NotificationPermissionNavigationAction,
     viewModel: NotificationPermissionViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -63,9 +62,7 @@ fun NotificationPermissionScreen(
     // Handle automatic navigation when permission is already granted or after successful grant
     LaunchedEffect(shouldNavigateToMain) {
         if (shouldNavigateToMain) {
-            navController.navigate(NavigationItem.Main.route) {
-                popUpTo(0) { inclusive = true }
-            }
+            navAction.navigateToMainAfterPermission()
             viewModel.onNavigationHandled()
         }
     }
