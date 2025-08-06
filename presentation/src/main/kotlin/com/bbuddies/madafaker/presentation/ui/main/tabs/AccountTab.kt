@@ -19,7 +19,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -46,7 +45,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.model.User
-import com.bbuddies.madafaker.presentation.BuildConfig
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 
@@ -89,7 +87,6 @@ fun AccountTab(
                 onDeleteAccountClick = viewModel::onDeleteAccountClick,
                 onLogoutClick = viewModel::onLogoutClick,
                 onFeedbackClick = viewModel::onFeedbackClick,
-                onTestCrashClick = viewModel::onTestCrashClick,
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -218,7 +215,6 @@ private fun AccountActionsSection(
     onDeleteAccountClick: () -> Unit,
     onLogoutClick: () -> Unit,
     onFeedbackClick: () -> Unit,
-    onTestCrashClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -270,33 +266,6 @@ private fun AccountActionsSection(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Medium
             )
-        }
-
-        // Test Crash Button (Debug only)
-        if (BuildConfig.DEBUG) {
-            Button(
-                onClick = onTestCrashClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Red.copy(alpha = 0.8f)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = "Test Crash",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Test Crash (Debug)",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.White
-                )
-            }
         }
 
         // Delete Account Button

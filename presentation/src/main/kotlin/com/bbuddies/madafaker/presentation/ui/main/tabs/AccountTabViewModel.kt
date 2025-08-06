@@ -6,14 +6,12 @@ import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.bbuddies.madafaker.notification_domain.repository.AnalyticsRepository
-import com.bbuddies.madafaker.presentation.BuildConfig
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import timber.log.Timber
 import javax.inject.Inject
 
 @HiltViewModel
@@ -61,15 +59,6 @@ class AccountTabViewModel @Inject constructor(
 
     fun onFeedbackClick() {
         _showFeedbackDialog.value = true
-    }
-
-    fun onTestCrashClick() {
-        if (BuildConfig.DEBUG) {
-            Timber.d("Test crash button clicked - triggering Crashlytics test")
-
-            // Force a test crash to verify Crashlytics is working
-            throw RuntimeException("Test crash for Firebase Crashlytics setup verification - triggered from Account tab")
-        }
     }
 
     fun dismissFeedbackDialog() {
