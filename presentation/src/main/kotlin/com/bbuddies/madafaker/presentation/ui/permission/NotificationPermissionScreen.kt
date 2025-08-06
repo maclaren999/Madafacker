@@ -16,9 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.sharp.Notifications
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
@@ -44,8 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.navigation.actions.NotificationPermissionNavigationAction
-import com.bbuddies.madafaker.presentation.base.MovingSunEffect
-import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
+import com.bbuddies.madafaker.presentation.design.components.MovingSunEffect
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextButton
 

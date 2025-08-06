@@ -64,11 +64,11 @@ fun AppNavHost(
     // Handle deep link navigation
     LaunchedEffect(deepLinkData) {
         if (deepLinkData != null && deepLinkData.isValid()) {
-            navController.navigateToMainWithDeepLink(
+            navController.navigate(MainWithDeepLinkRoute(
                 messageId = deepLinkData.messageId,
                 notificationId = deepLinkData.notificationId,
                 mode = deepLinkData.mode
-            )
+            ))
         }
     }
 
@@ -171,45 +171,3 @@ fun AppNavHost(
     }
 }
 
-// ============================================================================
-// NAVIGATION EXTENSIONS
-// ============================================================================
-
-/**
- * Extension functions for type-safe navigation
- */
-fun NavHostController.navigateToMain() {
-    navigate(MainRoute)
-}
-
-fun NavHostController.navigateToMainWithDeepLink(
-    messageId: String,
-    notificationId: String,
-    mode: Mode
-) {
-    navigate(MainWithDeepLinkRoute(messageId, notificationId, mode))
-}
-
-fun NavHostController.navigateToAuth(redirectRoute: String? = null) {
-    if (redirectRoute != null) {
-        navigate(AuthWithRedirectRoute(redirectRoute))
-    } else {
-        navigate(AuthRoute)
-    }
-}
-
-fun NavHostController.navigateToNotificationPermission() {
-    navigate(NotificationPermissionRoute)
-}
-
-fun NavHostController.navigateToMainAndClearStack() {
-    navigate(MainRoute) {
-        popUpTo(0) { inclusive = true }
-    }
-}
-
-fun NavHostController.navigateToAuthAndClearStack() {
-    navigate(AuthRoute) {
-        popUpTo(0) { inclusive = true }
-    }
-}

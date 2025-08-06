@@ -31,7 +31,7 @@ import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
-import com.bbuddies.madafaker.presentation.base.MovingSunEffect
+import com.bbuddies.madafaker.presentation.design.components.MovingSunEffect
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 

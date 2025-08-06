@@ -20,7 +20,7 @@ import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.navigation.actions.MainNavigationAction
-import com.bbuddies.madafaker.presentation.base.MovingSunEffect
+import com.bbuddies.madafaker.presentation.design.components.MovingSunEffect
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.utils.SharedTextManager
@@ -58,7 +58,7 @@ fun MainScreen(
                 contentScale = ContentScale.Crop
             )
 
-            // Use the new TabNavigationScreen
+            // Tab navigation using Navigation Compose
             TabNavigationScreen(
                 navAction = navAction,
                 viewModel = viewModel,

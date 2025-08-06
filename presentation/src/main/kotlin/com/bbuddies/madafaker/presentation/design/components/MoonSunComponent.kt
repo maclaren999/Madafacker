@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.presentation.base
+package com.bbuddies.madafaker.presentation.design.components
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
