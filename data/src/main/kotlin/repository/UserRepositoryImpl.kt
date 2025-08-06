@@ -5,6 +5,7 @@ import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +36,7 @@ class UserRepositoryImpl @Inject constructor(
 ) : UserRepository {
 
     val firebaseMessaging by lazy { FirebaseMessaging.getInstance() }
+    private val firebaseCrashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     override val authenticationState: StateFlow<AuthenticationState> =
@@ -46,11 +48,15 @@ class UserRepositoryImpl @Inject constructor(
                         try {
                             val user = localDao.getUserById(authToken)
                             if (user != null) {
+                                // Update Crashlytics for cached user
+                                updateCrashlyticsUserIdentification(user)
                                 AuthenticationState.Authenticated(user)
                             } else {
                                 // Try to fetch from network
                                 val networkUser = webService.getCurrentUser()
                                 localDao.insertUser(networkUser)
+                                // Update Crashlytics for network user
+                                updateCrashlyticsUserIdentification(networkUser)
                                 AuthenticationState.Authenticated(networkUser)
                             }
                         } catch (e: Exception) {
@@ -186,6 +192,9 @@ class UserRepositoryImpl @Inject constructor(
             // The user should still be able to logout even if FCM cleanup fails
         }
 
+        // Clear Crashlytics user identification
+        clearCrashlyticsUserIdentification()
+
         // Clear all local data
         localDao.clearAllData()
         // Clear preferences
@@ -257,6 +266,7 @@ class UserRepositoryImpl @Inject constructor(
             // Note: We only update googleIdToken here since all tokens were already stored in storeGoogleAuth
             preferenceManager.updateAuthToken(idToken)
             localDao.insertUser(user)
+
             user
         } catch (e: Exception) {
             if (isDuplicateRegistrationTokenError(e)) {
@@ -311,6 +321,52 @@ class UserRepositoryImpl @Inject constructor(
                 throw e
             }
         }
+
+    /**
+     * Safely updates Firebase Crashlytics with user identification information.
+     * This method is wrapped in try-catch to prevent any Crashlytics issues from affecting core functionality.
+     *
+     * @param user The user object containing ID and FCM token information
+     */
+    private fun updateCrashlyticsUserIdentification(user: User) {
+        try {
+            // Set user ID for crash reports
+            firebaseCrashlytics.setUserId(user.id)
+
+            // Set FCM token as custom key if available
+            user.registrationToken?.let { fcmToken ->
+                firebaseCrashlytics.setCustomKey("FCM_token", fcmToken)
+            }
+
+            // Set additional user context
+            firebaseCrashlytics.setCustomKey("user_name", user.name)
+            firebaseCrashlytics.setCustomKey("user_created_at", user.createdAt)
+
+            Timber.d("Updated Crashlytics user identification for user: ${user.id}")
+        } catch (e: Exception) {
+            // Log the error but don't let it affect the main functionality
+            Timber.w(e, "Failed to update Crashlytics user identification for user: ${user.id}")
+        }
+    }
+
+    /**
+     * Safely clears Firebase Crashlytics user identification.
+     * Called when user logs out to ensure crash reports are not associated with the previous user.
+     */
+    private fun clearCrashlyticsUserIdentification() {
+        try {
+            firebaseCrashlytics.setUserId("anonymous")
+            firebaseCrashlytics.setCustomKey("FCM_token", "")
+            firebaseCrashlytics.setCustomKey("user_name", "")
+            firebaseCrashlytics.setCustomKey("user_coins", 0)
+            firebaseCrashlytics.setCustomKey("user_created_at", "")
+
+            Timber.d("Cleared Crashlytics user identification")
+        } catch (e: Exception) {
+            // Log the error but don't let it affect the logout process
+            Timber.w(e, "Failed to clear Crashlytics user identification")
+        }
+    }
 
 }
 
