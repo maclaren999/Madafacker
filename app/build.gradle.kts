@@ -36,10 +36,13 @@ android {
 
     signingConfigs {
         getByName("debug") {
-            keyAlias = debugSecrets["DEBUG_KEYSTORE_ALIAS"]?.toString() ?: "androiddebugkey"
-            keyPassword = debugSecrets["DEBUG_KEY_PASSWORD"]?.toString() ?: "android"
+            keyAlias = debugSecrets["DEBUG_KEYSTORE_ALIAS"]?.toString()
+                ?: throw GradleException("DEBUG_KEYSTORE_ALIAS not found in secrets")
+            keyPassword = debugSecrets["DEBUG_KEY_PASSWORD"]?.toString()
+                ?: throw GradleException("DEBUG_KEY_PASSWORD not found in secrets")
             storeFile = file("${projectDir}/debug.keystore")
-            storePassword = debugSecrets["DEBUG_KEYSTORE_PASSWORD"]?.toString() ?: "android"
+            storePassword = debugSecrets["DEBUG_KEYSTORE_PASSWORD"]?.toString()
+                ?: throw GradleException("DEBUG_KEYSTORE_PASSWORD not found in secrets")
         }
     }
 
