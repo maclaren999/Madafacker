@@ -7,7 +7,10 @@ plugins {
     alias(libs.plugins.kotlinx.serialization)
 }
 
-val loadBuildConfigForBuildType = rootProject.extra["loadBuildConfigForBuildType"] as (String) -> Map<String, String>
+// Load unified secrets configuration
+val loadSecretsConfig = rootProject.extra["loadSecretsConfig"] as (String) -> Map<String, Any>
+val debugSecrets = loadSecretsConfig("debug")
+val releaseSecrets = loadSecretsConfig("release")
 
 android {
     namespace = "com.bbuddies.madafaker.presentation"
@@ -22,19 +25,15 @@ android {
 
     buildTypes {
         debug {
-            val config = loadBuildConfigForBuildType("debug")
-            //noinspection WrongGradleMethod
-            config.forEach { (key, value) ->
-                buildConfigField("String", key, "\"$value\"")
-            }
+            // Only add safe values to BuildConfig (not keystore credentials)
+            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${debugSecrets["GOOGLE_WEB_CLIENT_ID"] ?: ""}\"")
+            buildConfigField("String", "API_BASE_URL", "\"${debugSecrets["API_BASE_URL"] ?: ""}\"")
         }
 
         release {
-            val config = loadBuildConfigForBuildType("release")
-            //noinspection WrongGradleMethod
-            config.forEach { (key, value) ->
-                buildConfigField("String", key, "\"$value\"")
-            }
+            // Only add safe values to BuildConfig (not keystore credentials)
+            buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${releaseSecrets["GOOGLE_WEB_CLIENT_ID"] ?: ""}\"")
+            buildConfigField("String", "API_BASE_URL", "\"${releaseSecrets["API_BASE_URL"] ?: ""}\"")
         }
     }
     compileOptions {
