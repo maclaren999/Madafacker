@@ -1,5 +1,6 @@
 package com.bbuddies.madafaker.presentation.ui.main
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,7 @@ enum class MainTab(val titleRes: Int) {
     ACCOUNT(R.string.tab_account)
 }
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun MainScreenTabs(
     pagerState: PagerState,

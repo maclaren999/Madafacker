@@ -37,8 +37,6 @@ fun MainScreen(
 ) {
     val currentMode by viewModel.currentMode.collectAsState()
 
-
-
     ScreenWithWarnings(
         warningsFlow = viewModel.warningsFlow,
         modifier = modifier
@@ -56,14 +54,6 @@ fun MainScreen(
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
-            )
-
-            // Tab navigation using Navigation Compose
-            TabNavigationScreen(
-                navAction = navAction,
-                viewModel = viewModel,
-                deepLinkData = deepLinkData,
-                modifier = Modifier.fillMaxSize()
             )
         }
     }
@@ -86,6 +76,9 @@ private class PreviewMainViewModel : MainScreenContract {
 
     private val _currentMode = MutableStateFlow(Mode.SHINE)
     override val currentMode: StateFlow<Mode> = _currentMode
+
+    private val _currentTab = MutableStateFlow(MainTab.WRITE)
+    override val currentTab: StateFlow<MainTab> = _currentTab
 
     private val _isReplySending = MutableStateFlow(false)
     override val isReplySending: StateFlow<Boolean> = _isReplySending
@@ -123,6 +116,9 @@ private class PreviewMainViewModel : MainScreenContract {
     override fun markMessageAsRead(messageId: String) {}
     override fun onMessageTapped(messageId: String) {}
     override fun onMessageReplyingClosed() {}
+    override fun selectTab(tab: MainTab) {
+        _currentTab.value = tab
+    }
 }
 
 @Preview(showBackground = true)

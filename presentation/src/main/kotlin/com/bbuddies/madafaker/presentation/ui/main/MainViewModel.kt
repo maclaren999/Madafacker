@@ -79,6 +79,10 @@ class MainViewModel @Inject constructor(
 
     override val currentMode = preferenceManager.currentMode
 
+    // Tab navigation (moved from TabNavigationViewModel)
+    private val _currentTab = MutableStateFlow(MainTab.WRITE)
+    override val currentTab: StateFlow<MainTab> = _currentTab
+
     // Expose SharedTextManager to the UI
     override val sharedTextManager = sharedTextManagerImpl
 
@@ -427,6 +431,11 @@ class MainViewModel @Inject constructor(
     override fun onMessageReplyingClosed() {
         _replyingMessageId.value = null
         _userRepliesForMessage.value = emptyList()
+    }
+
+    // Tab navigation implementation (moved from TabNavigationViewModel)
+    override fun selectTab(tab: MainTab) {
+        _currentTab.value = tab
     }
 
     override fun onRateMessage(messageId: String, rating: MessageRating) {

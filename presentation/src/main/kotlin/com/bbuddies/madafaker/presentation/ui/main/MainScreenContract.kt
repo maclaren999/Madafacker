@@ -21,6 +21,9 @@ interface MainScreenContract {
     // Mode
     val currentMode: StateFlow<Mode>
 
+    // Tab navigation (moved from TabNavigationContract)
+    val currentTab: StateFlow<MainTab>
+
     // Reply composition
     val isReplySending: StateFlow<Boolean>
     val replyError: StateFlow<String?>
@@ -45,6 +48,9 @@ interface MainScreenContract {
     fun refreshMessages()
     fun refreshUserData()
     fun clearDraft() // New: manually clear draft
+
+    // Tab navigation actions (moved from TabNavigationContract)
+    fun selectTab(tab: MainTab)
 
     // Reply actions
     fun onSendReply(messageId: String, replyText: String, isPublic: Boolean = true)

@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
 
 //        setupGoogleAuth()
 
-        // Enable edge-to-edge display
+         // Enable edge-to-edge display
         enableEdgeToEdge()
 
         // Make status bar and navigation bar transparent
