@@ -17,7 +17,7 @@ class MainNavigationAction(
      */
     fun navigateToAuthFromMain() {
         navController.navigate(com.bbuddies.madafaker.presentation.AuthRoute) {
-            popUpTo(com.bbuddies.madafaker.presentation.MainRoute) { inclusive = true }
+            popUpTo(com.bbuddies.madafaker.presentation.WriteTabRoute) { inclusive = true }
         }
     }
     

@@ -4,10 +4,10 @@ import androidx.navigation.NavHostController
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.presentation.AuthRoute
 import com.bbuddies.madafaker.presentation.AuthWithRedirectRoute
-import com.bbuddies.madafaker.presentation.MainRoute
-import com.bbuddies.madafaker.presentation.MainWithDeepLinkRoute
+import com.bbuddies.madafaker.presentation.InboxTabWithDeepLinkRoute
 import com.bbuddies.madafaker.presentation.NotificationPermissionRoute
 import com.bbuddies.madafaker.presentation.SplashRoute
+import com.bbuddies.madafaker.presentation.WriteTabRoute
 
 /**
  * Base interface for navigation actions
@@ -25,7 +25,8 @@ fun NavigationAction.navigateToSplash() {
 }
 
 fun NavigationAction.navigateToMain() {
-    navController.navigate(MainRoute)
+    navController.navigate(WriteTabRoute) {
+    }
 }
 
 fun NavigationAction.navigateToMainWithDeepLink(
@@ -33,7 +34,7 @@ fun NavigationAction.navigateToMainWithDeepLink(
     notificationId: String,
     mode: Mode
 ) {
-    navController.navigate(MainWithDeepLinkRoute(messageId, notificationId, mode))
+    navController.navigate(InboxTabWithDeepLinkRoute(messageId, notificationId, mode))
 }
 
 fun NavigationAction.navigateToAuth(redirectRoute: String? = null) {
@@ -49,7 +50,7 @@ fun NavigationAction.navigateToNotificationPermission() {
 }
 
 fun NavigationAction.navigateToMainAndClearStack() {
-    navController.navigate(MainRoute) {
+    navController.navigate(WriteTabRoute) {
         popUpTo(0) { inclusive = true }
     }
 }

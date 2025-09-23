@@ -21,7 +21,6 @@ import androidx.navigation.toRoute
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.DeepLinkData
 import com.bbuddies.madafaker.presentation.ui.auth.AuthScreen
-import com.bbuddies.madafaker.presentation.ui.main.MainScreen
 import com.bbuddies.madafaker.presentation.ui.main.MainTab
 import com.bbuddies.madafaker.presentation.ui.main.MainViewModel
 import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTab
@@ -34,7 +33,6 @@ import com.bbuddies.madafaker.presentation.ui.navigation.shouldShowBottomNavigat
 import com.bbuddies.madafaker.presentation.ui.permission.NotificationPermissionScreen
 import com.bbuddies.madafaker.presentation.ui.splash.SplashScreen
 import com.bbuddies.madafaker.presentation.navigation.actions.AuthNavigationAction
-import com.bbuddies.madafaker.presentation.navigation.actions.MainNavigationAction
 import com.bbuddies.madafaker.presentation.navigation.actions.NotificationPermissionNavigationAction
 import com.bbuddies.madafaker.presentation.navigation.actions.SplashNavigationAction
 import kotlinx.serialization.Serializable
@@ -45,16 +43,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 object SplashRoute
-
-@Serializable
-object MainRoute
-
-@Serializable
-data class MainWithDeepLinkRoute(
-    val messageId: String,
-    val notificationId: String,
-    val mode: Mode
-)
 
 @Serializable
 object AuthRoute
@@ -154,41 +142,6 @@ fun AppNavHost(
                 )
             }
 
-            // Main Screen (simple)
-            composable<MainRoute> {
-                val mainNavAction = MainNavigationAction(navController)
-
-                MainScreen(
-                    navAction = mainNavAction,
-                    viewModel = hiltViewModel<MainViewModel>(),
-                    deepLinkData = null,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.navigationBars)
-                        .windowInsetsPadding(WindowInsets.ime)
-                )
-            }
-
-            // Main Screen with Deep Link
-            composable<MainWithDeepLinkRoute> { backStackEntry ->
-                val route = backStackEntry.toRoute<MainWithDeepLinkRoute>()
-                val deepLink = DeepLinkData(
-                    messageId = route.messageId,
-                    notificationId = route.notificationId,
-                    mode = route.mode
-                )
-                val mainNavAction = MainNavigationAction(navController)
-
-                MainScreen(
-                    navAction = mainNavAction,
-                    viewModel = hiltViewModel<MainViewModel>(),
-                    deepLinkData = deepLink,
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .windowInsetsPadding(WindowInsets.navigationBars)
-                        .windowInsetsPadding(WindowInsets.ime)
-                )
-            }
 
             // Auth Screen (simple)
             composable<AuthRoute> {

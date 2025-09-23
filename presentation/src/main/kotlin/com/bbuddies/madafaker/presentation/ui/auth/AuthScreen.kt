@@ -27,11 +27,12 @@ import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.navigation.actions.AuthNavigationAction
+import com.bbuddies.madafaker.presentation.base.DecorativeBackground
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
-import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.design.components.MovingSunEffect
+import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -139,33 +140,34 @@ fun AuthScreen(
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.height(32.dp))
 
-            when (authUiState) {
-                AuthUiState.INITIAL -> {
-                    InitialAuthContent(
-                        onGoogleSignIn = onGoogleSignIn,
-                        isSigningIn = isSigningIn
-                    )
+                when (authUiState) {
+                    AuthUiState.INITIAL -> {
+                        InitialAuthContent(
+                            onGoogleSignIn = onGoogleSignIn,
+                            isSigningIn = isSigningIn
+                        )
+                    }
+
+                    AuthUiState.POST_GOOGLE_AUTH -> {
+                        PostGoogleAuthContent(
+                            draftNickname = draftNickname,
+                            validationResult = validationResult,
+                            onNicknameChange = onNicknameChange,
+                            onCreateAccount = onCreateAccount,
+                            isSigningIn = isSigningIn
+                        )
+                    }
+
+                    AuthUiState.LOADING -> {
+                        LoadingContent()
+                    }
                 }
 
-                AuthUiState.POST_GOOGLE_AUTH -> {
-                    PostGoogleAuthContent(
-                        draftNickname = draftNickname,
-                        validationResult = validationResult,
-                        onNicknameChange = onNicknameChange,
-                        onCreateAccount = onCreateAccount,
-                        isSigningIn = isSigningIn
-                    )
-                }
-
-                AuthUiState.LOADING -> {
-                    LoadingContent()
-                }
+                Spacer(modifier = Modifier.weight(1f))
             }
-
-            Spacer(modifier = Modifier.weight(1f))
         }
     }
-}
+
 
 @Composable
 fun InitialAuthContent(
@@ -291,6 +293,7 @@ fun NicknameInputBlock(
                     else -> {}
                 }
             }
+
         }
     )
 }
