@@ -39,10 +39,11 @@ class GoogleAuthManager @Inject constructor(
 
     /**
      * Performs Google authentication and returns the credential response.
+     * @param activityContext The Activity context required for credential UI
      * @return GetCredentialResponse if successful, null otherwise
      * @throws GetCredentialException if authentication fails
      */
-    suspend fun performGoogleAuthentication(): GetCredentialResponse? {
+    suspend fun performGoogleAuthentication(activityContext: Context): GetCredentialResponse? {
         return try {
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
@@ -55,7 +56,7 @@ class GoogleAuthManager @Inject constructor(
 
             credentialManager.getCredential(
                 request = request,
-                context = context
+                context = activityContext
             )
         } catch (e: GetCredentialException) {
             Timber.e(e, "Google authentication failed - ${e.localizedMessage}")

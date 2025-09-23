@@ -1,5 +1,6 @@
 package com.bbuddies.madafaker.presentation.ui.auth
 
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.bbuddies.madafaker.presentation.BuildConfig
@@ -50,15 +51,16 @@ class AuthViewModel @Inject constructor(
 
     /**
      * Initiates Google Sign-In flow and handles authentication.
+     * @param context Activity context required for credential UI
      * @param onSuccessfulSignIn Callback invoked when sign-in is successful
      */
-    fun onGoogleSignIn(onSuccessfulSignIn: (NotificationPermissionHelper) -> Unit) {
+    fun onGoogleSignIn(context: Context, onSuccessfulSignIn: (NotificationPermissionHelper) -> Unit) {
         viewModelScope.launch {
             _isSigningIn.value = true
             _authUiState.value = AuthUiState.LOADING
 
             try {
-                val authenticationResult = performCompleteGoogleAuthentication()
+                val authenticationResult = performCompleteGoogleAuthentication(context)
 
                 when (authenticationResult) {
                     is AuthenticationResult.Success -> {
@@ -200,11 +202,12 @@ class AuthViewModel @Inject constructor(
 
     /**
      * Performs complete Google authentication including Firebase sign-in and credential storage.
+     * @param context Activity context required for credential UI
      * @return AuthenticationResult indicating success, new user, or failure
      */
-    private suspend fun performCompleteGoogleAuthentication(): AuthenticationResult {
+    private suspend fun performCompleteGoogleAuthentication(context: Context): AuthenticationResult {
         return try {
-            val googleCredentialResponse = googleAuthManager.performGoogleAuthentication()
+            val googleCredentialResponse = googleAuthManager.performGoogleAuthentication(context)
                 ?: return AuthenticationResult.Failure(
                     IllegalStateException("Google authentication returned null"),
                     "Google authentication failed. Please try again."

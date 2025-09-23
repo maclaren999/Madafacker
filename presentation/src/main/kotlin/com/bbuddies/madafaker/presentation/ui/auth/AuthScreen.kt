@@ -63,6 +63,7 @@ fun AuthScreen(
     val draftNickname by viewModel.draftNickname.collectAsState()
     val validationResult by viewModel.nicknameDraftValidationResult.collectAsState()
     val isSigningIn by viewModel.isSigningIn.collectAsState()
+    val context = LocalContext.current
 
     AuthScreen(
         authUiState = authUiState,
@@ -73,6 +74,7 @@ fun AuthScreen(
         },
         onGoogleSignIn = {
             viewModel.onGoogleSignIn(
+                context = context,
                 onSuccessfulSignIn = { notificationPermissionHelper ->
                     navAction.navigateAfterSuccessfulAuth(
                         notificationPermissionHelper = notificationPermissionHelper,

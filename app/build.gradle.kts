@@ -40,7 +40,7 @@ android {
                 ?: throw GradleException("DEBUG_KEYSTORE_ALIAS not found in secrets")
             keyPassword = debugSecrets["DEBUG_KEY_PASSWORD"]?.toString()
                 ?: throw GradleException("DEBUG_KEY_PASSWORD not found in secrets")
-            storeFile = file("${projectDir}/debug_new.keystore")
+            storeFile = file("${projectDir}/debug.keystore")
             storePassword = debugSecrets["DEBUG_KEYSTORE_PASSWORD"]?.toString()
                 ?: throw GradleException("DEBUG_KEYSTORE_PASSWORD not found in secrets")
         }
