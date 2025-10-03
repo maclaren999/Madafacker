@@ -11,6 +11,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.design.components.MovingSunEffect
 
 /**
@@ -29,23 +30,21 @@ fun DecorativeBackground(
     content: @Composable () -> Unit
 ) {
     Box(modifier = modifier.fillMaxSize()) {
-        // Background image (if provided)
-        backgroundImageRes?.let { imageRes ->
+        // Moving sun effect
+
+        Box(modifier = Modifier.fillMaxSize()) {
+            MovingSunEffect(
+                size = 64.dp,
+                alignment = Alignment.TopStart,
+                glowEnabled = true,
+                padding = 24.dp
+            )
+
             Image(
-                painter = painterResource(id = imageRes),
+                painter = painterResource(id = R.drawable.blur_top_bar),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
-            )
-        }
-        
-        // Moving sun effect
-        if (sunVisible) {
-            MovingSunEffect(
-                size = sunSize,
-                alignment = sunAlignment,
-                glowEnabled = sunGlowEnabled,
-                padding = sunPadding
             )
         }
         

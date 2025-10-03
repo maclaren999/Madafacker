@@ -26,7 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.presentation.R
-import com.bbuddies.madafaker.presentation.navigation.actions.AuthNavigationAction
+import com.bbuddies.madafaker.presentation.ui.auth.AuthNavigationAction
 import com.bbuddies.madafaker.presentation.base.DecorativeBackground
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
@@ -35,23 +35,6 @@ import com.bbuddies.madafaker.presentation.design.components.MovingSunEffect
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-
-@Preview
-@Composable
-fun AuthScreenPreview() {
-    MadafakerTheme(Mode.SHINE) {
-        AuthScreen(
-            authUiState = AuthUiState.POST_GOOGLE_AUTH,
-            draftNickname = "Nickname",
-            validationResult = ValidationState.Success,
-            onNicknameChange = {},
-            onGoogleSignIn = {},
-            onCreateAccount = {},
-            warningsFlow = MutableStateFlow(null),
-            isSigningIn = false
-        )
-    }
-}
 
 @Composable
 fun AuthScreen(
@@ -299,3 +282,19 @@ fun NicknameInputBlock(
 }
 
 
+@Preview
+@Composable
+fun AuthScreenPreview() {
+    MadafakerTheme(Mode.SHINE) {
+        AuthScreen(
+            authUiState = AuthUiState.POST_GOOGLE_AUTH,
+            draftNickname = "Nickname",
+            validationResult = ValidationState.Success,
+            onNicknameChange = {},
+            onGoogleSignIn = {},
+            onCreateAccount = {},
+            warningsFlow = MutableStateFlow(null),
+            isSigningIn = false
+        )
+    }
+}

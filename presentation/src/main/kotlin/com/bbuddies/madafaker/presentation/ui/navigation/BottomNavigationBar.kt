@@ -1,118 +1,86 @@
 package com.bbuddies.madafaker.presentation.ui.navigation
 
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.bbuddies.madafaker.presentation.AccountTabRoute
-import com.bbuddies.madafaker.presentation.InboxTabRoute
-import com.bbuddies.madafaker.presentation.MyPostsTabRoute
-import com.bbuddies.madafaker.presentation.WriteTabRoute
+import androidx.navigation.compose.rememberNavController
 import com.bbuddies.madafaker.presentation.ui.main.MainTab
-import kotlin.reflect.KClass
 
 /**
- * Bottom Navigation Bar component for unified tab navigation
+ * Top Navigation Bar component for unified tab navigation
+ * Uses TopLevelDestination pattern for cleaner navigation logic
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomNavigationBar(
+fun TopNavigationBar(
     navController: NavHostController,
     onTabSelected: (MainTab) -> Unit
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    
-    val items = listOf(
-        BottomNavItem(MainTab.WRITE, WriteTabRoute::class, "write_tab"),
-        BottomNavItem(MainTab.MY_POSTS, MyPostsTabRoute::class, "my_posts_tab"),
-        BottomNavItem(MainTab.INBOX, InboxTabRoute::class, "inbox_tab"),
-        BottomNavItem(MainTab.ACCOUNT, AccountTabRoute::class, "account_tab")
-    )
-    
-    NavigationBar {
-        items.forEach { item ->
-            val isSelected = currentDestination?.hierarchy?.any { 
-                it.route?.contains(item.routeClass.simpleName ?: "") == true 
-            } == true
-            
-            NavigationBarItem(
-                icon = { 
-                    Icon(
-                        painter = painterResource(id = getTabIcon(item.tab)),
-                        contentDescription = null
-                    )
-                },
-                label = { 
-                    Text(stringResource(item.tab.titleRes))
-                },
-                selected = isSelected,
-                onClick = {
-                    onTabSelected(item.tab)
-                    when (item.tab) {
-                        MainTab.WRITE -> navController.navigate(WriteTabRoute) {
-                            popUpTo(WriteTabRoute) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    color = Color(0xFFFFFF),
+                )
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                topLevelDestinations.forEach { destination ->
+                    val isSelected = currentDestination?.hierarchy?.any {
+                        it.route?.contains(destination.route::class.simpleName ?: "") == true
+                    } == true
+
+                    Surface(
+                        color = Color(0xFFFFFF),
+                        onClick = {
+                            onTabSelected(destination.tab)
+                            navController.navigateToTopLevelDestination(destination)
                         }
-                        MainTab.MY_POSTS -> navController.navigate(MyPostsTabRoute) {
-                            popUpTo(WriteTabRoute) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                        MainTab.INBOX -> navController.navigate(InboxTabRoute) {
-                            popUpTo(WriteTabRoute) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                        MainTab.ACCOUNT -> navController.navigate(AccountTabRoute) {
-                            popUpTo(WriteTabRoute) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
+                    ) {
+                        Text(
+                            text = stringResource(destination.tab.titleRes),
+                            color = Color(0xFF424242),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
                     }
                 }
-            )
+            }
         }
     }
 }
 
-/**
- * Data class for bottom navigation items
- */
-data class BottomNavItem(
-    val tab: MainTab,
-    val routeClass: KClass<*>,
-    val routeName: String
-)
-
-/**
- * Helper function to get tab icons
- * TODO: Replace with actual icon resources
- */
-private fun getTabIcon(tab: MainTab): Int {
-    return when (tab) {
-        MainTab.WRITE -> android.R.drawable.ic_menu_edit
-        MainTab.MY_POSTS -> android.R.drawable.ic_menu_view
-        MainTab.INBOX -> android.R.drawable.ic_dialog_email
-        MainTab.ACCOUNT -> android.R.drawable.ic_menu_myplaces
-    }
-}
-
-/**
- * Helper function to check if we should show bottom navigation
- */
-fun shouldShowBottomNavigation(navController: NavHostController): Boolean {
-    val currentRoute = navController.currentBackStackEntry?.destination?.route
-    return currentRoute?.contains("TabRoute") == true ||
-           currentRoute?.contains("WriteTabRoute") == true ||
-           currentRoute?.contains("MyPostsTabRoute") == true ||
-           currentRoute?.contains("InboxTabRoute") == true ||
-           currentRoute?.contains("AccountTabRoute") == true
+@Preview(showBackground = true, backgroundColor = 0xFFFFFFFF)
+@Composable
+fun TopNavigationBarPreview() {
+    val navController = rememberNavController()
+    TopNavigationBar(
+        navController = navController,
+        onTabSelected = {}
+    )
 }

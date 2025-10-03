@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.bbuddies.madafaker.presentation.R
-import com.bbuddies.madafaker.presentation.navigation.actions.SplashNavigationAction
 import kotlinx.coroutines.delay
 
 

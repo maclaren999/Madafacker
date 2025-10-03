@@ -10,14 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * Navigation destinations for splash screen
- */
-sealed class SplashNavigationDestination(val route: String) {
-    object Main : SplashNavigationDestination("MainScreen")
-    object Auth : SplashNavigationDestination("AuthScreen")
-    object NotificationPermission : SplashNavigationDestination("NotificationPermissionScreen")
-}
+
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(

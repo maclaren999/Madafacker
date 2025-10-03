@@ -5,9 +5,18 @@ import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
+import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import kotlinx.coroutines.flow.StateFlow
+
+
+enum class MainTab(val titleRes: Int) {
+    WRITE(R.string.tab_write),
+    MY_POSTS(R.string.tab_feed),
+    INBOX(R.string.tab_discussions),
+    ACCOUNT(R.string.tab_account)
+}
 
 interface MainScreenContract {
     // Message composition

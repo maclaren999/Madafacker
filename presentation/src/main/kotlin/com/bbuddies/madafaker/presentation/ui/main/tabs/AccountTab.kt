@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.presentation.R
+import com.bbuddies.madafaker.presentation.base.DecorativeBackground
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 
 
@@ -66,65 +67,65 @@ fun AccountTab(
     ScreenWithWarnings(
         warningsFlow = viewModel.warningsFlow
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(32.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(32.dp))
 
-            // Profile Section
-            ProfileSection(
-                user = currentUser,
-                modifier = Modifier.fillMaxWidth()
-            )
+                // Profile Section
+                ProfileSection(
+                    user = currentUser,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Spacer(modifier = Modifier.height(48.dp))
+                Spacer(modifier = Modifier.height(48.dp))
 
-            // Account Actions
-            AccountActionsSection(
-                onDeleteAccountClick = viewModel::onDeleteAccountClick,
-                onLogoutClick = viewModel::onLogoutClick,
-                onFeedbackClick = viewModel::onFeedbackClick,
-                modifier = Modifier.fillMaxWidth()
-            )
+                // Account Actions
+                AccountActionsSection(
+                    onDeleteAccountClick = viewModel::onDeleteAccountClick,
+                    onLogoutClick = viewModel::onLogoutClick,
+                    onFeedbackClick = viewModel::onFeedbackClick,
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.weight(1f))
+            }
         }
-    }
 
-    // Delete Account Dialog
-    if (showDeleteDialog) {
-        DeleteAccountDialog(
-            onConfirm = {
-                viewModel.sendDeleteAccountEmail(context, currentUser)
-            },
-            onDismiss = viewModel::dismissDeleteAccountDialog
-        )
-    }
+        // Delete Account Dialog
+        if (showDeleteDialog) {
+            DeleteAccountDialog(
+                onConfirm = {
+                    viewModel.sendDeleteAccountEmail(context, currentUser)
+                },
+                onDismiss = viewModel::dismissDeleteAccountDialog
+            )
+        }
 
-    // Logout Confirmation Dialog
-    if (showLogoutDialog) {
-        LogoutConfirmationDialog(
-            onConfirm = {
-                viewModel.performLogout(onNavigateToAuth)
-            },
-            onDismiss = viewModel::dismissLogoutDialog
-        )
-    }
+        // Logout Confirmation Dialog
+        if (showLogoutDialog) {
+            LogoutConfirmationDialog(
+                onConfirm = {
+                    viewModel.performLogout(onNavigateToAuth)
+                },
+                onDismiss = viewModel::dismissLogoutDialog
+            )
+        }
 
-    // Feedback Dialog
-    if (showFeedbackDialog) {
-        FeedbackDialog(
-            feedbackText = feedbackText,
-            selectedRating = selectedRating,
-            isSubmitting = isSubmittingFeedback,
-            onFeedbackTextChange = viewModel::onFeedbackTextChange,
-            onRatingChange = viewModel::onRatingChange,
-            onSubmit = viewModel::submitFeedback,
-            onDismiss = viewModel::dismissFeedbackDialog
-        )
+        // Feedback Dialog
+        if (showFeedbackDialog) {
+            FeedbackDialog(
+                feedbackText = feedbackText,
+                selectedRating = selectedRating,
+                isSubmitting = isSubmittingFeedback,
+                onFeedbackTextChange = viewModel::onFeedbackTextChange,
+                onRatingChange = viewModel::onRatingChange,
+                onSubmit = viewModel::submitFeedback,
+                onDismiss = viewModel::dismissFeedbackDialog
+            )
     }
 }
 

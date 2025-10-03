@@ -41,7 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.presentation.R
-import com.bbuddies.madafaker.presentation.navigation.actions.NotificationPermissionNavigationAction
+import com.bbuddies.madafaker.presentation.ui.permission.NotificationPermissionNavigationAction
 import com.bbuddies.madafaker.presentation.design.components.MovingSunEffect
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextButton
