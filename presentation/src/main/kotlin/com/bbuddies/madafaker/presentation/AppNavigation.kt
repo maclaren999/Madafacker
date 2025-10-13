@@ -39,6 +39,8 @@ import com.bbuddies.madafaker.presentation.ui.permission.NotificationPermissionS
 import com.bbuddies.madafaker.presentation.ui.splash.SplashNavigationAction
 import com.bbuddies.madafaker.presentation.ui.splash.SplashScreen
 import kotlinx.serialization.Serializable
+import androidx.compose.runtime.collectAsState
+import com.bbuddies.madafaker.presentation.design.components.ModeBackground
 
 // ============================================================================
 // TYPE-SAFE ROUTES using Kotlin Serialization
@@ -72,14 +74,45 @@ object MyPostsTabRoute
 object InboxTabRoute
 
 @Serializable
+object AccountTabRoute
+
+@Serializable
 data class InboxTabWithDeepLinkRoute(
     val messageId: String,
     val notificationId: String,
     val mode: Mode
 )
 
-@Serializable
-object AccountTabRoute
+// ============================================================================
+// TOP LEVEL DESTINATIONS & NAVIGATION VISIBILITY
+// ============================================================================
+
+/**
+ * Top-level destinations and navigation visibility logic are defined in NavDisplay.kt
+ *
+ * TopLevelDestination Pattern provides:
+ * - Centralized navigation logic
+ * - Proper back stack management
+ * - State preservation across tab switches
+ * - Type-safe navigation
+ *
+ * NavigationVisibility provides:
+ * - Type-safe route checking for navigation visibility
+ * - Centralized logic for showing/hiding navigation
+ * - Easy to extend and maintain
+ *
+ * Usage:
+ * - Use topLevelDestinations list to iterate over all tabs
+ * - Use navigateToTopLevelDestination() extension for navigation
+ * - Use toTopLevelDestination() to convert MainTab to TopLevelDestination
+ * - Use shouldShowTopNavigation() to check if navigation should be visible
+ * - Use isAtTopLevelDestination() to check if at a top-level destination
+ */
+
+/**
+ * Main App Navigation Host
+ * Sets up navigation graph and handles deep links and shared text
+ */
 
 @Composable
 fun AppNavHost(
@@ -115,14 +148,21 @@ fun AppNavHost(
         }
     }
 
-   val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val shouldShowNavigation = NavigationVisibility.shouldShowNavigation(currentRoute)
+    
+    // Get current mode from MainViewModel
+    val currentMode by mainViewModel.currentMode.collectAsState()
 
-    // Navigation with custom design
-    Scaffold(
-        containerColor = Color.Transparent,
-    ) { paddingValues ->
+    ModeBackground(
+        mode = currentMode,
+        showDecorative = shouldShowNavigation
+    ) {
+        // Navigation with custom design
+        Scaffold(
+            containerColor = Color.Transparent,
+        ) { paddingValues ->
             Column(
                 modifier = modifier.padding(paddingValues)
             ) {
@@ -141,111 +181,113 @@ fun AppNavHost(
                     navController = navController,
                     startDestination = if (startDestination == SplashRoute) SplashRoute else WriteTabRoute
                 ) {
-                // Splash Screen
-                composable<SplashRoute> {
-                    val splashNavAction = SplashNavigationAction(navController)
+                    // Splash Screen
+                    composable<SplashRoute> {
+                        val splashNavAction = SplashNavigationAction(navController)
 
-                    SplashScreen(
-                        navAction = splashNavAction,
-                        splashViewModel = hiltViewModel(),
-                        modifier = Modifier.fillMaxSize()
-                    )
+                        SplashScreen(
+                            navAction = splashNavAction,
+                            splashViewModel = hiltViewModel(),
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+
+
+                    // Auth Screen (simple)
+                    composable<AuthRoute> {
+                        val authNavAction = AuthNavigationAction(navController)
+
+                        AuthScreen(
+                            navAction = authNavAction,
+                            viewModel = hiltViewModel(),
+                            redirectRoute = null,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .windowInsetsPadding(WindowInsets.navigationBars)
+                                .windowInsetsPadding(WindowInsets.ime)
+                        )
+                    }
+
+                    // Auth Screen with Redirect
+                    composable<AuthWithRedirectRoute> { backStackEntry ->
+                        val route = backStackEntry.toRoute<AuthWithRedirectRoute>()
+                        val authNavAction = AuthNavigationAction(navController)
+
+                        AuthScreen(
+                            navAction = authNavAction,
+                            viewModel = hiltViewModel(),
+                            redirectRoute = route.redirectRoute,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .windowInsetsPadding(WindowInsets.navigationBars)
+                                .windowInsetsPadding(WindowInsets.ime)
+                        )
+                    }
+
+                    // Notification Permission Screen
+                    composable<NotificationPermissionRoute> {
+                        val permissionNavAction =
+                            NotificationPermissionNavigationAction(navController)
+
+                        NotificationPermissionScreen(
+                            navAction = permissionNavAction,
+                            viewModel = hiltViewModel(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .windowInsetsPadding(WindowInsets.navigationBars)
+                                .windowInsetsPadding(WindowInsets.ime)
+                        )
+                    }
+
+                    // ============================================================================
+                    // TAB SCREENS (unified navigation)
+                    // ============================================================================
+
+                    // Write Tab
+                    composable<WriteTabRoute> {
+                        WriteTab(
+                            viewModel = mainViewModel,
+                        )
+                    }
+
+                    // My Posts Tab
+                    composable<MyPostsTabRoute> {
+                        MyPostsTab(
+                            viewModel = mainViewModel,
+                        )
+                    }
+
+                    // Inbox Tab
+                    composable<InboxTabRoute> {
+                        InboxTab(
+                            viewModel = mainViewModel,
+                            highlightedMessageId = null,
+                        )
+                    }
+
+                    // Inbox Tab with Deep Link
+                    composable<InboxTabWithDeepLinkRoute> { backStackEntry ->
+                        val route = backStackEntry.toRoute<InboxTabWithDeepLinkRoute>()
+                        InboxTab(
+                            viewModel = mainViewModel,
+                            highlightedMessageId = route.messageId,
+                        )
+                    }
+
+                    // Account Tab
+                    composable<AccountTabRoute> {
+                        AccountTab(
+                            viewModel = hiltViewModel<AccountTabViewModel>(),
+                            onNavigateToAuth = {
+                                navController.navigate(AuthRoute) {
+                                    popUpTo(WriteTabRoute) { inclusive = true }
+                                }
+                            },
+                        )
+                    }
                 }
-
-
-                // Auth Screen (simple)
-                composable<AuthRoute> {
-                    val authNavAction = AuthNavigationAction(navController)
-
-                    AuthScreen(
-                        navAction = authNavAction,
-                        viewModel = hiltViewModel(),
-                        redirectRoute = null,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .windowInsetsPadding(WindowInsets.navigationBars)
-                            .windowInsetsPadding(WindowInsets.ime)
-                    )
-                }
-
-                // Auth Screen with Redirect
-                composable<AuthWithRedirectRoute> { backStackEntry ->
-                    val route = backStackEntry.toRoute<AuthWithRedirectRoute>()
-                    val authNavAction = AuthNavigationAction(navController)
-
-                    AuthScreen(
-                        navAction = authNavAction,
-                        viewModel = hiltViewModel(),
-                        redirectRoute = route.redirectRoute,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .windowInsetsPadding(WindowInsets.navigationBars)
-                            .windowInsetsPadding(WindowInsets.ime)
-                    )
-                }
-
-                // Notification Permission Screen
-                composable<NotificationPermissionRoute> {
-                    val permissionNavAction = NotificationPermissionNavigationAction(navController)
-
-                    NotificationPermissionScreen(
-                        navAction = permissionNavAction,
-                        viewModel = hiltViewModel(),
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .windowInsetsPadding(WindowInsets.navigationBars)
-                            .windowInsetsPadding(WindowInsets.ime)
-                    )
-                }
-
-                // ============================================================================
-                // TAB SCREENS (unified navigation)
-                // ============================================================================
-
-                // Write Tab
-                composable<WriteTabRoute> {
-                    WriteTab(
-                        viewModel = mainViewModel,
-                    )
-                }
-
-                // My Posts Tab
-                composable<MyPostsTabRoute> {
-                    MyPostsTab(
-                        viewModel = mainViewModel,
-                    )
-                }
-
-                // Inbox Tab
-                composable<InboxTabRoute> {
-                    InboxTab(
-                        viewModel = mainViewModel,
-                        highlightedMessageId = null,
-                    )
-                }
-
-                // Inbox Tab with Deep Link
-                composable<InboxTabWithDeepLinkRoute> { backStackEntry ->
-                    val route = backStackEntry.toRoute<InboxTabWithDeepLinkRoute>()
-                    InboxTab(
-                        viewModel = mainViewModel,
-                        highlightedMessageId = route.messageId,
-                    )
-                }
-
-                // Account Tab
-                composable<AccountTabRoute> {
-                    AccountTab(
-                        viewModel = hiltViewModel<AccountTabViewModel>(),
-                        onNavigateToAuth = {
-                            navController.navigate(AuthRoute) {
-                                popUpTo(WriteTabRoute) { inclusive = true }
-                            }
-                        },
-                    )
-                }
-            }
             }
         }
 
+    }
 }

@@ -26,11 +26,22 @@ val ShineGradientColors = listOf(
     Color(0xFFFBEC65), // #FBEC65
     Color(0xFFFB6000)  // #FB6000
 )
-
 // SHADOW mode gradient (BG moon)
 val ShadowGradientColors = listOf(
     Color(0xFF111111), // #111111
     Color(0xFF000000)  // #000000
+)
+
+val ShineSunGradient = listOf(
+    Color(0xFFFFF7EB),
+    Color(0xFFFFD54F),
+    Color(0xFFFFA726)
+)
+
+val ShadowSunGradient = listOf(
+    Color(0xFFAC1212), // Dark red middle
+    Color(0xFF8B0000), // Dark red middle
+    Color(0xFF1A0033)  // Very dark purple outer
 )
 
 // SHINE mode background gradient
@@ -42,6 +53,7 @@ val ShineBackgroundGradient = Brush.verticalGradient(
 val ShadowBackgroundGradient = Brush.verticalGradient(
     colors = ShadowGradientColors
 )
+
 
 // Button Gradient
 val ButtonGradient = Brush.radialGradient(

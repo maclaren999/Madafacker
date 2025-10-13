@@ -46,7 +46,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.presentation.R
-import com.bbuddies.madafaker.presentation.base.DecorativeBackground
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 
 

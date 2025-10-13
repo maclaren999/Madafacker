@@ -14,16 +14,15 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.bbuddies.madafaker.presentation.design.theme.ShadowSunGradient
+import com.bbuddies.madafaker.presentation.design.theme.ShineSunGradient
 import kotlinx.coroutines.delay
+
 
 @Composable
 fun MovingSunEffect(
     visible: Boolean = true,
-    baseColors: List<Color> = listOf(
-        Color(0xFFFFF7EB),
-        Color(0xFFFFD54F),
-        Color(0xFFFFA726)
-    ),
+    baseColors: List<Color> = ShineSunGradient,
     size: Dp = 300.dp,
     alignment: Alignment = Alignment.TopCenter,
     enableInteraction: Boolean = true,
@@ -161,7 +160,7 @@ fun MovingSunEffectPreview() {
 
 // Луна для темной темы
     MovingSunEffect(
-        baseColors = listOf(Color(0xFF6A5ACD), Color(0xFF483D8B), Color(0xFF2F2F4F)),
+        baseColors = ShadowSunGradient,
         size = 200.dp,
         alignment = Alignment.Center,
         glowEnabled = true,
