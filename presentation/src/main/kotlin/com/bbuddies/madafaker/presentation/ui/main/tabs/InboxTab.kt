@@ -1,5 +1,6 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
+import android.content.Context
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,14 +21,23 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import com.bbuddies.madafaker.common_domain.enums.MessageRating
+import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
+import com.bbuddies.madafaker.presentation.base.UiState
+import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
-
+import com.bbuddies.madafaker.presentation.ui.main.MainTab
 import com.bbuddies.madafaker.presentation.ui.main.components.InboxMessage
 import com.bbuddies.madafaker.presentation.ui.main.components.MessageCard
 import com.bbuddies.madafaker.presentation.ui.main.components.toInboxMessages
+import com.bbuddies.madafaker.presentation.utils.SharedTextManager
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun InboxTab(
@@ -161,5 +171,97 @@ private fun InboxEmptyState() {
                 lineHeight = MaterialTheme.typography.bodySmall.lineHeight
             )
         }
+    }
+}
+
+private val previewInboxReplies = listOf(
+    Reply(
+        id = "reply-1",
+        body = "Appreciate the positive energy here.",
+        mode = Mode.SHINE.apiValue,
+        isPublic = true,
+        createdAt = "2024-02-01T10:00:00Z",
+        updatedAt = "2024-02-01T10:05:00Z",
+        authorId = "user-reply-1",
+        parentId = "message-1"
+    ),
+    Reply(
+        id = "reply-2",
+        body = "Thanks for sharing this perspective.",
+        mode = Mode.SHADOW.apiValue,
+        isPublic = true,
+        createdAt = "2024-02-02T09:30:00Z",
+        updatedAt = "2024-02-02T09:40:00Z",
+        authorId = "user-reply-2",
+        parentId = "message-1"
+    )
+)
+
+private val previewInboxMessages = listOf(
+    Message(
+        id = "message-1",
+        body = "What helps you reset after a long week?",
+        mode = Mode.SHINE.apiValue,
+        isPublic = true,
+        createdAt = "2024-02-01T09:00:00Z",
+        updatedAt = "2024-02-01T09:15:00Z",
+        authorId = "user-1",
+        replies = previewInboxReplies
+    ),
+    Message(
+        id = "message-2",
+        body = "Share a small win you had today.",
+        mode = Mode.SHADOW.apiValue,
+        isPublic = true,
+        createdAt = "2024-02-02T14:00:00Z",
+        updatedAt = "2024-02-02T14:10:00Z",
+        authorId = "user-2",
+        replies = emptyList()
+    )
+)
+
+private class PreviewInboxContract(
+    initialMessages: List<Message> = previewInboxMessages
+) : MainScreenContract {
+    override val draftMessage: StateFlow<String> = MutableStateFlow("Staying curious.")
+    override val isSending: StateFlow<Boolean> = MutableStateFlow(false)
+    override val incomingMessages: StateFlow<UiState<List<Message>>> =
+        MutableStateFlow(UiState.Success(initialMessages))
+    override val outcomingMessages: StateFlow<UiState<List<Message>>> =
+        MutableStateFlow(UiState.Success(emptyList()))
+    override val currentMode: StateFlow<Mode> = MutableStateFlow(Mode.SHINE)
+    override val currentTab: StateFlow<MainTab> = MutableStateFlow(MainTab.INBOX)
+    override val isReplySending: StateFlow<Boolean> = MutableStateFlow(false)
+    override val replyError: StateFlow<String?> = MutableStateFlow(null)
+    override val highlightedMessageId: StateFlow<String?> = MutableStateFlow(initialMessages.firstOrNull()?.id)
+    override val replyingMessageId: StateFlow<String?> = MutableStateFlow(initialMessages.firstOrNull()?.id)
+    override val userRepliesForMessage: StateFlow<List<Reply>> = MutableStateFlow(previewInboxReplies)
+    override val warningsFlow: StateFlow<((Context) -> String?)?> = MutableStateFlow(null)
+    override val sharedTextManager: SharedTextManager = SharedTextManager()
+
+    override fun onSendMessage(message: String) = Unit
+    override fun onDraftMessageChanged(message: String) = Unit
+    override fun toggleMode() = Unit
+    override fun refreshMessages() = Unit
+    override fun refreshUserData() = Unit
+    override fun clearDraft() = Unit
+    override fun selectTab(tab: MainTab) = Unit
+    override fun onSendReply(messageId: String, replyText: String, isPublic: Boolean) = Unit
+    override fun clearReplyError() = Unit
+    override fun onRateMessage(messageId: String, rating: MessageRating) = Unit
+    override fun onInboxViewed() = Unit
+    override fun markMessageAsRead(messageId: String) = Unit
+    override fun onMessageTapped(messageId: String) = Unit
+    override fun onMessageReplyingClosed() = Unit
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun InboxTabPreview() {
+    MadafakerTheme(mode = Mode.SHINE) {
+        InboxTab(
+            viewModel = PreviewInboxContract(),
+            highlightedMessageId = previewInboxMessages.first().id
+        )
     }
 }

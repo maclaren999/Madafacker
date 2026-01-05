@@ -44,11 +44,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
+import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 
 
@@ -472,3 +474,63 @@ data class InboxMessage(
     val hearts: Int?,
     val replies: List<Reply>? = null
 )
+
+private val previewReplies = listOf(
+    Reply(
+        id = "reply-1",
+        body = "Appreciate the vibes! Keep them coming.",
+        mode = Mode.SHINE.apiValue,
+        isPublic = true,
+        createdAt = "2024-01-01T12:00:00Z",
+        updatedAt = "2024-01-01T12:05:00Z",
+        authorId = "user-reply-1",
+        parentId = "message-1"
+    ),
+    Reply(
+        id = "reply-2",
+        body = "Following along and loving it.",
+        mode = Mode.SHADOW.apiValue,
+        isPublic = true,
+        createdAt = "2024-01-02T10:15:00Z",
+        updatedAt = "2024-01-02T10:20:00Z",
+        authorId = "user-reply-2",
+        parentId = "message-1"
+    )
+)
+
+private val previewInboxMessage = InboxMessage(
+    id = "message-1",
+    author = "user_12345678",
+    body = "Keep shining! This space is all about honest thoughts and bright vibes.",
+    mode = Mode.SHINE.apiValue,
+    up = 24,
+    down = 2,
+    hearts = 6,
+    replies = previewReplies
+)
+
+@Preview(showBackground = true)
+@Composable
+private fun MessageCardPreview() {
+    MadafakerTheme(mode = Mode.SHINE) {
+        MessageCard(
+            message = previewInboxMessage
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun MessageCardReplyingPreview() {
+    MadafakerTheme(mode = Mode.SHINE) {
+        MessageCard(
+            message = previewInboxMessage,
+            isReplying = true,
+            userReplies = previewReplies,
+            onReplyingClosed = {},
+            onSendReply = { _, _, _ -> },
+            onRateMessage = { _, _ -> },
+            currentUserId = previewReplies.first().authorId
+        )
+    }
+}

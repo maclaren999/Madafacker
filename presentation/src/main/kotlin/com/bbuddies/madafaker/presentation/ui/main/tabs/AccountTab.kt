@@ -44,9 +44,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
+import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
+import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 
 
 @Composable
@@ -207,6 +210,91 @@ private fun ProfileSection(
                 )
             }
         }
+    }
+}
+
+private val previewUser = User(
+    id = "preview-user",
+    name = "Preview User",
+    registrationToken = "preview-token",
+    coins = 240,
+    createdAt = "2024-01-01",
+    updatedAt = "2024-06-01"
+)
+
+@Preview(showBackground = true)
+@Composable
+private fun ProfileSectionPreview() {
+    MadafakerTheme(mode = Mode.SHINE) {
+        ProfileSection(
+            user = previewUser,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AccountActionsSectionPreview() {
+    MadafakerTheme(mode = Mode.SHINE) {
+        AccountActionsSection(
+            onDeleteAccountClick = {},
+            onLogoutClick = {},
+            onFeedbackClick = {},
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun DeleteAccountDialogPreview() {
+    MadafakerTheme(mode = Mode.SHINE) {
+        DeleteAccountDialog(
+            onConfirm = {},
+            onDismiss = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LogoutConfirmationDialogPreview() {
+    MadafakerTheme(mode = Mode.SHINE) {
+        LogoutConfirmationDialog(
+            onConfirm = {},
+            onDismiss = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun FeedbackDialogPreview() {
+    MadafakerTheme(mode = Mode.SHINE) {
+        FeedbackDialog(
+            feedbackText = "Loving the experience so far!",
+            selectedRating = 4,
+            isSubmitting = false,
+            onFeedbackTextChange = {},
+            onRatingChange = {},
+            onSubmit = {},
+            onDismiss = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun StarRatingPreview() {
+    MadafakerTheme(mode = Mode.SHINE) {
+        StarRating(
+            rating = 3,
+            onRatingChange = {},
+            enabled = true
+        )
     }
 }
 
@@ -542,3 +630,6 @@ private fun StarRating(
         }
     }
 }
+
+
+

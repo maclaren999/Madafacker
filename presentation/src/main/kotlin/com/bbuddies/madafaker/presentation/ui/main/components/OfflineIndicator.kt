@@ -14,8 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.presentation.R
+import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 
 @Composable
 @Deprecated("Not used")
@@ -42,5 +45,16 @@ fun OfflineIndicator(
                 style = MaterialTheme.typography.bodySmall
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun OfflineIndicatorPreview() {
+    MadafakerTheme(mode = Mode.SHINE) {
+        OfflineIndicator(
+            isOnline = false,
+            modifier = Modifier.padding(8.dp)
+        )
     }
 }
