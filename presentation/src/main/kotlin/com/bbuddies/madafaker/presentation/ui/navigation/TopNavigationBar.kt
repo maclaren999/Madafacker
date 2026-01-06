@@ -37,6 +37,11 @@ fun TopNavigationBar(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
+    val navigateToDestination: (TopLevelDestination) -> Unit = { destination ->
+        onTabSelected(destination.tab)
+        navController.navigateToTopLevelDestination(destination)
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -61,8 +66,7 @@ fun TopNavigationBar(
                     Surface(
                         color = Color(0xFFFFFF),
                         onClick = {
-                            onTabSelected(destination.tab)
-                            navController.navigateToTopLevelDestination(destination)
+                            navigateToDestination(destination)
                         }
                     ) {
                         Text(
