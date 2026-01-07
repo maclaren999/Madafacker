@@ -11,20 +11,20 @@ import com.bbuddies.madafaker.presentation.R
 
 // Font families
 val MontserratSemiBold = FontFamily(
-    Font(R.font.montserrat_semibold, FontWeight.SemiBold)
+    // Bundled variable font, we pin to weight 600
+    Font(R.font.montserrat_wght, FontWeight.SemiBold)
 )
 
-val OpenSansRegular = FontFamily(
-    Font(R.font.open_sans, FontWeight.Normal)
+private val OpenSans = FontFamily(
+    // Variable font covers all weights we need
+    Font(R.font.open_sans_wdth_wght, FontWeight.Normal),
+    Font(R.font.open_sans_wdth_wght, FontWeight.SemiBold),
+    Font(R.font.open_sans_wdth_wght, FontWeight.Bold)
 )
 
-val OpenSansSemiBold = FontFamily(
-    Font(R.font.open_sans_semibold, FontWeight.SemiBold)
-)
-
-val OpenSansBold = FontFamily(
-    Font(R.font.open_sans_bold, FontWeight.Bold)
-)
+val OpenSansRegular = OpenSans
+val OpenSansSemiBold = OpenSans
+val OpenSansBold = OpenSans
 
 // Custom typography based on design system
 val Typography = Typography(
