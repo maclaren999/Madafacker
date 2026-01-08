@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import androidx.lifecycle.viewModelScope
+import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import com.bbuddies.madafaker.presentation.utils.NotificationPermissionHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,6 +25,7 @@ sealed class NotificationPermissionState {
 @HiltViewModel
 class NotificationPermissionViewModel @Inject constructor(
     private val application: Application,
+    private val preferenceManager : PreferenceManager,
     private val notificationPermissionHelper: NotificationPermissionHelper
 ) : BaseViewModel() {
 
@@ -35,6 +37,9 @@ class NotificationPermissionViewModel @Inject constructor(
 
     private val _shouldNavigateToMain = MutableStateFlow(false)
     val shouldNavigateToMain: StateFlow<Boolean> = _shouldNavigateToMain
+
+
+    val currentMode = preferenceManager.currentMode
 
     init {
         checkInitialPermissionState()

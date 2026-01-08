@@ -40,11 +40,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.presentation.R
-import com.bbuddies.madafaker.presentation.ui.permission.NotificationPermissionNavigationAction
 import com.bbuddies.madafaker.presentation.design.components.MovingSunEffect
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextButton
+import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
+import com.bbuddies.madafaker.presentation.design.theme.ShadowSunGradient
+import com.bbuddies.madafaker.presentation.design.theme.ShineSunGradient
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun NotificationPermissionScreen(
@@ -55,6 +59,7 @@ fun NotificationPermissionScreen(
     val permissionState by viewModel.permissionState.collectAsState()
     val showSettingsPrompt by viewModel.showSettingsPrompt.collectAsState()
     val shouldNavigateToMain by viewModel.shouldNavigateToMain.collectAsState()
+    val currentMode by viewModel.currentMode.collectAsState()
 
     // Handle automatic navigation when permission is already granted or after successful grant
     LaunchedEffect(shouldNavigateToMain) {
@@ -66,6 +71,7 @@ fun NotificationPermissionScreen(
 
     NotificationPermissionScreen(
         permissionState = permissionState,
+        currentMode = currentMode,
         showSettingsPrompt = showSettingsPrompt,
         onRequestPermission = viewModel::requestPermission,
         onSkip = viewModel::onSkip,
@@ -80,6 +86,7 @@ fun NotificationPermissionScreen(
 @Composable
 fun NotificationPermissionScreen(
     permissionState: NotificationPermissionState,
+    currentMode: Mode,
     showSettingsPrompt: Boolean,
     onRequestPermission: () -> Unit,
     onSkip: () -> Unit,
@@ -128,108 +135,126 @@ fun NotificationPermissionScreen(
         return
     }
 
-    MovingSunEffect(
-        size = 300.dp,
-        alignment = Alignment.TopCenter,
-        glowEnabled = true,
-        padding = 80.dp
-    )
-
-    Image(painter = painterResource(id = R.drawable.blur),
-        contentDescription = null,
-        modifier = Modifier.fillMaxSize(),
-        contentScale = ContentScale.Crop
-
-    )
-
+    val sunColors = if (currentMode == Mode.SHINE) ShineSunGradient else ShadowSunGradient
     Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Spacer(modifier = Modifier.weight(1f))
+        MovingSunEffect(
+            baseColors = sunColors,
+            size = 300.dp,
+            alignment = Alignment.TopCenter,
+            glowEnabled = true,
+            padding = 80.dp
+        )
 
-            // Notification Icon
-            Box(
+        Image(
+            painter = painterResource(
+                id = if (currentMode == Mode.SHINE)
+                    R.drawable.blur
+                else
+                    R.drawable.blur_dark
+            ),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillHeight
+
+        )
+
+        Box(modifier = modifier.fillMaxSize()) {
+            Column(
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Notifications,
-                    contentDescription = null,
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Notification Icon
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Notifications,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Title - Using H2 style
+                Text(
+                    text = stringResource(R.string.notification_permission_title),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = if (currentMode == Mode.SHINE) MaterialTheme.colorScheme.onSurface
+                    else MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Description
+                Text(
+                    text = stringResource(R.string.notification_permission_description),
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Enable Notifications Button
+                MadafakerSecondaryButton(
+                    text = stringResource(R.string.notification_permission_enable),
+                    onClick = onRequestPermission,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Skip Button
+                MadafakerTextButton(
+                    text = stringResource(R.string.notification_permission_skip),
+                    onClick = onSkip,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Title - Using H2 style
-            Text(
-                text = stringResource(R.string.notification_permission_title),
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Description
-            Text(
-                text = stringResource(R.string.notification_permission_description),
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Enable Notifications Button
-            MadafakerSecondaryButton(
-                text = stringResource(R.string.notification_permission_enable),
-                onClick = onRequestPermission,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Skip Button
-            MadafakerTextButton(
-                text = stringResource(R.string.notification_permission_skip),
-                onClick = onSkip,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-
-        // Settings prompt snackbar
-        if (showSettingsPrompt) {
-            SnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.BottomCenter)
-            ) {
-                Snackbar(
-                    action = {
-                        TextButton(
-                            onClick = {
-                                onOpenSettings()
-                                onDismissSettingsPrompt()
-                            }
-                        ) {
-                            Text(stringResource(R.string.notification_permission_settings), color = Color.White)
-                        }
-                    },
-                    dismissAction = {
-                        TextButton(onClick = onDismissSettingsPrompt) {
-                            Text(stringResource(R.string.notification_permission_dismiss), color = Color.White)
-                        }
-                    }
+            // Settings prompt snackbar
+            if (showSettingsPrompt) {
+                SnackbarHost(
+                    hostState = snackbarHostState,
+                    modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
-                    Text(stringResource(R.string.notification_permission_snackbar))
+                    Snackbar(
+                        action = {
+                            TextButton(
+                                onClick = {
+                                    onOpenSettings()
+                                    onDismissSettingsPrompt()
+                                }
+                            ) {
+                                Text(
+                                    stringResource(R.string.notification_permission_settings),
+                                    color = Color.White
+                                )
+                            }
+                        },
+                        dismissAction = {
+                            TextButton(onClick = onDismissSettingsPrompt) {
+                                Text(
+                                    stringResource(R.string.notification_permission_dismiss),
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    ) {
+                        Text(stringResource(R.string.notification_permission_snackbar))
+                    }
                 }
             }
         }
@@ -239,14 +264,35 @@ fun NotificationPermissionScreen(
 @Preview(showBackground = true)
 @Composable
 private fun NotificationPermissionScreenPreview() {
-    NotificationPermissionScreen(
-        permissionState = NotificationPermissionState.Initial,
-        showSettingsPrompt = false,
-        onRequestPermission = {},
-        onSkip = {},
-        onPermissionGranted = {},
-        onPermissionDenied = {},
-        onOpenSettings = {},
-        onDismissSettingsPrompt = {}
-    )
+    MadafakerTheme(Mode.SHINE) {
+        NotificationPermissionScreen(
+            permissionState = NotificationPermissionState.Initial,
+            currentMode = Mode.SHINE,
+            showSettingsPrompt = false,
+            onRequestPermission = {},
+            onSkip = {},
+            onPermissionGranted = {},
+            onPermissionDenied = {},
+            onOpenSettings = {},
+            onDismissSettingsPrompt = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun NotificationPermissionScreenShadowPreview() {
+    MadafakerTheme(Mode.SHADOW) {
+        NotificationPermissionScreen(
+            permissionState = NotificationPermissionState.Initial,
+            currentMode = Mode.SHADOW,
+            showSettingsPrompt = false,
+            onRequestPermission = {},
+            onSkip = {},
+            onPermissionGranted = {},
+            onPermissionDenied = {},
+            onOpenSettings = {},
+            onDismissSettingsPrompt = {}
+        )
+    }
 }

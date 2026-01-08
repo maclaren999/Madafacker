@@ -7,21 +7,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
-import com.bbuddies.madafaker.presentation.design.theme.ButtonGradient
-import com.bbuddies.madafaker.presentation.design.theme.ButtonOrangeEnd
-import com.bbuddies.madafaker.presentation.design.theme.TextPrimary
-import com.bbuddies.madafaker.presentation.design.theme.White
 import androidx.compose.ui.tooling.preview.Preview
-import com.bbuddies.madafaker.presentation.design.theme.LightGray
+import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 
 
 /**
@@ -35,6 +35,9 @@ fun MadafakerPrimaryButton(
     enabled: Boolean = true
 ) {
     val buttonShape = RoundedCornerShape(4.dp)
+    val colorScheme = MaterialTheme.colorScheme
+    val shadowColor = buttonShadow(colorScheme)
+    val transparentSurface = colorScheme.surface.copy(alpha = 0f)
 
     Button(
         onClick = onClick,
@@ -44,25 +47,23 @@ fun MadafakerPrimaryButton(
             .shadow(
                 elevation = 2.dp,
                 shape = buttonShape,
-                spotColor = Color(0x40131313),
-                ambientColor = Color(0x40131313)
+                spotColor = shadowColor,
+                ambientColor = shadowColor
             )
             .clip(buttonShape)
             .background(
-                brush = if (enabled) ButtonGradient else Brush.linearGradient(
-                    colors = listOf(Color(0xFFE0E0E0), Color(0xFFBDBDBD))
-                )
+                brush = primaryButtonBackground(enabled, colorScheme)
             )
             .border(
                 width = 1.dp,
-                color = if (enabled) Color(0xFF000000) else Color(0xFF9E9E9E),
+                color = primaryBorder(enabled, colorScheme),
                 shape = buttonShape
             ),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color.Transparent,
-            contentColor = if (enabled) White else Color(0xFF757575),
-            disabledContainerColor = Color.Transparent,
-            disabledContentColor = Color(0xFF757575)
+            containerColor = transparentSurface,
+            contentColor = colorScheme.onPrimary,
+            disabledContainerColor = transparentSurface,
+            disabledContentColor = colorScheme.onSurfaceVariant
         ),
         shape = buttonShape,
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
@@ -85,6 +86,7 @@ fun MadafakerSecondaryButton(
     enabled: Boolean = true
 ) {
     val buttonShape = RoundedCornerShape(4.dp)
+    val colorScheme = MaterialTheme.colorScheme
 
     Button(
         onClick = onClick,
@@ -93,14 +95,14 @@ fun MadafakerSecondaryButton(
             .height(44.dp)
             .border(
                 width = 1.dp,
-                color = if (enabled) TextPrimary else LightGray,
+                color = secondaryBorder(enabled, colorScheme),
                 shape = buttonShape
             ),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            contentColor = if (enabled) TextPrimary else LightGray,
+            contentColor = secondaryContent(enabled, colorScheme),
             disabledContainerColor = Color.Transparent,
-            disabledContentColor = LightGray
+            disabledContentColor = secondaryContent(enabled = false, colorScheme = colorScheme)
         ),
         shape = buttonShape,
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
@@ -122,13 +124,15 @@ fun MadafakerTextButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
+    val colorScheme = MaterialTheme.colorScheme
+
     Button(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.height(44.dp),
         colors = ButtonDefaults.textButtonColors(
-            contentColor = if (enabled)  TextPrimary else LightGray,
-            disabledContentColor =LightGray
+            contentColor = colorScheme.onSurface,
+            disabledContentColor = colorScheme.onSurfaceVariant
         ),
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
     ) {
@@ -142,7 +146,7 @@ fun MadafakerTextButton(
 @Preview(showBackground = true)
 @Composable
 fun MadafakerPrimaryButtonPreview() {
-    MaterialTheme {
+    MadafakerTheme(Mode.SHINE) {
         MadafakerPrimaryButton(
             text = "Primary",
             onClick = {},
@@ -154,8 +158,7 @@ fun MadafakerPrimaryButtonPreview() {
 @Preview(showBackground = true)
 @Composable
 fun MadafakerSecondaryButtonPreview() {
-    MaterialTheme {
-
+    MadafakerTheme(Mode.SHINE) {
         MadafakerSecondaryButton(
             text = "Secondary",
             onClick = {},
@@ -167,7 +170,7 @@ fun MadafakerSecondaryButtonPreview() {
 @Preview(showBackground = true)
 @Composable
 fun MadafakerTextButtonPreview() {
-    MaterialTheme {
+    MadafakerTheme(Mode.SHADOW) {
         MadafakerTextButton(
             text = "Text",
             onClick = {},
@@ -176,3 +179,74 @@ fun MadafakerTextButtonPreview() {
     }
 }
 
+@Preview(showBackground = true)
+@Composable
+fun MadafakerPrimaryButtonShadowPreview() {
+    MadafakerTheme(Mode.SHADOW) {
+        MadafakerPrimaryButton(
+            text = "Primary",
+            onClick = {},
+            enabled = true
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MadafakerSecondaryButtonShadowPreview() {
+    MadafakerTheme(Mode.SHADOW) {
+        MadafakerSecondaryButton(
+            text = "Secondary",
+            onClick = {},
+            enabled = true
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MadafakerTextButtonShinePreview() {
+    MadafakerTheme(Mode.SHINE) {
+        MadafakerTextButton(
+            text = "Text",
+            onClick = {},
+            enabled = true
+        )
+    }
+}
+
+private fun primaryButtonBackground(enabled: Boolean, colorScheme: ColorScheme): Brush {
+    if (!enabled) {
+        return Brush.linearGradient(
+            colors = listOf(
+                colorScheme.primary,
+                colorScheme.onPrimary
+            )
+        )
+    }
+
+    val primary = colorScheme.primary
+    val highlight = colorScheme.primaryContainer
+    val depth = primary.copy(alpha = 0.85f)
+
+    return Brush.radialGradient(
+        colors = listOf(
+            highlight,
+            primary,
+            depth
+        ),
+        center = Offset(0.87f, 0f)
+    )
+}
+
+private fun primaryBorder(enabled: Boolean, colorScheme: ColorScheme): Color =
+    if (enabled) colorScheme.onBackground.copy(alpha = 0.8f) else colorScheme.outline
+
+private fun secondaryBorder(enabled: Boolean, colorScheme: ColorScheme): Color =
+    if (enabled) colorScheme.onSurface else colorScheme.outline
+
+private fun secondaryContent(enabled: Boolean, colorScheme: ColorScheme): Color =
+    if (enabled) colorScheme.onSurface else colorScheme.onSurfaceVariant
+
+private fun buttonShadow(colorScheme: ColorScheme): Color =
+    colorScheme.onBackground.copy(alpha = 0.45f)

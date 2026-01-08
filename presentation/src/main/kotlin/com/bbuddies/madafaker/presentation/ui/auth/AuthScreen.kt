@@ -31,6 +31,8 @@ import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryB
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import com.bbuddies.madafaker.presentation.design.components.MovingSunEffect
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
+import com.bbuddies.madafaker.presentation.design.theme.ShadowSunGradient
+import com.bbuddies.madafaker.presentation.design.theme.ShineSunGradient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -45,6 +47,7 @@ fun AuthScreen(
     val draftNickname by viewModel.draftNickname.collectAsState()
     val validationResult by viewModel.nicknameDraftValidationResult.collectAsState()
     val isSigningIn by viewModel.isSigningIn.collectAsState()
+    val currentMode by viewModel.currentMode.collectAsState()
     val context = LocalContext.current
 
     AuthScreen(
@@ -77,6 +80,7 @@ fun AuthScreen(
         },
         warningsFlow = viewModel.warningsFlow,
         isSigningIn = isSigningIn,
+        currentMode = currentMode,
         modifier = modifier
     )
 }
@@ -91,24 +95,29 @@ fun AuthScreen(
     onCreateAccount: () -> Unit,
     warningsFlow: StateFlow<((context: Context) -> String?)?>,
     isSigningIn: Boolean,
+    currentMode: Mode,
     modifier: Modifier = Modifier
 ) {
+    val sunColors = if (currentMode == Mode.SHINE) ShineSunGradient else ShadowSunGradient
+    val blurResId = if (currentMode == Mode.SHINE) R.drawable.blur else R.drawable.blur_dark
+
     ScreenWithWarnings(
         warningsFlow = warningsFlow,
         modifier = modifier
     ) {
         MovingSunEffect(
+            baseColors = sunColors,
             size = 300.dp,
             alignment = Alignment.TopCenter,
             glowEnabled = true,
             padding = 80.dp
         )
 
-        Image(painter = painterResource(id = R.drawable.blur),
+        Image(
+            painter = painterResource(id = blurResId),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
-
         )
 
         Column(
@@ -121,33 +130,33 @@ fun AuthScreen(
             Spacer(modifier = Modifier.weight(1f))
             Spacer(modifier = Modifier.height(32.dp))
 
-                when (authUiState) {
-                    AuthUiState.INITIAL -> {
-                        InitialAuthContent(
-                            onGoogleSignIn = onGoogleSignIn,
-                            isSigningIn = isSigningIn
-                        )
-                    }
-
-                    AuthUiState.POST_GOOGLE_AUTH -> {
-                        PostGoogleAuthContent(
-                            draftNickname = draftNickname,
-                            validationResult = validationResult,
-                            onNicknameChange = onNicknameChange,
-                            onCreateAccount = onCreateAccount,
-                            isSigningIn = isSigningIn
-                        )
-                    }
-
-                    AuthUiState.LOADING -> {
-                        LoadingContent()
-                    }
+            when (authUiState) {
+                AuthUiState.INITIAL -> {
+                    InitialAuthContent(
+                        onGoogleSignIn = onGoogleSignIn,
+                        isSigningIn = isSigningIn
+                    )
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
+                AuthUiState.POST_GOOGLE_AUTH -> {
+                    PostGoogleAuthContent(
+                        draftNickname = draftNickname,
+                        validationResult = validationResult,
+                        onNicknameChange = onNicknameChange,
+                        onCreateAccount = onCreateAccount,
+                        isSigningIn = isSigningIn
+                    )
+                }
+
+                AuthUiState.LOADING -> {
+                    LoadingContent()
+                }
             }
+
+            Spacer(modifier = Modifier.weight(1f))
         }
     }
+}
 
 
 @Composable
@@ -200,6 +209,7 @@ fun PostGoogleAuthContent(
         Text(
             text = stringResource(R.string.auth_choose_nickname_title),
             style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
@@ -292,7 +302,26 @@ fun AuthScreenPreview() {
             onGoogleSignIn = {},
             onCreateAccount = {},
             warningsFlow = MutableStateFlow(null),
-            isSigningIn = false
+            isSigningIn = false,
+            currentMode = Mode.SHINE
+        )
+    }
+}
+
+@Preview
+@Composable
+fun AuthScreenShadowPreview() {
+    MadafakerTheme(Mode.SHADOW) {
+        AuthScreen(
+            authUiState = AuthUiState.POST_GOOGLE_AUTH,
+            draftNickname = "Nickname",
+            validationResult = ValidationState.Success,
+            onNicknameChange = {},
+            onGoogleSignIn = {},
+            onCreateAccount = {},
+            warningsFlow = MutableStateFlow(null),
+            isSigningIn = false,
+            currentMode = Mode.SHADOW
         )
     }
 }

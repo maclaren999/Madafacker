@@ -3,6 +3,7 @@ package com.bbuddies.madafaker.presentation.ui.auth
 import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
+import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.presentation.BuildConfig
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.auth.GoogleAuthManager
@@ -29,7 +30,8 @@ class AuthViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val notificationPermissionHelper: NotificationPermissionHelper,
     private val googleAuthManager: GoogleAuthManager,
-    private val clipboardManager: ClipboardManager
+    private val clipboardManager: ClipboardManager,
+    preferenceManager: PreferenceManager
 ) : BaseViewModel() {
 
     private val _authUiState = MutableStateFlow(AuthUiState.INITIAL)
@@ -40,6 +42,8 @@ class AuthViewModel @Inject constructor(
 
     private val _isSigningIn = MutableStateFlow(false)
     val isSigningIn: StateFlow<Boolean> = _isSigningIn
+
+    val currentMode = preferenceManager.currentMode
 
     private val draftValidator = NicknameDraftValidator(userRepository, viewModelScope)
     val nicknameDraftValidationResult = draftValidator.validationResult

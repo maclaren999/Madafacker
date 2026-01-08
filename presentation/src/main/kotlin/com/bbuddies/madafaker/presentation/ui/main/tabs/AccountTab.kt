@@ -14,10 +14,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Info
+    import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -185,7 +185,7 @@ private fun ProfileSection(
 
             // Member since
             Text(
-                text = stringResource(R.string.account_member_since_prefix) + "${user?.createdAt ?: "Unknown"}",
+                text = stringResource(R.string.account_member_since_prefix) + (user?.createdAt ?: "Unknown"),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
             )
@@ -321,7 +321,7 @@ private fun AccountActionsSection(
             shape = RoundedCornerShape(12.dp)
         ) {
             Icon(
-                imageVector = Icons.Default.ExitToApp,
+                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                 contentDescription = "Logout",
                 modifier = Modifier.size(20.dp)
             )
@@ -448,7 +448,7 @@ private fun LogoutConfirmationDialog(
         onDismissRequest = onDismiss,
         icon = {
             Icon(
-                imageVector = Icons.Default.ExitToApp,
+                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                 contentDescription = "Logout",
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(24.dp)
