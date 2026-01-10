@@ -76,7 +76,7 @@ The app balances these contrasting approaches while rewarding creativity and res
 
 ### 4.2 UI Navigation Tabs
 
-Establish four primary tabs in the bottom navigation bar to support the Write‑focused flow and clear separation of content:
+Establish four primary tabs in the top navigation tabs to support the Write‑focused flow and clear separation of content:
 
 | Position | Purpose                                        | Label    | Icon |
 |----------|------------------------------------------------|----------|------|
@@ -88,8 +88,7 @@ Establish four primary tabs in the bottom navigation bar to support the Write‑
 ### 4.3  Account & Settings
 
 * Google sign‑in links messages across devices.
-* Avatar & 80‑char bio.
-* Language + Locale selector (default phone locale).
+* Language + Locale selector (default phone locale). #NON-MVP
 
 ### 4.4 Error & Informational States
 
