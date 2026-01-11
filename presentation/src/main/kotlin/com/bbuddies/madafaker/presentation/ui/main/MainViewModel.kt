@@ -26,6 +26,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
@@ -257,26 +258,39 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    //TODO? Create dedicated 'messageViewModel' or 'messageManager' ?
     private fun observeMessages() {
         // Observe incoming messages
-        messageRepository.observeIncomingMessages()
-            .onEach { messages ->
-                _incomingMessages.value = UiState.Success(messages)
-            }
+        combine(
+            messageRepository.observeIncomingMessages(),
+            currentMode
+        ) { messages, mode ->
+            filterMessagesByMode(messages, mode)
+        }.onEach { messages ->
+            _incomingMessages.value = UiState.Success(messages)
+        }
             .catch { exception ->
                 _incomingMessages.value = UiState.Error(exception = exception)
             }
             .launchIn(viewModelScope)
 
         // Observe outgoing messages
-        messageRepository.observeOutgoingMessages()
-            .onEach { messages ->
-                _outcomingMessages.value = UiState.Success(messages)
-            }
+        combine(
+            messageRepository.observeOutgoingMessages(),
+            currentMode
+        ) { messages, mode ->
+            filterMessagesByMode(messages, mode)
+        }.onEach { messages ->
+            _outcomingMessages.value = UiState.Success(messages)
+        }
             .catch { exception ->
                 _outcomingMessages.value = UiState.Error(exception = exception)
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun filterMessagesByMode(messages: List<Message>, mode: Mode): List<Message> {
+        return messages.filter { Mode.fromApiValue(it.mode) == mode }
     }
 
     override fun refreshMessages() {

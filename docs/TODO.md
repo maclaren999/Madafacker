@@ -10,8 +10,8 @@
 
 ## Logic
 
-100. Mode switching has to change content accordingly.
-101. Revise the notifications logic
+100. [X] Mode switching has to change content accordingly.
+101. [Artem] Revise the notifications logic
 
 ## Docs
 

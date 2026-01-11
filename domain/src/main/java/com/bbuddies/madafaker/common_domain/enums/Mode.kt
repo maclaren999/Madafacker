@@ -8,9 +8,9 @@ enum class Mode(val displayName: String, val apiValue: String) {
         val DEFAULT_MODE = SHINE
 
         fun fromApiValue(apiValue: String): Mode {
-            return when (apiValue.uppercase()) {
-                "light" -> SHINE
-                "dark" -> SHADOW
+            return when (apiValue.trim().lowercase()) {
+                "light", "shine" -> SHINE
+                "dark", "shadow" -> SHADOW
                 else -> SHINE // Default fallback
             }
         }
