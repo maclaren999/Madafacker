@@ -16,8 +16,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Done
 import androidx.compose.material.icons.outlined.ThumbUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -193,18 +196,17 @@ private fun MyPostCard(message: Message) {
 
 @Composable
 fun MessageStateIndicator(messageState: MessageState) {
-    val (text, color) = when (messageState) {
-        MessageState.PENDING -> stringResource(R.string.message_sending) to Color(0xFFFF9800)
-        MessageState.SENT -> stringResource(R.string.message_delivered) to Color(0xFF4CAF50)
-        MessageState.FAILED -> stringResource(R.string.message_failed) to Color(0xFFE53935)
+    val (icon, tint, contentDescription) = when (messageState) {
+        MessageState.PENDING -> Triple(Icons.Outlined.Done, Color(0xFFFF9800), stringResource(R.string.message_sending))
+        MessageState.SENT -> Triple(Icons.Outlined.CheckCircle, Color(0xFF4CAF50), stringResource(R.string.message_delivered))
+        MessageState.FAILED -> Triple(Icons.Outlined.Close, Color(0xFFE53935), stringResource(R.string.message_failed))
     }
 
-    Text(
-        text = text,
-        color = color,
-        style = MaterialTheme.typography.labelSmall.copy(
-            fontWeight = FontWeight.Medium
-        )
+    Icon(
+        imageVector = icon,
+        contentDescription = contentDescription,
+        tint = tint,
+        modifier = Modifier.size(18.dp)
     )
 }
 
