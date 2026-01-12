@@ -1,6 +1,6 @@
 ## UI main issues
 
-1. [Maria] Tabs naming: write, my posts, inbox, account. The resources already exist.
+1. [X] Tabs naming: write, my posts, inbox, account. The resources already exist.
 2. [hold] Remove rating buttons/icons in "my posts" and "inbox". We can return them redesigned if BE confirms the proper implementation.
    (at the moment, BE allows rating placement, but never sends any ratings with messages)
 3. [Artem] My posts: implement replies displaying. For each post show total number and one most recent reply.
