@@ -1,6 +1,7 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
 import android.content.Context
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -30,6 +32,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -124,6 +127,11 @@ private fun EmptyStateView(
 
 @Composable
 private fun MyPostCard(message: Message) {
+    val replies = message.replies.orEmpty()
+    val latestReply = replies.maxByOrNull { reply ->
+        reply.updatedAt.ifBlank { reply.createdAt }
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -166,29 +174,20 @@ private fun MyPostCard(message: Message) {
                 overflow = TextOverflow.Ellipsis
             )
 
-            // Only show reactions and replies for SENT messages
-            if (message.localState == MessageState.SENT) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(24.dp)
-                ) {
-                    // Mock reactions - these would come from the server in a real app
-                    Reaction(Icons.Outlined.ThumbUp, 0, MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f))
-                    Reaction(
-                        Icons.Outlined.KeyboardArrowDown,
-                        0,
-                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                    )
-                    Reaction(Icons.Outlined.FavoriteBorder, 0, Color.Red)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.replies_count, replies.size),
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
 
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Text(
-                        text = stringResource(R.string.replies_count, 0),
-                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
+            latestReply?.let { reply ->
+                Spacer(modifier = Modifier.height(10.dp))
+                LatestReplyHighlight(reply = reply)
             }
         }
     }
@@ -232,6 +231,63 @@ private fun Reaction(
     }
 }
 
+@Composable
+private fun LatestReplyHighlight(reply: Reply) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            .padding(12.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.latest_reply_title),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
+        Text(
+            text = reply.body,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 4,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(bottom = 6.dp)
+        )
+        Text(
+            text = stringResource(
+                R.string.latest_reply_from,
+                "user_${reply.authorId.take(8)}"
+            ),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+        )
+    }
+}
+
+private val previewRepliesForMyPosts = listOf(
+    Reply(
+        id = "my-post-1-reply-1",
+        body = "Thanks for sharing this - it resonated with me today.",
+        mode = Mode.SHINE.apiValue,
+        isPublic = true,
+        createdAt = "2024-03-01T10:30:00Z",
+        updatedAt = "2024-03-01T10:31:00Z",
+        authorId = "replying-user-1",
+        parentId = "my-post-1"
+    ),
+    Reply(
+        id = "my-post-1-reply-2",
+        body = "Loved this reminder. Keep posting more!",
+        mode = Mode.SHINE.apiValue,
+        isPublic = true,
+        createdAt = "2024-03-01T11:00:00Z",
+        updatedAt = "2024-03-01T11:02:00Z",
+        authorId = "replying-user-2",
+        parentId = "my-post-1"
+    )
+)
+
 private val previewMyPosts = listOf(
     Message(
         id = "my-post-1",
@@ -241,7 +297,7 @@ private val previewMyPosts = listOf(
         createdAt = "2024-03-01T10:00:00Z",
         updatedAt = "2024-03-01T10:05:00Z",
         authorId = "preview-user",
-        replies = emptyList(),
+        replies = previewRepliesForMyPosts,
         localState = MessageState.SENT
     ),
     Message(

@@ -153,7 +153,7 @@ fun MessageCard(
                     }
                 }
 
-                // Rating buttons
+              /*  // Rating buttons
                 Text(
                     text = androidx.compose.ui.res.stringResource(com.bbuddies.madafaker.presentation.R.string.rating_prompt),
                     style = MaterialTheme.typography.bodyMedium,
@@ -199,7 +199,7 @@ fun MessageCard(
                             onRateMessage?.invoke(message.id, MessageRating.SUPERLIKE)
                         }
                     )
-                }
+                }*/
 
                 Spacer(modifier = Modifier.height(16.dp))
 
