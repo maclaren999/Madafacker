@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -49,6 +50,8 @@ import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
+import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
+import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import java.time.Instant
@@ -315,48 +318,54 @@ private fun AccountActionsSection(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Logout Button
-        MadafakerSecondaryButton(
+        MadafakerPrimaryButton(
             text = stringResource(R.string.account_logout_button),
             onClick = onLogoutClick,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                    contentDescription = "Logout",
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         )
 
         // Send Feedback Button
         MadafakerSecondaryButton(
-            text = "Send Feedback",
+            text = stringResource(R.string.feedback_title),
             onClick = onFeedbackClick,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Info,
+                    contentDescription = "Send Feedback",
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         )
 
         // Delete Account Button
-        Button(
+        MadafakerSecondaryButton(
+            text = stringResource(R.string.account_delete_button),
             onClick = onDeleteAccountClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(44.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.Transparent,
-                contentColor = Color.Red,
-                disabledContainerColor = Color.Transparent,
-                disabledContentColor = Color.Red.copy(alpha = 0.5f)
-            ),
-            shape = RoundedCornerShape(4.dp),
-            border = BorderStroke(1.dp, Color.Red),
-            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = "Delete Account",
-                modifier = Modifier.size(20.dp),
-                tint = Color.Red
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = stringResource(R.string.account_delete_button),
-                style = MaterialTheme.typography.labelLarge,
-                color = Color.Red
-            )
-        }
+                .height(56.dp),
+            accentColor = MaterialTheme.colorScheme.error,
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Delete Account",
+                    modifier = Modifier.size(20.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        )
     }
 }
 

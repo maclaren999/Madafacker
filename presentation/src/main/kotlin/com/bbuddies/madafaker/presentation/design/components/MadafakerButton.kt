@@ -2,8 +2,13 @@ package com.bbuddies.madafaker.presentation.design.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -11,6 +16,7 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -32,7 +38,8 @@ fun MadafakerPrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    leadingIcon: (@Composable () -> Unit)? = null
 ) {
     val buttonShape = RoundedCornerShape(4.dp)
     val colorScheme = MaterialTheme.colorScheme
@@ -68,10 +75,19 @@ fun MadafakerPrimaryButton(
         shape = buttonShape,
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            leadingIcon?.let {
+                it()
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
     }
 }
 
@@ -83,7 +99,9 @@ fun MadafakerSecondaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    accentColor: Color? = null,
+    leadingIcon: (@Composable () -> Unit)? = null
 ) {
     val buttonShape = RoundedCornerShape(4.dp)
     val colorScheme = MaterialTheme.colorScheme
@@ -95,22 +113,35 @@ fun MadafakerSecondaryButton(
             .height(44.dp)
             .border(
                 width = 1.dp,
-                color = secondaryBorder(enabled, colorScheme),
+                color = secondaryBorder(enabled, colorScheme, accentColor),
                 shape = buttonShape
             ),
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            contentColor = secondaryContent(enabled, colorScheme),
+            contentColor = secondaryContent(enabled, colorScheme, accentColor),
             disabledContainerColor = Color.Transparent,
-            disabledContentColor = secondaryContent(enabled = false, colorScheme = colorScheme)
+            disabledContentColor = secondaryContent(
+                enabled = false,
+                colorScheme = colorScheme,
+                accentColor = accentColor
+            )
         ),
         shape = buttonShape,
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            leadingIcon?.let {
+                it()
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
     }
 }
 
@@ -122,7 +153,9 @@ fun MadafakerTextButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    accentColor: Color? = null,
+    leadingIcon: (@Composable () -> Unit)? = null
 ) {
     val colorScheme = MaterialTheme.colorScheme
 
@@ -131,15 +164,24 @@ fun MadafakerTextButton(
         enabled = enabled,
         modifier = modifier.height(44.dp),
         colors = ButtonDefaults.textButtonColors(
-            contentColor = colorScheme.onSurface,
-            disabledContentColor = colorScheme.onSurfaceVariant
+            contentColor = accentColor ?: colorScheme.onSurface,
+            disabledContentColor = accentColor?.copy(alpha = 0.5f) ?: colorScheme.onSurfaceVariant
         ),
         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 10.dp)
     ) {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelLarge
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            leadingIcon?.let {
+                it()
+                Spacer(modifier = Modifier.width(8.dp))
+            }
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge
+            )
+        }
     }
 }
 
@@ -242,11 +284,25 @@ private fun primaryButtonBackground(enabled: Boolean, colorScheme: ColorScheme):
 private fun primaryBorder(enabled: Boolean, colorScheme: ColorScheme): Color =
     if (enabled) colorScheme.onBackground.copy(alpha = 0.8f) else colorScheme.outline
 
-private fun secondaryBorder(enabled: Boolean, colorScheme: ColorScheme): Color =
-    if (enabled) colorScheme.onSurface else colorScheme.outline
+private fun secondaryBorder(
+    enabled: Boolean,
+    colorScheme: ColorScheme,
+    accentColor: Color?
+): Color {
+    val activeColor = accentColor ?: colorScheme.onSurface
+    val disabledColor = accentColor?.copy(alpha = 0.4f) ?: colorScheme.outline
+    return if (enabled) activeColor else disabledColor
+}
 
-private fun secondaryContent(enabled: Boolean, colorScheme: ColorScheme): Color =
-    if (enabled) colorScheme.onSurface else colorScheme.onSurfaceVariant
+private fun secondaryContent(
+    enabled: Boolean,
+    colorScheme: ColorScheme,
+    accentColor: Color?
+): Color {
+    val activeColor = accentColor ?: colorScheme.onSurface
+    val disabledColor = accentColor?.copy(alpha = 0.5f) ?: colorScheme.onSurfaceVariant
+    return if (enabled) activeColor else disabledColor
+}
 
 private fun buttonShadow(colorScheme: ColorScheme): Color =
     colorScheme.onBackground.copy(alpha = 0.45f)

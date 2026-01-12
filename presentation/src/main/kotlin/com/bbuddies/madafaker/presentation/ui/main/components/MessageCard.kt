@@ -261,7 +261,11 @@ fun MessageCard(
                         onClick = { onReplyingClosed?.invoke() },
                         modifier = Modifier.weight(0.3f)
                     ) {
-                        Text("Close")
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close Reply",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
                     }
                 }
 
