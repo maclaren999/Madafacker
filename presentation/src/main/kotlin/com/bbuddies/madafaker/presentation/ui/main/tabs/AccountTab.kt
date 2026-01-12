@@ -1,8 +1,11 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,11 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Star
@@ -36,21 +37,29 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
+import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 
 @Composable
@@ -73,18 +82,24 @@ fun AccountTab(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp),
+                    .padding(24.dp)
+                    .padding(bottom = 100.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // Profile Section
-                ProfileSection(
-                    user = currentUser,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(48.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Profile Section
+                    ProfileSection(
+                        user = currentUser,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 // Account Actions
                 AccountActionsSection(
@@ -93,8 +108,6 @@ fun AccountTab(
                     onFeedbackClick = viewModel::onFeedbackClick,
                     modifier = Modifier.fillMaxWidth()
                 )
-
-                Spacer(modifier = Modifier.weight(1f))
             }
         }
 
@@ -137,35 +150,23 @@ private fun ProfileSection(
     user: User?,
     modifier: Modifier = Modifier
 ) {
+    val clipboardManager = LocalClipboardManager.current
+    val userId = user?.id
+    val displayId = userId?.let { "${it.take(8)}..." } ?: "--------"
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
         ),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
     ) {
         Column(
-            modifier = Modifier.padding(24.dp),
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Avatar
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Profile Avatar",
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             // User Name - Using H2 style
             Text(
                 text = user?.name ?: stringResource(R.string.account_unknown_user),
@@ -177,23 +178,47 @@ private fun ProfileSection(
 
             // User ID
             Text(
-                text = stringResource(R.string.account_user_id_prefix) + "${user?.id?.take(8) ?: "--------"}...",
+                text = stringResource(R.string.account_user_id_prefix) + displayId,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                modifier = Modifier.clickable(enabled = userId != null) {
+                    if (userId != null) {
+                        clipboardManager.setText(AnnotatedString(userId))
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
             // Member since
             Text(
-                text = stringResource(R.string.account_member_since_prefix) + (user?.createdAt ?: "Unknown"),
+                text = stringResource(R.string.account_member_since_prefix).trimEnd() +
+                        " " +
+                        formatMemberSince(user?.createdAt),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f)
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
+}
+
+private fun formatMemberSince(createdAt: String?): String {
+    if (createdAt.isNullOrBlank()) {
+        return "Unknown"
+    }
+
+    val formatter = DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.getDefault())
+    return runCatching {
+        Instant.parse(createdAt)
+            .atZone(ZoneId.systemDefault())
+            .format(formatter)
+    }.recoverCatching {
+        LocalDateTime.parse(createdAt)
+            .atZone(ZoneId.systemDefault())
+            .format(formatter)
+    }.recoverCatching {
+        LocalDate.parse(createdAt).format(formatter)
+    }.getOrElse { createdAt }
 }
 
 private val previewUser = User(
