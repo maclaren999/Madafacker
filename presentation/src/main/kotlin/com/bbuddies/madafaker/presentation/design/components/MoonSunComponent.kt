@@ -30,6 +30,7 @@ fun MovingSunEffect(
     animationDuration: Int = 600,
     glowEnabled: Boolean = false,
     padding: Dp = 0.dp,
+    onTap: (() -> Unit)? = null,
     onAnimationComplete: () -> Unit = {}
 ) {
     var targetCenter by remember { mutableStateOf<Offset?>(null) }
@@ -80,7 +81,8 @@ fun MovingSunEffect(
                                         isPressed = true
                                         tryAwaitRelease()
                                         isPressed = false
-                                    }
+                                    },
+                                    onTap = { onTap?.invoke() }
                                 )
                             }
                         } else Modifier

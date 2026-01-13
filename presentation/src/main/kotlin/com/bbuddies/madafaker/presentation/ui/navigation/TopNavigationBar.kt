@@ -52,7 +52,7 @@ fun TopNavigationBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 24.dp)
+            .padding(top = 48.dp)
     ) {
         Box(
             modifier = Modifier

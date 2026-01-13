@@ -175,7 +175,8 @@ fun AppNavHost(
 
     ModeBackground(
         mode = currentMode,
-        showDecorative = shouldShowNavigation
+        showDecorative = shouldShowNavigation,
+        onModeToggle = { mainViewModel.toggleMode() }
     ) {
         Box(
             modifier = modifier
