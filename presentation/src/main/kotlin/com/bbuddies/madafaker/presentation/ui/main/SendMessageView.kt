@@ -39,7 +39,6 @@ import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
-import com.bbuddies.madafaker.presentation.ui.main.tabs.MessageStateIndicator
 
 /* ----------  SEND MESSAGE VIEW  ---------- */
 @Composable
@@ -382,7 +381,6 @@ private fun RecentMessageItem(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        MessageStateIndicator(messageState = messageState)
     }
 }
 

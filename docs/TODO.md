@@ -17,14 +17,16 @@
 100. [X] Mode switching has to change content accordingly.
 101. [Artem] Revise the notifications logic. (? test with BE)
 102. [Artem] Construct a flow when BE rejects a message sending (e.g., due to inappropriate content). Show proper error message to user.
+     a) Client will wait for HTTP response from BE. If BE rejects the message, client shows appropriate error message to user.
+     b) Disable the offline sending queue for now. Because it adds too much complexity.
     
 ## Bugs
 
 300. [X] Context: *New user logged in with Google and end up on "Choose the nickname*. If user presses back button, the main screen is
      shown, but the User account has not been created. Fix: bring user back to 'AuthUiState.INITIAL'; forget the google account; let user
      choose new account.
-301. [Artem] Logged in user. No internet connection. User opens the app (cold start) the sees Welcome AuthScreen instead of MainScreen.
-302. [Artem] Messages arrangement by dates my be unstable. Messages mix up sometimes.
+301. [X] Logged in user. No internet connection. User opens the app (cold start) the sees Welcome AuthScreen instead of MainScreen.
+302. [X] Messages arrangement by dates my be unstable. Messages mix up sometimes.
 
 ## Docs
 
