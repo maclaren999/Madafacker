@@ -15,6 +15,10 @@ val MontserratSemiBold = FontFamily(
     Font(R.font.montserrat_wght, FontWeight.SemiBold)
 )
 
+val MontserratBold = FontFamily(
+    Font(R.font.montserrat_wght, FontWeight.Bold)
+)
+
 private val OpenSans = FontFamily(
     // Variable font covers all weights we need
     Font(R.font.open_sans_wdth_wght, FontWeight.Normal),
