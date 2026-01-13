@@ -2,7 +2,10 @@ package com.bbuddies.madafaker.presentation.ui.auth
 
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -169,6 +172,8 @@ fun InitialAuthContent(
     onGoogleSignIn: () -> Unit,
     isSigningIn: Boolean
 ) {
+    val context = LocalContext.current
+    
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -196,6 +201,18 @@ fun InitialAuthContent(
             onClick = onGoogleSignIn,
             enabled = !isSigningIn,
             modifier = Modifier.fillMaxWidth()
+        )
+        
+        // Privacy Policy Link
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = stringResource(R.string.privacy_policy),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.clickable {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.privacy_policy_url)))
+                context.startActivity(intent)
+            }
         )
     }
 }

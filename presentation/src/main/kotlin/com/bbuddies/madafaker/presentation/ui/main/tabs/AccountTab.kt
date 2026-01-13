@@ -1,5 +1,7 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -313,6 +316,8 @@ private fun AccountActionsSection(
     onFeedbackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -344,6 +349,25 @@ private fun AccountActionsSection(
                 Icon(
                     imageVector = Icons.Default.Info,
                     contentDescription = "Send Feedback",
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        )
+
+        // Privacy Policy Button
+        MadafakerSecondaryButton(
+            text = stringResource(R.string.privacy_policy),
+            onClick = {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.privacy_policy_url)))
+                context.startActivity(intent)
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Lock,
+                    contentDescription = "Privacy Policy",
                     modifier = Modifier.size(20.dp)
                 )
             }
