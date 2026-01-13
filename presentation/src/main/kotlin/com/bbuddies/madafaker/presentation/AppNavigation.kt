@@ -215,6 +215,7 @@ fun AppNavHost(
                     if (shouldShowNavigation) {
                         TopNavigationBar(
                             navController = navController,
+                            mode = currentMode,
                             onTabSelected = { tab -> mainViewModel.selectTab(tab) }
                         )
                     }
