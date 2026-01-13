@@ -25,6 +25,7 @@ import remote.api.request.CreateMessageRequest
 import remote.api.request.CreateReplyRequest
 import timber.log.Timber
 import worker.SendMessageWorker
+import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 
@@ -72,6 +73,8 @@ class MessageRepositoryImpl @Inject constructor(
 
         val tempId = "temp_${UUID.randomUUID()}"
         val currentMode = preferenceManager.currentMode.value
+        val nowMillis = System.currentTimeMillis()
+        val nowIso = Instant.ofEpochMilli(nowMillis).toString()
 
         // Create local message immediately
         val localMessage = Message(
@@ -81,16 +84,16 @@ class MessageRepositoryImpl @Inject constructor(
             // Other fields are dumb defaults, as the message is temporary
             mode = currentMode.apiValue,
             isPublic = true,
-            createdAt = System.currentTimeMillis().toString(),
-            updatedAt = System.currentTimeMillis().toString(),
+            createdAt = nowIso,
+            updatedAt = nowIso,
             authorId = user.id,
             replies = null,
             tempId = tempId,
             needsSync = true,
             parentId = null,
-            localCreatedAt = System.currentTimeMillis(),
+            localCreatedAt = nowMillis,
             isRead = true,
-            readAt = System.currentTimeMillis(),
+            readAt = nowMillis,
         )
 
         localDao.insertMessage(localMessage)

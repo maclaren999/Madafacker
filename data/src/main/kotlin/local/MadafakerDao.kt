@@ -34,10 +34,10 @@ interface MadafakerDao {
     @Update
     suspend fun updateMessage(message: Message)
 
-    @Query("SELECT * FROM messages WHERE authorId != :currentUserId ORDER BY localCreatedAt DESC")
+    @Query("SELECT * FROM messages WHERE authorId != :currentUserId ORDER BY createdAt DESC")
     fun observeIncomingMessages(currentUserId: String): Flow<List<Message>>
 
-    @Query("SELECT * FROM messages WHERE authorId = :currentUserId AND parentId IS NULL ORDER BY localCreatedAt DESC")
+    @Query("SELECT * FROM messages WHERE authorId = :currentUserId AND parentId IS NULL ORDER BY createdAt DESC")
     fun observeOutgoingMessages(currentUserId: String): Flow<List<Message>>
 
     @Query("SELECT * FROM messages WHERE localState = :state")
@@ -53,7 +53,7 @@ interface MadafakerDao {
     fun observePendingCount(): Flow<Int>
 
     // Read state management
-    @Query("SELECT * FROM messages WHERE authorId != :currentUserId AND isRead = false ORDER BY localCreatedAt DESC LIMIT 1")
+    @Query("SELECT * FROM messages WHERE authorId != :currentUserId AND isRead = false ORDER BY createdAt DESC LIMIT 1")
     suspend fun getMostRecentUnreadMessage(currentUserId: String): Message?
 
     @Query("UPDATE messages SET isRead = true, readAt = :readAt WHERE id = :messageId")
