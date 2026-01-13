@@ -88,6 +88,10 @@ interface MadafakerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUsers(users: List<User>)
 
+    // Single-user app: allow offline fallback without relying on a token-mapped ID.
+    @Query("SELECT * FROM users LIMIT 1")
+    suspend fun getAnyUser(): User?
+
     @Query("SELECT * FROM users WHERE id = :userId")
     suspend fun getUserById(userId: String): User?
 
