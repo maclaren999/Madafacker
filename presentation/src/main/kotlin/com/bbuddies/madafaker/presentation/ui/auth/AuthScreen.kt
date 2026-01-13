@@ -1,6 +1,7 @@
 package com.bbuddies.madafaker.presentation.ui.auth
 
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -49,6 +50,10 @@ fun AuthScreen(
     val isSigningIn by viewModel.isSigningIn.collectAsState()
     val currentMode by viewModel.currentMode.collectAsState()
     val context = LocalContext.current
+
+    BackHandler(enabled = authUiState == AuthUiState.POST_GOOGLE_AUTH) {
+        viewModel.onPostGoogleAuthBack()
+    }
 
     AuthScreen(
         authUiState = authUiState,
