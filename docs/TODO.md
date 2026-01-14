@@ -3,22 +3,31 @@
 1. [X] Tabs naming: write, my posts, inbox, account. The resources already exist.
 2. [X] Remove rating buttons/icons in "my posts" and "inbox". We can return them redesigned if BE confirms the proper implementation.
    (at the moment, BE allows rating placement, but never sends any ratings with messages)
-3. [] My posts: implement replies displaying. For each post show total number and one most recent reply.
-4. [] Inbox(feed): polish replies UI styling.
+3. [X] My posts: implement replies displaying. For each post show total number and one most recent reply.
+4. [X] Inbox(feed): polish replies UI styling.
 5. [X] Account: remove coins; apply proper styling to buttons - outlined, transparent.
 6. [Maria] Mode toggle with simple sinking sun animation.
+7. [] "Tip": show new user how to change modes by tapping on the sun.
+8. [] ! My posts: impl expanded state for selected post. User taps -> post with replies is drawn on blurred background. (check Figma
+   prototype)
+9. [] Likes: impl dislike, like and superlike buttons(similar to Netflix). For 'my posts' they have to be small, with numbers, as they are
+   non clickable. For 'inbox' they have to be bigger, clickable.
+10.
 
 ## UI secondary issues
 
-50. [] Tab swipe animation. Bolder font of the selected tab. Carousel or cascade effect when swiping.
+51. [] Recent messages: hide section if no messages yet.
+52. [] Tabs swipe animation: titles slide horizontally, underline graphics stays in place.
 
 ## Logic
 
 100. [X] Mode switching has to change content accordingly.
 101. [Artem] Revise the notifications logic. (? test with BE)
-102. [Artem] Construct a flow when BE rejects a message sending (e.g., due to inappropriate content). Show proper error message to user.
-     a) Client will wait for HTTP response from BE. If BE rejects the message, client shows appropriate error message to user.
-     b) Disable the offline sending queue for now. Because it adds too much complexity.
+102. [pending-BE] Moderation: Construct a flow when BE rejects a message sending (e.g., due to inappropriate content). Show proper error
+     message to user.
+    1) Client will wait for HTTP response from BE. If BE rejects the message, client shows appropriate error message to user.
+    2) BE targets implementation of RFC 7807 (Problem Details for HTTP APIs) to give back a payload with error code and meaningful message.
+    3) [] Disable the offline sending queue for now. Because it adds too much complexity.
     
 ## Bugs
 
