@@ -5,7 +5,6 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import com.bbuddies.madafaker.common_domain.model.Message
-import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.User
 import kotlinx.serialization.encodeToString
@@ -23,16 +22,7 @@ class Converters {
     fun toReplyList(value: String?): List<Reply>? {
         return value?.let { Json.decodeFromString(it) }
     }
-    
-    @TypeConverter
-    fun fromRatingStats(value: RatingStats?): String? {
-        return value?.let { Json.encodeToString(it) }
-    }
-    
-    @TypeConverter
-    fun toRatingStats(value: String?): RatingStats? {
-        return value?.let { Json.decodeFromString(it) }
-    }
+    // Note: RatingStats uses @Embedded, not TypeConverter - Room handles it automatically
 }
 
 @Database(
