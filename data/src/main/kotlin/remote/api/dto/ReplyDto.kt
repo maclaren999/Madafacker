@@ -29,7 +29,8 @@ data class ReplyDto(
 // Extension functions for mapping
 fun ReplyDto.toDomainModel(): Reply {
     // Derive authorId from author object if authorId is not directly available
-    val resolvedAuthorId = authorId ?: author?.id ?: ""
+    val resolvedAuthorId = authorId ?: author?.id
+        ?: throw IllegalStateException("Reply $id has no authorId and no author object - malformed API response")
     
     return Reply(
         id = id,

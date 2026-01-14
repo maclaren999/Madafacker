@@ -35,7 +35,8 @@ data class MessageDto(
 // Extension functions for mapping
 fun MessageDto.toDomainModel(): Message {
     // Derive authorId from author object if authorId is not directly available
-    val resolvedAuthorId = authorId ?: author?.id ?: ""
+    val resolvedAuthorId = authorId ?: author?.id
+        ?: throw IllegalStateException("Message $id has no authorId and no author object - malformed API response")
     
     return Message(
         id = id,
