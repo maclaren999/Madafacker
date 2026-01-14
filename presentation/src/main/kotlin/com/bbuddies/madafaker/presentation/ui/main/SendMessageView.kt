@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -37,7 +36,6 @@ import com.bbuddies.madafaker.common_domain.model.MessageState
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.UiState
-import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import com.bbuddies.madafaker.presentation.design.components.MessageStateIndicator
@@ -256,7 +254,9 @@ private fun RecentMessageItem(
     messageState: MessageState
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 16.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -296,20 +296,18 @@ private class PreviewMainScreenContract : MainScreenContract {
             id = "1",
             body = "Недавнее отправленное сообщение",
             mode = Mode.SHINE.apiValue,
-            isPublic = true,
             createdAt = "",
-            updatedAt = "",
             authorId = "me",
+            authorName = "Preview User",
             localState = MessageState.SENT
         ),
         Message(
             id = "2",
             body = "Сообщение в очереди",
             mode = Mode.SHINE.apiValue,
-            isPublic = true,
             createdAt = "",
-            updatedAt = "",
             authorId = "me",
+            authorName = "Preview User",
             localState = MessageState.PENDING
         )
     )

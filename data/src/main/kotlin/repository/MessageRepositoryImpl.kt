@@ -10,6 +10,7 @@ import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
@@ -76,24 +77,23 @@ class MessageRepositoryImpl @Inject constructor(
         val nowMillis = System.currentTimeMillis()
         val nowIso = Instant.ofEpochMilli(nowMillis).toString()
 
-        // Create local message immediately
+        // Create local message immediately (pending state)
         val localMessage = Message(
             id = tempId,
             body = body,
-            localState = MessageState.PENDING,
-            // Other fields are dumb defaults, as the message is temporary
             mode = currentMode.apiValue,
-            isPublic = true,
             createdAt = nowIso,
-            updatedAt = nowIso,
             authorId = user.id,
-            replies = null,
+            authorName = user.name,
+            ratingStats = RatingStats(),
+            ownRating = null,
+            localState = MessageState.PENDING,
+            localCreatedAt = nowMillis,
             tempId = tempId,
             needsSync = true,
-            parentId = null,
-            localCreatedAt = nowMillis,
             isRead = true,
             readAt = nowMillis,
+            replies = null
         )
 
         localDao.insertMessage(localMessage)
@@ -175,14 +175,6 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
-
-//    override suspend fun retryPendingMessages() {
-//        val pendingMessages = localDao.getMessagesByState(MessageState.PENDING)
-//        pendingMessages.forEach { message ->
-//            schedulePendingMessageSend(message)
-//        }
-//    }
-
     override suspend fun hasPendingMessages(): Boolean {
         return localDao.getMessagesByState(MessageState.PENDING).isNotEmpty()
     }
@@ -225,7 +217,7 @@ class MessageRepositoryImpl @Inject constructor(
             )
 
             val replyDto = webService.createReply(request)
-            val reply = replyDto.toDomainModel()
+            val reply = replyDto.toDomainModel(parentMessageId = parentId)
 
             // Store locally
             localDao.insertReply(reply)

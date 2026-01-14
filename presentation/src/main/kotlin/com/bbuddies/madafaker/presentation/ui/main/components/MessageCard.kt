@@ -43,10 +43,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
@@ -356,7 +356,7 @@ private fun ReplyCard(
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Text(
-                text = if (isUserReply) "You" else "@${reply.authorId.take(8)}",
+                text = if (isUserReply) "You" else "@${reply.authorName}",
                 style = MaterialTheme.typography.labelSmall.copy(
                     fontStyle = FontStyle.Italic,
                 ),
@@ -404,16 +404,15 @@ private fun Mode.accentColor(): Color {
 }
 
 // Extension functions
-@Suppress("KotlinConstantConditions")
 private fun Message.toInboxMessage(): InboxMessage {
     return InboxMessage(
         id = id,
-        author = "user_${authorId.take(8)}", // Simplified author display
+        author = authorName,
         body = body,
         mode = mode,
-        up = if (AppConfig.USE_MOCK_API) (0..20).random() else null,
-        down = if (AppConfig.USE_MOCK_API) (0..5).random() else null,
-        hearts = if (AppConfig.USE_MOCK_API) (0..15).random() else null,
+        up = ratingStats.likes.takeIf { it > 0 },
+        down = ratingStats.dislikes.takeIf { it > 0 },
+        hearts = ratingStats.superLikes.takeIf { it > 0 },
         replies = replies
     )
 }
@@ -439,21 +438,19 @@ private val previewReplies = listOf(
         id = "reply-1",
         body = "Appreciate the vibes! Keep them coming.",
         mode = Mode.SHINE.apiValue,
-        isPublic = true,
         createdAt = "2024-01-01T12:00:00Z",
-        updatedAt = "2024-01-01T12:05:00Z",
         authorId = "user-reply-1",
-        parentId = "message-1"
+        authorName = "ReplyUser1",
+        parentMessageId = "message-1"
     ),
     Reply(
         id = "reply-2",
         body = "Following along and loving it.",
         mode = Mode.SHADOW.apiValue,
-        isPublic = true,
         createdAt = "2024-01-02T10:15:00Z",
-        updatedAt = "2024-01-02T10:20:00Z",
         authorId = "user-reply-2",
-        parentId = "message-1"
+        authorName = "ReplyUser2",
+        parentMessageId = "message-1"
     )
 )
 

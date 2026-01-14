@@ -28,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
@@ -189,21 +191,19 @@ private val previewInboxReplies = listOf(
         id = "reply-1",
         body = "Appreciate the positive energy here.",
         mode = Mode.SHINE.apiValue,
-        isPublic = true,
         createdAt = "2024-02-01T10:00:00Z",
-        updatedAt = "2024-02-01T10:05:00Z",
         authorId = "user-reply-1",
-        parentId = "message-1"
+        authorName = "ReplyUser1",
+        parentMessageId = "message-1"
     ),
     Reply(
         id = "reply-2",
         body = "Thanks for sharing this perspective.",
         mode = Mode.SHADOW.apiValue,
-        isPublic = true,
         createdAt = "2024-02-02T09:30:00Z",
-        updatedAt = "2024-02-02T09:40:00Z",
         authorId = "user-reply-2",
-        parentId = "message-1"
+        authorName = "ReplyUser2",
+        parentMessageId = "message-1"
     )
 )
 
@@ -212,30 +212,51 @@ private val previewInboxMessages = listOf(
         id = "message-1",
         body = "What helps you reset after a long week?",
         mode = Mode.SHINE.apiValue,
-        isPublic = true,
         createdAt = "2024-02-01T09:00:00Z",
-        updatedAt = "2024-02-01T09:15:00Z",
         authorId = "user-1",
+        authorName = "User1",
+        ratingStats = RatingStats(likes = 5, dislikes = 1, superLikes = 2),
+        ownRating = null,
+        localState = MessageState.SENT,
+        localCreatedAt = System.currentTimeMillis(),
+        tempId = null,
+        needsSync = false,
+        isRead = false,
+        readAt = null,
         replies = previewInboxReplies
     ),
     Message(
         id = "message-2",
         body = "Share a small win you had today.",
         mode = Mode.SHADOW.apiValue,
-        isPublic = true,
         createdAt = "2024-02-02T14:00:00Z",
-        updatedAt = "2024-02-02T14:10:00Z",
         authorId = "user-2",
+        authorName = "User2",
+        ratingStats = RatingStats(likes = 3, dislikes = 0, superLikes = 1),
+        ownRating = null,
+        localState = MessageState.SENT,
+        localCreatedAt = System.currentTimeMillis(),
+        tempId = null,
+        needsSync = false,
+        isRead = false,
+        readAt = null,
         replies = emptyList()
     ),
     Message(
         id = "message-3",
         body = "Share a small win you had today.",
         mode = Mode.SHADOW.apiValue,
-        isPublic = true,
         createdAt = "2024-02-02T14:00:00Z",
-        updatedAt = "2024-02-02T14:10:00Z",
         authorId = "user-2",
+        authorName = "User2",
+        ratingStats = RatingStats(likes = 8, dislikes = 2, superLikes = 3),
+        ownRating = null,
+        localState = MessageState.SENT,
+        localCreatedAt = System.currentTimeMillis(),
+        tempId = null,
+        needsSync = false,
+        isRead = false,
+        readAt = null,
         replies = previewInboxReplies
     )
 )

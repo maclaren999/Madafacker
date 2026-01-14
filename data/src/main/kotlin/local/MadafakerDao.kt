@@ -37,7 +37,7 @@ interface MadafakerDao {
     @Query("SELECT * FROM messages WHERE authorId != :currentUserId ORDER BY createdAt DESC")
     fun observeIncomingMessages(currentUserId: String): Flow<List<Message>>
 
-    @Query("SELECT * FROM messages WHERE authorId = :currentUserId AND parentId IS NULL ORDER BY createdAt DESC")
+    @Query("SELECT * FROM messages WHERE authorId = :currentUserId ORDER BY createdAt DESC")
     fun observeOutgoingMessages(currentUserId: String): Flow<List<Message>>
 
     @Query("SELECT * FROM messages WHERE localState = :state")
@@ -69,11 +69,11 @@ interface MadafakerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReplies(replies: List<Reply>)
 
-    @Query("SELECT * FROM replies WHERE parentId = :parentId ORDER BY createdAt ASC")
-    suspend fun getRepliesByParentId(parentId: String): List<Reply>
+    @Query("SELECT * FROM replies WHERE parentMessageId = :parentMessageId ORDER BY createdAt ASC")
+    suspend fun getRepliesByParentId(parentMessageId: String): List<Reply>
 
-    @Query("SELECT * FROM replies WHERE parentId = :parentId AND authorId = :authorId ORDER BY createdAt ASC")
-    suspend fun getRepliesByParentIdAndAuthor(parentId: String, authorId: String): List<Reply>
+    @Query("SELECT * FROM replies WHERE parentMessageId = :parentMessageId AND authorId = :authorId ORDER BY createdAt ASC")
+    suspend fun getRepliesByParentIdAndAuthor(parentMessageId: String, authorId: String): List<Reply>
 
     @Query("SELECT * FROM replies WHERE id = :replyId")
     suspend fun getReplyById(replyId: String): Reply?

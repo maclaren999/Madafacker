@@ -22,6 +22,7 @@ class Converters {
     fun toReplyList(value: String?): List<Reply>? {
         return value?.let { Json.decodeFromString(it) }
     }
+    // Note: RatingStats uses @Embedded, not TypeConverter - Room handles it automatically
 }
 
 @Database(
@@ -30,7 +31,7 @@ class Converters {
         Reply::class,
         User::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

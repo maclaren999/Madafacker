@@ -30,22 +30,18 @@ private val previewOutgoingMessages = listOf(
         id = "sent-1",
         body = "Shared a reminder to drink water today.",
         mode = Mode.SHINE.apiValue,
-        isPublic = true,
         createdAt = "2024-04-01T08:00:00Z",
-        updatedAt = "2024-04-01T08:05:00Z",
         authorId = "preview-user",
-        replies = emptyList(),
+        authorName = "Preview User",
         localState = MessageState.SENT
     ),
     Message(
         id = "sent-2",
         body = "Drafting a note about handling tough days.",
         mode = Mode.SHADOW.apiValue,
-        isPublic = true,
         createdAt = "2024-04-02T10:00:00Z",
-        updatedAt = "2024-04-02T10:05:00Z",
         authorId = "preview-user",
-        replies = emptyList(),
+        authorName = "Preview User",
         localState = MessageState.PENDING
     )
 )

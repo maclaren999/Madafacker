@@ -3,43 +3,29 @@ package remote.api.dto
 import com.bbuddies.madafaker.common_domain.model.Reply
 
 /**
- * Network DTO for Reply - matches API response structure
+ * Network DTO for Reply - matches 2026 API structure exactly.
+ * Replies are nested within messages and contain author object.
  */
 data class ReplyDto(
     val id: String,
     val body: String,
+    val author: AuthorDto,
     val mode: String,
-    val isPublic: Boolean,
-    val wasSent: Boolean? = null,
-    val createdAt: String,
-    val updatedAt: String,
-    val authorId: String,
-    val parentId: String?
+    val createdAt: String
 )
 
-// Extension functions for mapping
-fun ReplyDto.toDomainModel(): Reply {
+/**
+ * Maps ReplyDto to domain model.
+ * @param parentMessageId The ID of the parent message (for client-side tracking)
+ */
+fun ReplyDto.toDomainModel(parentMessageId: String? = null): Reply {
     return Reply(
         id = id,
         body = body,
         mode = mode,
-        isPublic = isPublic,
         createdAt = createdAt,
-        updatedAt = updatedAt,
-        authorId = authorId,
-        parentId = parentId
-    )
-}
-
-fun Reply.toNetworkDto(): ReplyDto {
-    return ReplyDto(
-        id = id,
-        body = body,
-        mode = mode,
-        isPublic = isPublic,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
-        authorId = authorId,
-        parentId = parentId
+        authorId = author.id,
+        authorName = author.name,
+        parentMessageId = parentMessageId
     )
 }
