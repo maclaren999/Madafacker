@@ -1,7 +1,8 @@
 package remote.api.dto
 
 /**
- * Network DTO for RatingStats - statistics about message ratings (new API structure)
+ * Network DTO for RatingStats - statistics about message ratings.
+ * Matches 2026 API structure exactly.
  */
 data class RatingStatsDto(
     val likes: Int = 0,

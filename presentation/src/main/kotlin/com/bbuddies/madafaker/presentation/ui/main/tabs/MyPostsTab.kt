@@ -38,6 +38,7 @@ import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
@@ -113,7 +114,7 @@ private fun EmptyStateView(
 private fun MyPostCard(message: Message, mode: Mode) {
     val replies = message.replies.orEmpty()
     val latestReply = replies.maxByOrNull { reply ->
-        reply.updatedAt.ifBlank { reply.createdAt }
+        reply.createdAt
     }
     var columnHeightPx by remember { mutableIntStateOf(0) }
     val columnHeight = with(LocalDensity.current) { columnHeightPx.toDp() }
@@ -180,7 +181,7 @@ private fun LatestReplyHighlight(reply: Reply) {
             .padding(8.dp)
     ) {
         Text(
-            text = "@${reply.authorId}",
+            text = "@${reply.authorName}",
             style = MaterialTheme.typography.bodySmall.copy(fontStyle = FontStyle.Italic),
             color = MaterialTheme.colorScheme.onBackground
         )
@@ -200,21 +201,19 @@ private val previewRepliesForMyPosts = listOf(
         id = "my-post-1-reply-1",
         body = "Thanks for sharing this - it resonated with me today.",
         mode = Mode.SHINE.apiValue,
-        isPublic = true,
         createdAt = "2024-03-01T10:30:00Z",
-        updatedAt = "2024-03-01T10:31:00Z",
         authorId = "replying-user-1",
-        parentId = "my-post-1"
+        authorName = "ReplyingUser1",
+        parentMessageId = "my-post-1"
     ),
     Reply(
         id = "my-post-1-reply-2",
         body = "Loved this reminder. Keep posting more!",
         mode = Mode.SHINE.apiValue,
-        isPublic = true,
         createdAt = "2024-03-01T11:00:00Z",
-        updatedAt = "2024-03-01T11:02:00Z",
         authorId = "replying-user-2",
-        parentId = "my-post-1"
+        authorName = "ReplyingUser2",
+        parentMessageId = "my-post-1"
     )
 )
 
@@ -223,34 +222,52 @@ private val previewMyPosts = listOf(
         id = "my-post-1",
         body = "Just shared a thought with the community about staying motivated.",
         mode = Mode.SHINE.apiValue,
-        isPublic = true,
         createdAt = "2024-03-01T10:00:00Z",
-        updatedAt = "2024-03-01T10:05:00Z",
         authorId = "preview-user",
-        replies = previewRepliesForMyPosts,
-        localState = MessageState.SENT
+        authorName = "PreviewUser",
+        ratingStats = RatingStats(likes = 5, dislikes = 1, superLikes = 2),
+        ownRating = null,
+        localState = MessageState.SENT,
+        localCreatedAt = System.currentTimeMillis(),
+        tempId = null,
+        needsSync = false,
+        isRead = true,
+        readAt = null,
+        replies = previewRepliesForMyPosts
     ),
     Message(
         id = "my-post-2",
         body = "Working on a longer story about focus and balance.",
         mode = Mode.SHADOW.apiValue,
-        isPublic = true,
         createdAt = "2024-03-02T09:00:00Z",
-        updatedAt = "2024-03-02T09:10:00Z",
         authorId = "preview-user",
-        replies = emptyList(),
-        localState = MessageState.PENDING
+        authorName = "PreviewUser",
+        ratingStats = RatingStats(),
+        ownRating = null,
+        localState = MessageState.PENDING,
+        localCreatedAt = System.currentTimeMillis(),
+        tempId = null,
+        needsSync = true,
+        isRead = true,
+        readAt = null,
+        replies = emptyList()
     ),
     Message(
         id = "my-post-3",
         body = "Draft failed to send, needs another try.",
         mode = Mode.SHADOW.apiValue,
-        isPublic = true,
         createdAt = "2024-03-02T09:00:00Z",
-        updatedAt = "2024-03-02T09:10:00Z",
         authorId = "preview-user",
-        replies = emptyList(),
-        localState = MessageState.FAILED
+        authorName = "PreviewUser",
+        ratingStats = RatingStats(),
+        ownRating = null,
+        localState = MessageState.FAILED,
+        localCreatedAt = System.currentTimeMillis(),
+        tempId = null,
+        needsSync = true,
+        isRead = true,
+        readAt = null,
+        replies = emptyList()
     )
 )
 private class PreviewMyPostsContract(
