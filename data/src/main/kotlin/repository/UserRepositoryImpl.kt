@@ -241,8 +241,8 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun refreshFirebaseIdToken(): String = withContext(Dispatchers.IO) {
         try {
-            // Get fresh token from Firebase
-            val newToken = tokenRefreshService.refreshFirebaseIdToken()
+            // Get fresh token from Firebase with explicit force refresh for consistency
+            val newToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
 
             // Update stored token
             preferenceManager.updateFirebaseIdToken(newToken)
