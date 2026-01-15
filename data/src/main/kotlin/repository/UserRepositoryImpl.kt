@@ -43,6 +43,8 @@ class UserRepositoryImpl @Inject constructor(
     init {
         // Proactively refresh Firebase ID token in background when user is signed in
         // This prevents the blocking call in the authenticationState flow
+        // Note: This repository is a Singleton with application scope, so this coroutine
+        // lives for the entire app lifecycle, which is the intended behavior
         repositoryScope.launch {
             preferenceManager.googleIdAuthToken.collect { authToken ->
                 if (authToken != null) {
@@ -265,7 +267,7 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Proactively refreshes Firebase ID token if user is signed in and token exists.
+     * Proactively refreshes Firebase ID token if user is signed in.
      * This prevents 401 errors due to expired tokens, especially after app has been closed for a while.
      */
     private suspend fun refreshFirebaseTokenIfNeeded() {
@@ -276,15 +278,12 @@ class UserRepositoryImpl @Inject constructor(
                 return
             }
 
-            val currentFirebaseToken = preferenceManager.firebaseIdToken.value
-            if (currentFirebaseToken != null) {
-                // Proactively refresh the token to ensure it's valid
-                // Use forceRefresh = true to guarantee we get a fresh token, not a potentially stale cached one
-                val freshToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
-                // Always update the stored token with the fresh one
-                preferenceManager.updateFirebaseIdToken(freshToken)
-                Timber.d("Firebase ID token proactively refreshed on auth state initialization")
-            }
+            // Refresh token regardless of whether it's stored
+            // This handles edge cases where user is signed in but token is missing from storage
+            val freshToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
+            // Always update the stored token with the fresh one
+            preferenceManager.updateFirebaseIdToken(freshToken)
+            Timber.d("Firebase ID token proactively refreshed on auth state initialization")
         } catch (e: Exception) {
             // Log but don't fail - the auth interceptor will handle token refresh on 401
             Timber.w(e, "Failed to proactively refresh Firebase ID token, will retry on API call")

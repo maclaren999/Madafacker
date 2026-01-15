@@ -73,14 +73,7 @@ class AuthInterceptor @Inject constructor(
                         Timber.e(clearException, "Failed to clear auth data")
                     }
                 }
-                // Return a new 401 response since original was closed
-                return Response.Builder()
-                    .request(originalRequest)
-                    .protocol(okhttp3.Protocol.HTTP_1_1)
-                    .code(401)
-                    .message("Unauthorized - Firebase session expired")
-                    .body(okhttp3.ResponseBody.create(null, ByteArray(0)))
-                    .build()
+                return createUnauthorizedResponse(originalRequest, "Firebase session expired")
             }
 
             // Attempt to refresh the token using TokenRefreshService with force refresh
@@ -128,14 +121,21 @@ class AuthInterceptor @Inject constructor(
                 }
             }
 
-            // Return a new 401 response
-            Response.Builder()
-                .request(originalRequest)
-                .protocol(okhttp3.Protocol.HTTP_1_1)
-                .code(401)
-                .message("Unauthorized - Token refresh failed")
-                .body(okhttp3.ResponseBody.create(null, ByteArray(0)))
-                .build()
+            createUnauthorizedResponse(originalRequest, "Token refresh failed")
         }
+    }
+
+    /**
+     * Creates a new 401 Unauthorized response with a custom message.
+     * Helper method to avoid code duplication.
+     */
+    private fun createUnauthorizedResponse(request: okhttp3.Request, reason: String): Response {
+        return Response.Builder()
+            .request(request)
+            .protocol(okhttp3.Protocol.HTTP_1_1)
+            .code(401)
+            .message("Unauthorized - $reason")
+            .body(okhttp3.ResponseBody.create(null, ByteArray(0)))
+            .build()
     }
 }
