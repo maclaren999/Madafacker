@@ -40,6 +40,18 @@ class UserRepositoryImpl @Inject constructor(
     private val firebaseCrashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    init {
+        // Proactively refresh Firebase ID token in background when user is signed in
+        // This prevents the blocking call in the authenticationState flow
+        repositoryScope.launch {
+            preferenceManager.googleIdAuthToken.collect { authToken ->
+                if (authToken != null) {
+                    refreshFirebaseTokenIfNeeded()
+                }
+            }
+        }
+    }
+
     override val authenticationState: StateFlow<AuthenticationState> =
         preferenceManager.googleIdAuthToken
             .map { authToken ->
@@ -47,9 +59,6 @@ class UserRepositoryImpl @Inject constructor(
                     authToken == null -> AuthenticationState.NotAuthenticated   
                     else -> {
                         try {
-                            // Proactively refresh Firebase ID token if user is signed in
-                            refreshFirebaseTokenIfNeeded()
-                            
                             val user = localDao.getUserById(authToken)
                             if (user != null) {
                                 // Update Crashlytics for cached user

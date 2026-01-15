@@ -45,6 +45,12 @@ class AuthInterceptor @Inject constructor(
     /**
      * Handles 401 Unauthorized responses by attempting to refresh the Firebase ID token
      * and retrying the original request.
+     * 
+     * Note: Uses runBlocking for token refresh operations because OkHttp Interceptor.intercept()
+     * is synchronous and cannot be made suspend. This is a known limitation, but the impact is minimal:
+     * - Token refresh only happens on 401 errors (rare after proactive refresh)
+     * - OkHttp uses a thread pool that can handle blocking operations
+     * - The alternative (failing immediately) would be worse for UX
      */
     private fun handleUnauthorizedResponse(
         chain: Interceptor.Chain,
@@ -78,6 +84,7 @@ class AuthInterceptor @Inject constructor(
             }
 
             // Attempt to refresh the token using TokenRefreshService with force refresh
+            // runBlocking is necessary here as OkHttp interceptors are synchronous
             val newToken = runBlocking {
                 val refreshedToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
                 // Update the stored token
