@@ -46,10 +46,15 @@ class UserRepositoryImpl @Inject constructor(
         // Note: This repository is a Singleton with application scope, so this coroutine
         // lives for the entire app lifecycle, which is the intended behavior
         repositoryScope.launch {
-            preferenceManager.googleIdAuthToken.collect { authToken ->
-                if (authToken != null) {
-                    refreshFirebaseTokenIfNeeded()
+            try {
+                preferenceManager.googleIdAuthToken.collect { authToken ->
+                    if (authToken != null) {
+                        refreshFirebaseTokenIfNeeded()
+                    }
                 }
+            } catch (e: Exception) {
+                Timber.e(e, "Token refresh coroutine failed")
+                // Supervisor job ensures this doesn't crash the app
             }
         }
     }
@@ -269,6 +274,11 @@ class UserRepositoryImpl @Inject constructor(
     /**
      * Proactively refreshes Firebase ID token if user is signed in.
      * This prevents 401 errors due to expired tokens, especially after app has been closed for a while.
+     * 
+     * Edge cases handled:
+     * - User is signed in to Firebase but token missing from DataStore (e.g., DataStore cleared)
+     * - Token exists but is stale/expired
+     * - Network failures during refresh (logged but don't break flow)
      */
     private suspend fun refreshFirebaseTokenIfNeeded() {
         try {
@@ -278,8 +288,8 @@ class UserRepositoryImpl @Inject constructor(
                 return
             }
 
-            // Refresh token regardless of whether it's stored
-            // This handles edge cases where user is signed in but token is missing from storage
+            // Refresh token regardless of whether it's stored in DataStore
+            // This handles edge cases where user is signed in but token was cleared from storage
             val freshToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
             // Always update the stored token with the fresh one
             preferenceManager.updateFirebaseIdToken(freshToken)

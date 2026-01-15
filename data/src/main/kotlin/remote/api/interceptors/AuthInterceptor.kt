@@ -16,6 +16,7 @@ class AuthInterceptor @Inject constructor(
     companion object {
         private const val AUTHORIZATION_HEADER = "Authorization"
         private const val BEARER_PREFIX = "Bearer "
+        private val EMPTY_RESPONSE_BODY = okhttp3.ResponseBody.create(null, "")
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -135,7 +136,7 @@ class AuthInterceptor @Inject constructor(
             .protocol(okhttp3.Protocol.HTTP_1_1)
             .code(401)
             .message("Unauthorized - $reason")
-            .body(okhttp3.ResponseBody.create(null, ByteArray(0)))
+            .body(EMPTY_RESPONSE_BODY)
             .build()
     }
 }
