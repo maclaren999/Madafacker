@@ -53,10 +53,10 @@ class AuthInterceptor @Inject constructor(
     ): Response {
         Timber.w("Received 401 Unauthorized, attempting token refresh")
 
-        return try {
-            // Close the original response to free resources
-            originalResponse.close()
+        // Close the original response to free resources
+        originalResponse.close()
 
+        return try {
             // Check if user is still signed in to Firebase before attempting refresh
             if (!tokenRefreshService.isSignedIn()) {
                 Timber.e("User is not signed in to Firebase - cannot refresh token")
@@ -67,7 +67,14 @@ class AuthInterceptor @Inject constructor(
                         Timber.e(clearException, "Failed to clear auth data")
                     }
                 }
-                return originalResponse
+                // Return a new 401 response since original was closed
+                return Response.Builder()
+                    .request(originalRequest)
+                    .protocol(okhttp3.Protocol.HTTP_1_1)
+                    .code(401)
+                    .message("Unauthorized - Firebase session expired")
+                    .body(okhttp3.ResponseBody.create(null, ByteArray(0)))
+                    .build()
             }
 
             // Attempt to refresh the token using TokenRefreshService with force refresh
@@ -114,8 +121,14 @@ class AuthInterceptor @Inject constructor(
                 }
             }
 
-            // Return the original 401 response
-            originalResponse
+            // Return a new 401 response since original was closed
+            Response.Builder()
+                .request(originalRequest)
+                .protocol(okhttp3.Protocol.HTTP_1_1)
+                .code(401)
+                .message("Unauthorized - Token refresh failed")
+                .body(okhttp3.ResponseBody.create(null, ByteArray(0)))
+                .build()
         }
     }
 }
