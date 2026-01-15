@@ -115,11 +115,6 @@ class AuthInterceptor @Inject constructor(
             // Handle auth failure (clear auth data)
             runBlocking {
                 try {
-                    // Ensure original response is closed if not already
-                    if (!originalResponse.body?.contentLength().let { it == null || it == 0L }) {
-                        originalResponse.close()
-                    }
-                    
                     preferenceManager.clearUserData()
                 } catch (clearException: Exception) {
                     Timber.e(clearException, "Failed to clear auth data")

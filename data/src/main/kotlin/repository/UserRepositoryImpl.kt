@@ -272,10 +272,9 @@ class UserRepositoryImpl @Inject constructor(
                 // Proactively refresh the token to ensure it's valid
                 // Use forceRefresh = true to guarantee we get a fresh token, not a potentially stale cached one
                 val freshToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
-                if (freshToken != currentFirebaseToken) {
-                    preferenceManager.updateFirebaseIdToken(freshToken)
-                    Timber.d("Firebase ID token proactively refreshed on auth state initialization")
-                }
+                // Always update the stored token with the fresh one
+                preferenceManager.updateFirebaseIdToken(freshToken)
+                Timber.d("Firebase ID token proactively refreshed on auth state initialization")
             }
         } catch (e: Exception) {
             // Log but don't fail - the auth interceptor will handle token refresh on 401

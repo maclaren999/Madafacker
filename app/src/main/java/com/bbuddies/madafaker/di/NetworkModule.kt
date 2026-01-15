@@ -27,6 +27,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    private const val CHUCKER_MAX_CONTENT_LENGTH = 250_000L // 250 KB
+
     /**
      * Provides ChuckerInterceptor for HTTP request/response inspection.
      * Only active in debug builds; no-op in release builds.
@@ -43,7 +45,7 @@ object NetworkModule {
 
         return ChuckerInterceptor.Builder(context)
             .collector(chuckerCollector)
-            .maxContentLength(250_000L)
+            .maxContentLength(CHUCKER_MAX_CONTENT_LENGTH)
             .redactHeaders("Authorization", "Cookie")
             .alwaysReadResponseBody(true)
             .build()
