@@ -12,12 +12,14 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.ImageBitmap
@@ -33,9 +35,8 @@ import androidx.compose.ui.unit.sp
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.design.theme.ShadowBackgroundGradient
-import com.bbuddies.madafaker.presentation.design.theme.ShineBackgroundGradient
-import androidx.compose.ui.Alignment
 import com.bbuddies.madafaker.presentation.design.theme.ShadowSunGradient
+import com.bbuddies.madafaker.presentation.design.theme.ShineBackgroundGradient
 import com.bbuddies.madafaker.presentation.design.theme.ShineSunGradient
 
 /**
@@ -151,7 +152,8 @@ fun ModeBackground(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(16.dp)
-                        .size(120.dp)
+                        .height(60.dp)
+                        .width(120.dp)
                         .alpha(0f)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
