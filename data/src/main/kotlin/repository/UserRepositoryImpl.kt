@@ -47,6 +47,9 @@ class UserRepositoryImpl @Inject constructor(
                     authToken == null -> AuthenticationState.NotAuthenticated   
                     else -> {
                         try {
+                            // Proactively refresh Firebase ID token if user is signed in
+                            refreshFirebaseTokenIfNeeded()
+                            
                             val user = localDao.getUserById(authToken)
                             if (user != null) {
                                 // Update Crashlytics for cached user
@@ -249,6 +252,34 @@ class UserRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Failed to refresh Firebase ID token")
             throw e
+        }
+    }
+
+    /**
+     * Proactively refreshes Firebase ID token if user is signed in and token exists.
+     * This prevents 401 errors due to expired tokens, especially after app has been closed for a while.
+     */
+    private suspend fun refreshFirebaseTokenIfNeeded() {
+        try {
+            // Check if user is signed in to Firebase
+            if (!tokenRefreshService.isSignedIn()) {
+                Timber.d("User not signed in to Firebase, skipping token refresh")
+                return
+            }
+
+            val currentFirebaseToken = preferenceManager.firebaseIdToken.value
+            if (currentFirebaseToken != null) {
+                // Proactively refresh the token to ensure it's valid
+                // Firebase SDK will handle token caching and only refresh if needed
+                val freshToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = false)
+                if (freshToken != currentFirebaseToken) {
+                    preferenceManager.updateFirebaseIdToken(freshToken)
+                    Timber.d("Firebase ID token proactively refreshed on auth state initialization")
+                }
+            }
+        } catch (e: Exception) {
+            // Log but don't fail - the auth interceptor will handle token refresh on 401
+            Timber.w(e, "Failed to proactively refresh Firebase ID token, will retry on API call")
         }
     }
 

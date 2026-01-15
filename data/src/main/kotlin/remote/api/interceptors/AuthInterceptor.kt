@@ -57,11 +57,25 @@ class AuthInterceptor @Inject constructor(
             // Close the original response to free resources
             originalResponse.close()
 
-            // Attempt to refresh the token using TokenRefreshService
+            // Check if user is still signed in to Firebase before attempting refresh
+            if (!tokenRefreshService.isSignedIn()) {
+                Timber.e("User is not signed in to Firebase - cannot refresh token")
+                runBlocking {
+                    try {
+                        preferenceManager.clearUserData()
+                    } catch (clearException: Exception) {
+                        Timber.e(clearException, "Failed to clear auth data")
+                    }
+                }
+                return originalResponse
+            }
+
+            // Attempt to refresh the token using TokenRefreshService with force refresh
             val newToken = runBlocking {
-                val refreshedToken = tokenRefreshService.refreshFirebaseIdToken()
+                val refreshedToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
                 // Update the stored token
                 preferenceManager.updateFirebaseIdToken(refreshedToken)
+                Timber.d("Firebase ID token refreshed and stored successfully")
                 refreshedToken
             }
 
