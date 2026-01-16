@@ -1,5 +1,6 @@
 package repository
 
+import com.bbuddies.madafaker.common_domain.auth.AuthSessionState
 import com.bbuddies.madafaker.common_domain.auth.TokenRefreshService
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.User
@@ -12,11 +13,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import local.MadafakerDao
@@ -40,43 +43,27 @@ class UserRepositoryImpl @Inject constructor(
     private val firebaseCrashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    override val authenticationState: StateFlow<AuthenticationState> =
-        preferenceManager.googleIdAuthToken
-            .map { authToken ->
-                when {
-                    authToken == null -> AuthenticationState.NotAuthenticated   
-                    else -> {
-                        try {
-                            val user = localDao.getUserById(authToken)
-                            if (user != null) {
-                                // Update Crashlytics for cached user
-                                updateCrashlyticsUserIdentification(user)       
-                                AuthenticationState.Authenticated(user)
-                            } else {
-                                // Network fetch fills cache when token-to-user mapping misses.
-                                val networkUser = webService.getCurrentUser()
-                                localDao.insertUser(networkUser)
-                                // Update Crashlytics for network user
-                                updateCrashlyticsUserIdentification(networkUser)
-                                AuthenticationState.Authenticated(networkUser)
-                            }
-                        } catch (e: Exception) {
-                            // Offline cold start: fall back to cached user for single-user app.
-                            val fallbackUser = if (e is IOException) {
-                                localDao.getAnyUser()
-                            } else {
-                                null
-                            }
-                            if (fallbackUser != null) {
-                                updateCrashlyticsUserIdentification(fallbackUser)
-                                AuthenticationState.Authenticated(fallbackUser)
-                            } else {
-                                AuthenticationState.Error(e)
-                            }
-                        }
-                    }
+    init {
+        repositoryScope.launch {
+            tokenRefreshService.authState.collect { authState ->
+                if (authState is AuthSessionState.SignedIn) {
+                    refreshFirebaseTokenIfNeeded()
                 }
             }
+        }
+    }
+
+    override val authenticationState: StateFlow<AuthenticationState> =
+        combine(
+            tokenRefreshService.authState,
+            preferenceManager.userId
+        ) { authState, userId ->
+            when (authState) {
+                AuthSessionState.Initializing -> AuthenticationState.Loading
+                AuthSessionState.SignedOut -> AuthenticationState.NotAuthenticated
+                AuthSessionState.SignedIn -> resolveAuthenticatedUser(userId)
+            }
+        }
             .stateIn(
                 scope = repositoryScope,
                 started = SharingStarted.Eagerly,
@@ -134,6 +121,7 @@ class UserRepositoryImpl @Inject constructor(
             try {
                 val freshUser = webService.getCurrentUser()
                 localDao.insertUser(freshUser)
+                preferenceManager.updateUserId(freshUser.id)
                 Timber.d("Force refreshed user data from server")
                 return@withContext freshUser
             } catch (e: Exception) {
@@ -143,9 +131,9 @@ class UserRepositoryImpl @Inject constructor(
         }
 
         // Cache-only lookup - network fetching is handled by authenticationState flow
-        preferenceManager.googleIdAuthToken.value?.let { token ->
+        preferenceManager.userId.value?.let { userId ->
             try {
-                localDao.getUserById(token)
+                localDao.getUserById(userId)
             } catch (exception: Exception) {
                 Timber.e(exception, "Error getting user from cache")
                 null
@@ -157,6 +145,7 @@ class UserRepositoryImpl @Inject constructor(
         val updatedUser = webService.updateCurrentUser(name)
         // Update local cache
         localDao.insertUser(updatedUser) // Direct use of domain model
+        preferenceManager.updateUserId(updatedUser.id)
         updatedUser
     }
 
@@ -252,6 +241,52 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun refreshFirebaseTokenIfNeeded() {
+        try {
+            val freshToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
+            preferenceManager.updateFirebaseIdToken(freshToken)
+            Timber.d("Firebase ID token refreshed on auth state update")
+        } catch (e: Exception) {
+            Timber.w(e, "Failed to refresh Firebase ID token on auth state update")
+        }
+    }
+
+    private suspend fun resolveAuthenticatedUser(userId: String?): AuthenticationState {
+        val cachedUser = userId?.let { localDao.getUserById(it) }
+        if (cachedUser != null) {
+            updateCrashlyticsUserIdentification(cachedUser)
+            return AuthenticationState.Authenticated(cachedUser)
+        }
+
+        refreshFirebaseTokenIfNeeded()
+
+        return try {
+            val networkUser = webService.getCurrentUser()
+            localDao.insertUser(networkUser)
+            preferenceManager.updateUserId(networkUser.id)
+            updateCrashlyticsUserIdentification(networkUser)
+            AuthenticationState.Authenticated(networkUser)
+        } catch (e: Exception) {
+            val fallbackUser = when {
+                e is HttpException && e.code() == 401 -> {
+                    Timber.e(e, "Unauthorized while fetching current user, using cached user if available")
+                    userId?.let { localDao.getUserById(it) } ?: localDao.getAnyUser()
+                }
+
+                e is IOException -> localDao.getAnyUser()
+
+                else -> null
+            }
+
+            if (fallbackUser != null) {
+                updateCrashlyticsUserIdentification(fallbackUser)
+                AuthenticationState.Authenticated(fallbackUser)
+            } else {
+                AuthenticationState.Error(e)
+            }
+        }
+    }
+
 
 
     override suspend fun createUserWithGoogle(nickname: String, idToken: String, googleUserId: String): User =
@@ -277,6 +312,7 @@ class UserRepositoryImpl @Inject constructor(
             val user = webService.createUser(CreateUserRequest(nickname, fcmToken))
             // Note: We only update googleIdToken here since all tokens were already stored in storeGoogleAuth
             preferenceManager.updateAuthToken(idToken)
+            preferenceManager.updateUserId(user.id)
             localDao.insertUser(user)
 
             user
@@ -300,6 +336,7 @@ class UserRepositoryImpl @Inject constructor(
         val freshFcmToken = refreshFcmToken()
         val user = webService.createUser(CreateUserRequest(nickname, freshFcmToken))
         preferenceManager.updateAuthToken(idToken)
+        preferenceManager.updateUserId(user.id)
         localDao.insertUser(user)
         return user
     }
@@ -325,6 +362,7 @@ class UserRepositoryImpl @Inject constructor(
 
                 // Update local storage
                 preferenceManager.updateAuthToken(googleIdToken)
+                preferenceManager.updateUserId(user.id)
                 localDao.insertUser(user)
 
                 user

@@ -8,6 +8,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
+import com.bbuddies.madafaker.common_domain.auth.AuthSessionState
 import com.bbuddies.madafaker.common_domain.auth.TokenRefreshService
 import com.bbuddies.madafaker.presentation.BuildConfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -15,6 +16,9 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
@@ -36,6 +40,19 @@ class GoogleAuthManager @Inject constructor(
     // Store Google credentials for later use in account creation
     private var storedGoogleIdToken: String? = null
     private var storedGoogleUserId: String? = null
+    private val _authState = MutableStateFlow<AuthSessionState>(AuthSessionState.Initializing)
+    override val authState: StateFlow<AuthSessionState> = _authState.asStateFlow()
+    private val authStateListener = FirebaseAuth.AuthStateListener { auth ->
+        _authState.value = if (auth.currentUser != null) {
+            AuthSessionState.SignedIn
+        } else {
+            AuthSessionState.SignedOut
+        }
+    }
+
+    init {
+        firebaseAuth.addAuthStateListener(authStateListener)
+    }
 
     /**
      * Performs Google authentication and returns the credential response.

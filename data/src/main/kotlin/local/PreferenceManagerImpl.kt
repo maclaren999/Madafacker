@@ -32,6 +32,7 @@ class PreferenceManagerImpl @Inject constructor(
             object FirebaseIdToken : PreferenceKey<String>(stringPreferencesKey("firebase_id_token"))
             object GoogleUserId : PreferenceKey<String>(stringPreferencesKey("google_user_id"))
             object FirebaseUid : PreferenceKey<String>(stringPreferencesKey("firebase_uid"))
+            object UserId : PreferenceKey<String>(stringPreferencesKey("user_id"))
             object CurrentMode : PreferenceKey<String>(stringPreferencesKey("current_mode"))
             object UnsentDraftBody : PreferenceKey<String>(stringPreferencesKey("unsent_draft_body"))
             object UnsentDraftMode : PreferenceKey<String>(stringPreferencesKey("unsent_draft_mode"))
@@ -79,6 +80,13 @@ class PreferenceManagerImpl @Inject constructor(
             initialValue = null
         )
 
+    override val userId: StateFlow<String?> = dataStore.get<String>(PreferenceKey.UserId)
+        .stateIn(
+            scope = CoroutineScope(Dispatchers.IO),
+            started = SharingStarted.Eagerly,
+            initialValue = null
+        )
+
     override suspend fun updateAuthToken(googleIdToken: String) {
         dataStore.set(PreferenceKey.AuthToken, googleIdToken)
     }
@@ -93,6 +101,10 @@ class PreferenceManagerImpl @Inject constructor(
 
     override suspend fun updateFirebaseUid(firebaseUid: String) {
         dataStore.set(PreferenceKey.FirebaseUid, firebaseUid)
+    }
+
+    override suspend fun updateUserId(userId: String) {
+        dataStore.set(PreferenceKey.UserId, userId)
     }
 
     override suspend fun updateAllAuthTokens(

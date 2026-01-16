@@ -1,10 +1,18 @@
 package com.bbuddies.madafaker.common_domain.auth
 
+import kotlinx.coroutines.flow.StateFlow
+
 /**
  * Service for refreshing Firebase ID tokens.
  * This interface allows the data layer to refresh tokens without depending on presentation layer.
  */
 interface TokenRefreshService {
+    /**
+     * Stream of Firebase auth session state.
+     * Used by data layer to wait for FirebaseAuth to be ready before loading user data.
+     */
+    val authState: StateFlow<AuthSessionState>
+
     /**
      * Refreshes the Firebase ID token for the current user.
      * @param forceRefresh Whether to force refresh the token even if it's not expired
