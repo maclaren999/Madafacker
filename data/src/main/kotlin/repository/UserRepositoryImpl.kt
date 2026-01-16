@@ -19,15 +19,14 @@ import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.request.CreateUserRequest
-import java.io.IOException
 import retrofit2.HttpException
 import timber.log.Timber
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -42,16 +41,6 @@ class UserRepositoryImpl @Inject constructor(
     val firebaseMessaging by lazy { FirebaseMessaging.getInstance() }
     private val firebaseCrashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-
-    init {
-        repositoryScope.launch {
-            tokenRefreshService.authState.collect { authState ->
-                if (authState is AuthSessionState.SignedIn) {
-                    refreshFirebaseTokenIfNeeded()
-                }
-            }
-        }
-    }
 
     override val authenticationState: StateFlow<AuthenticationState> =
         combine(
@@ -120,8 +109,7 @@ class UserRepositoryImpl @Inject constructor(
             // Force refresh: fetch fresh data from server
             try {
                 val freshUser = webService.getCurrentUser()
-                localDao.insertUser(freshUser)
-                preferenceManager.updateUserId(freshUser.id)
+                cacheUser(freshUser)
                 Timber.d("Force refreshed user data from server")
                 return@withContext freshUser
             } catch (e: Exception) {
@@ -144,41 +132,9 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun updateUserName(name: String): User = withContext(Dispatchers.IO) {
         val updatedUser = webService.updateCurrentUser(name)
         // Update local cache
-        localDao.insertUser(updatedUser) // Direct use of domain model
-        preferenceManager.updateUserId(updatedUser.id)
+        cacheUser(updatedUser)
         updatedUser
     }
-
-//    override suspend fun createUser(name: String): User = withContext(Dispatchers.IO) {
-//        // First attempt with current FCM token
-//        val initialFcmToken = firebaseMessaging.token.await()
-//
-//        try {
-//            val user = webService.createUser(CreateUserRequest(name, initialFcmToken))
-//            preferenceManager.updateAuthToken(user.id)
-//            localDao.insertUser(user)
-//            Timber.tag("USER_REPO").d("User created with FCM token: $initialFcmToken")
-//            return@withContext user
-//        } catch (e: Exception) {
-//            // Check if it's a duplicate registration token error
-//            if (isDuplicateRegistrationTokenError(e)) {
-//                // Refresh FCM token and retry
-//                val freshFcmToken = refreshFcmToken()
-//                try {
-//                    val user = webService.createUser(CreateUserRequest(name, freshFcmToken))
-//                    preferenceManager.updateAuthToken(user.id)
-//                    localDao.insertUser(user)
-//                    return@withContext user
-//                } catch (retryException: Exception) {
-//                    // If retry also fails, throw the retry exception
-//                    throw retryException
-//                }
-//            } else {
-//                // If it's not a duplicate token error, rethrow original exception
-//                throw e
-//            }
-//        }
-//    }
 
     override suspend fun isNameAvailable(name: String): Boolean = withContext(Dispatchers.IO) {
         webService.checkNameAvailability(name).nameIsAvailable
@@ -212,6 +168,11 @@ class UserRepositoryImpl @Inject constructor(
             // Fallback to just getting current token if deletion fails
             firebaseMessaging.token.await()
         }
+    }
+
+    private suspend fun cacheUser(user: User) {
+        localDao.insertUser(user)
+        preferenceManager.updateUserId(user.id)
     }
 
     override suspend fun storeGoogleAuth(
@@ -262,8 +223,7 @@ class UserRepositoryImpl @Inject constructor(
 
         return try {
             val networkUser = webService.getCurrentUser()
-            localDao.insertUser(networkUser)
-            preferenceManager.updateUserId(networkUser.id)
+            cacheUser(networkUser)
             updateCrashlyticsUserIdentification(networkUser)
             AuthenticationState.Authenticated(networkUser)
         } catch (e: Exception) {
@@ -312,8 +272,7 @@ class UserRepositoryImpl @Inject constructor(
             val user = webService.createUser(CreateUserRequest(nickname, fcmToken))
             // Note: We only update googleIdToken here since all tokens were already stored in storeGoogleAuth
             preferenceManager.updateAuthToken(idToken)
-            preferenceManager.updateUserId(user.id)
-            localDao.insertUser(user)
+            cacheUser(user)
 
             user
         } catch (e: Exception) {
@@ -336,8 +295,7 @@ class UserRepositoryImpl @Inject constructor(
         val freshFcmToken = refreshFcmToken()
         val user = webService.createUser(CreateUserRequest(nickname, freshFcmToken))
         preferenceManager.updateAuthToken(idToken)
-        preferenceManager.updateUserId(user.id)
-        localDao.insertUser(user)
+        cacheUser(user)
         return user
     }
 
@@ -362,8 +320,7 @@ class UserRepositoryImpl @Inject constructor(
 
                 // Update local storage
                 preferenceManager.updateAuthToken(googleIdToken)
-                preferenceManager.updateUserId(user.id)
-                localDao.insertUser(user)
+                cacheUser(user)
 
                 user
             } catch (e: Exception) {

@@ -16,10 +16,10 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 import javax.inject.Inject
@@ -214,14 +214,6 @@ class GoogleAuthManager @Inject constructor(
      */
     fun getCurrentFirebaseUser(): FirebaseUser? {
         return firebaseAuth.currentUser
-    }
-
-    /**
-     * Checks if user is currently signed in to Firebase.
-     * @return true if signed in, false otherwise
-     */
-    override fun isSignedIn(): Boolean {
-        return firebaseAuth.currentUser != null
     }
 
     /**

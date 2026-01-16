@@ -21,10 +21,4 @@ interface TokenRefreshService {
      * @throws Exception if token refresh fails
      */
     suspend fun refreshFirebaseIdToken(forceRefresh: Boolean = true): String
-
-    /**
-     * Checks if user is currently signed in to Firebase.
-     * @return true if signed in, false otherwise
-     */
-    fun isSignedIn(): Boolean
 }
