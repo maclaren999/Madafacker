@@ -16,7 +16,6 @@ class AuthInterceptor @Inject constructor(
     companion object {
         private const val AUTHORIZATION_HEADER = "Authorization"
         private const val BEARER_PREFIX = "Bearer "
-        private val EMPTY_RESPONSE_BODY = okhttp3.ResponseBody.create(null, "")
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -46,12 +45,6 @@ class AuthInterceptor @Inject constructor(
     /**
      * Handles 401 Unauthorized responses by attempting to refresh the Firebase ID token
      * and retrying the original request.
-     * 
-     * Note: Uses runBlocking for token refresh operations because OkHttp Interceptor.intercept()
-     * is synchronous and cannot be made suspend. This is a known limitation, but the impact is minimal:
-     * - Token refresh only happens on 401 errors (rare after proactive refresh)
-     * - OkHttp uses a thread pool that can handle blocking operations
-     * - The alternative (failing immediately) would be worse for UX
      */
     private fun handleUnauthorizedResponse(
         chain: Interceptor.Chain,
@@ -64,26 +57,11 @@ class AuthInterceptor @Inject constructor(
             // Close the original response to free resources
             originalResponse.close()
 
-            // Check if user is still signed in to Firebase before attempting refresh
-            if (!tokenRefreshService.isSignedIn()) {
-                Timber.e("User is not signed in to Firebase - cannot refresh token")
-                runBlocking {
-                    try {
-                        preferenceManager.clearUserData()
-                    } catch (clearException: Exception) {
-                        Timber.e(clearException, "Failed to clear auth data")
-                    }
-                }
-                return createUnauthorizedResponse(originalRequest, "Firebase session expired")
-            }
-
-            // Attempt to refresh the token using TokenRefreshService with force refresh
-            // runBlocking is necessary here as OkHttp interceptors are synchronous
+            // Attempt to refresh the token using TokenRefreshService
             val newToken = runBlocking {
-                val refreshedToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
+                val refreshedToken = tokenRefreshService.refreshFirebaseIdToken()
                 // Update the stored token
                 preferenceManager.updateFirebaseIdToken(refreshedToken)
-                Timber.d("Firebase ID token refreshed and stored successfully")
                 refreshedToken
             }
 
@@ -122,21 +100,8 @@ class AuthInterceptor @Inject constructor(
                 }
             }
 
-            createUnauthorizedResponse(originalRequest, "Token refresh failed")
+            // Return the original 401 response
+            originalResponse
         }
-    }
-
-    /**
-     * Creates a new 401 Unauthorized response with a custom message.
-     * Helper method to avoid code duplication.
-     */
-    private fun createUnauthorizedResponse(request: okhttp3.Request, reason: String): Response {
-        return Response.Builder()
-            .request(request)
-            .protocol(okhttp3.Protocol.HTTP_1_1)
-            .code(401)
-            .message("Unauthorized - $reason")
-            .body(EMPTY_RESPONSE_BODY)
-            .build()
     }
 }

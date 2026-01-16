@@ -40,25 +40,6 @@ class UserRepositoryImpl @Inject constructor(
     private val firebaseCrashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    init {
-        // Proactively refresh Firebase ID token in background when user is signed in
-        // This prevents the blocking call in the authenticationState flow
-        // Note: This repository is a Singleton with application scope, so this coroutine
-        // lives for the entire app lifecycle, which is the intended behavior
-        repositoryScope.launch {
-            try {
-                preferenceManager.googleIdAuthToken.collect { authToken ->
-                    if (authToken != null) {
-                        refreshFirebaseTokenIfNeeded()
-                    }
-                }
-            } catch (e: Exception) {
-                Timber.e(e, "Token refresh coroutine failed")
-                // Supervisor job ensures this doesn't crash the app
-            }
-        }
-    }
-
     override val authenticationState: StateFlow<AuthenticationState> =
         preferenceManager.googleIdAuthToken
             .map { authToken ->
@@ -257,8 +238,8 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun refreshFirebaseIdToken(): String = withContext(Dispatchers.IO) {
         try {
-            // Get fresh token from Firebase with explicit force refresh for consistency
-            val newToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
+            // Get fresh token from Firebase
+            val newToken = tokenRefreshService.refreshFirebaseIdToken()
 
             // Update stored token
             preferenceManager.updateFirebaseIdToken(newToken)
@@ -268,35 +249,6 @@ class UserRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Timber.e(e, "Failed to refresh Firebase ID token")
             throw e
-        }
-    }
-
-    /**
-     * Proactively refreshes Firebase ID token if user is signed in.
-     * This prevents 401 errors due to expired tokens, especially after app has been closed for a while.
-     * 
-     * Edge cases handled:
-     * - User is signed in to Firebase but token missing from DataStore (e.g., DataStore cleared)
-     * - Token exists but is stale/expired
-     * - Network failures during refresh (logged but don't break flow)
-     */
-    private suspend fun refreshFirebaseTokenIfNeeded() {
-        try {
-            // Check if user is signed in to Firebase
-            if (!tokenRefreshService.isSignedIn()) {
-                Timber.d("User not signed in to Firebase, skipping token refresh")
-                return
-            }
-
-            // Refresh token regardless of whether it's stored in DataStore
-            // This handles edge cases where user is signed in but token was cleared from storage
-            val freshToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
-            // Always update the stored token with the fresh one
-            preferenceManager.updateFirebaseIdToken(freshToken)
-            Timber.d("Firebase ID token proactively refreshed on auth state initialization")
-        } catch (e: Exception) {
-            // Log but don't fail - the auth interceptor will handle token refresh on 401
-            Timber.w(e, "Failed to proactively refresh Firebase ID token, will retry on API call")
         }
     }
 
