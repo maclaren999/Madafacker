@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.request.CreateUserRequest
+import java.io.IOException
 import retrofit2.HttpException
 import timber.log.Timber
 import javax.inject.Inject
@@ -43,16 +44,16 @@ class UserRepositoryImpl @Inject constructor(
         preferenceManager.googleIdAuthToken
             .map { authToken ->
                 when {
-                    authToken == null -> AuthenticationState.NotAuthenticated
+                    authToken == null -> AuthenticationState.NotAuthenticated   
                     else -> {
                         try {
                             val user = localDao.getUserById(authToken)
                             if (user != null) {
                                 // Update Crashlytics for cached user
-                                updateCrashlyticsUserIdentification(user)
+                                updateCrashlyticsUserIdentification(user)       
                                 AuthenticationState.Authenticated(user)
                             } else {
-                                // Try to fetch from network
+                                // Network fetch fills cache when token-to-user mapping misses.
                                 val networkUser = webService.getCurrentUser()
                                 localDao.insertUser(networkUser)
                                 // Update Crashlytics for network user
@@ -60,7 +61,18 @@ class UserRepositoryImpl @Inject constructor(
                                 AuthenticationState.Authenticated(networkUser)
                             }
                         } catch (e: Exception) {
-                            AuthenticationState.Error(e)
+                            // Offline cold start: fall back to cached user for single-user app.
+                            val fallbackUser = if (e is IOException) {
+                                localDao.getAnyUser()
+                            } else {
+                                null
+                            }
+                            if (fallbackUser != null) {
+                                updateCrashlyticsUserIdentification(fallbackUser)
+                                AuthenticationState.Authenticated(fallbackUser)
+                            } else {
+                                AuthenticationState.Error(e)
+                            }
                         }
                     }
                 }

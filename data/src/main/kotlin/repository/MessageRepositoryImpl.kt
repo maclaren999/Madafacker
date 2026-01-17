@@ -10,6 +10,7 @@ import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
@@ -25,6 +26,7 @@ import remote.api.request.CreateMessageRequest
 import remote.api.request.CreateReplyRequest
 import timber.log.Timber
 import worker.SendMessageWorker
+import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 
@@ -72,25 +74,26 @@ class MessageRepositoryImpl @Inject constructor(
 
         val tempId = "temp_${UUID.randomUUID()}"
         val currentMode = preferenceManager.currentMode.value
+        val nowMillis = System.currentTimeMillis()
+        val nowIso = Instant.ofEpochMilli(nowMillis).toString()
 
-        // Create local message immediately
+        // Create local message immediately (pending state)
         val localMessage = Message(
             id = tempId,
             body = body,
-            localState = MessageState.PENDING,
-            // Other fields are dumb defaults, as the message is temporary
             mode = currentMode.apiValue,
-            isPublic = true,
-            createdAt = System.currentTimeMillis().toString(),
-            updatedAt = System.currentTimeMillis().toString(),
+            createdAt = nowIso,
             authorId = user.id,
-            replies = null,
+            authorName = user.name,
+            ratingStats = RatingStats(),
+            ownRating = null,
+            localState = MessageState.PENDING,
+            localCreatedAt = nowMillis,
             tempId = tempId,
             needsSync = true,
-            parentId = null,
-            localCreatedAt = System.currentTimeMillis(),
             isRead = true,
-            readAt = System.currentTimeMillis(),
+            readAt = nowMillis,
+            replies = null
         )
 
         localDao.insertMessage(localMessage)
@@ -172,14 +175,6 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
-
-//    override suspend fun retryPendingMessages() {
-//        val pendingMessages = localDao.getMessagesByState(MessageState.PENDING)
-//        pendingMessages.forEach { message ->
-//            schedulePendingMessageSend(message)
-//        }
-//    }
-
     override suspend fun hasPendingMessages(): Boolean {
         return localDao.getMessagesByState(MessageState.PENDING).isNotEmpty()
     }
@@ -222,7 +217,7 @@ class MessageRepositoryImpl @Inject constructor(
             )
 
             val replyDto = webService.createReply(request)
-            val reply = replyDto.toDomainModel()
+            val reply = replyDto.toDomainModel(parentMessageId = parentId)
 
             // Store locally
             localDao.insertReply(reply)

@@ -175,7 +175,8 @@ fun AppNavHost(
 
     ModeBackground(
         mode = currentMode,
-        showDecorative = shouldShowNavigation
+        showDecorative = shouldShowNavigation,
+        onModeToggle = { mainViewModel.toggleMode() }
     ) {
         Box(
             modifier = modifier
@@ -215,6 +216,7 @@ fun AppNavHost(
                     if (shouldShowNavigation) {
                         TopNavigationBar(
                             navController = navController,
+                            mode = currentMode,
                             onTabSelected = { tab -> mainViewModel.selectTab(tab) }
                         )
                     }

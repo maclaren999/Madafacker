@@ -1,0 +1,2308 @@
+{
+  "info": {
+    "_postman_id": "f0d199b9-071f-4630-a5b2-e289ecdce5f4",
+    "name": "API requests",
+    "description": "This is a collection of the Madafacker application endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "36333787",
+    "_collection_link": "https://warped-comet-797124.postman.co/workspace/Madafacker~8ba16351-ae56-478a-a7db-80cbba08b65d/collection/3331014-f0d199b9-071f-4630-a5b2-e289ecdce5f4?action=share&source=collection_link&creator=36333787"
+  },
+  "item": [
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Create user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Artem32\",\r\n    \"registrationToken\": \"fEMltzHrTdSQ_ckVe9tKYh:APA91bGC7NQ7UM0CjVORWgoppjN4dwBRCYt2RhetDfur0tu3S_JRAaQSEdJb2pm5B5k7MWBImEV-gziR5cWYmRyvfo8nNM_EzngiT817GB3MaWh2QDSISRE\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/api/user",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "user"
+              ]
+            },
+            "description": "This endpoint allows the creation of a new user via an HTTP POST request. **This endpoint doesn't require authorization.**\n\n### Request Body\n\n- `name` (string, required): The name of the user to be created.\n    \n- `registrationToken` (string, required): FCM registration token, is used to send user notifications.\n    \n\nUpon a successful creation, the response will have a status code of 201 and a JSON content type. The response body will include the details of the newly created user, including their unique ID, name, and timestamps for when the user was created and last updated.\n\n### Response Body\n\n- `id` (string): The unique identifier of the newly created user.\n    \n- `name` (string): The name of the newly created user.\n    \n- `registrationToken` (string): FCM registration token.\n    \n- `coins` (number): Current number of coins for the user (0 by default).\n    \n- `updatedAt` (string): Timestamp indicating when the user was last updated.\n    \n- `createdAt` (string): Timestamp indicating when the user was created."
+          },
+          "response": [
+            {
+              "name": "Successfully created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"name\": \"BestStageUser\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/user",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Cache-Control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "146"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 22 Jul 2024 18:23:44 GMT"
+                },
+                {
+                  "key": "Etag",
+                  "value": "W/\"92-c1dE19Q+IkvZQQ+zsSJE6G8Lz4Y\""
+                },
+                {
+                  "key": "Server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "X-Robots-Tag",
+                  "value": "noindex"
+                },
+                {
+                  "key": "X-Vercel-Cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "X-Vercel-Id",
+                  "value": "arn1::fra1::5tt6t-1721672622571-d2f0ce582712"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": \"9f5cdda5-db55-4af0-857d-b9d7f8146bc7\",\n    \"name\": \"BestStageUser\",\n    \"updatedAt\": \"2024-07-22T18:23:44.904Z\",\n    \"createdAt\": \"2024-07-22T18:23:44.904Z\"\n}"
+            },
+            {
+              "name": "Duplicated error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"name\": \"Test1\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/user",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Cache-Control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "120"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 10:51:02 GMT"
+                },
+                {
+                  "key": "Etag",
+                  "value": "W/\"78-bK2hJYVIg3X+eN3em46fKj+QdIg\""
+                },
+                {
+                  "key": "Server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "X-Robots-Tag",
+                  "value": "noindex"
+                },
+                {
+                  "key": "X-Vercel-Cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "X-Vercel-Id",
+                  "value": "arn1::fra1::4ncnt-1721904659797-a93036836bfd"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Duplicated value is not allowed: Key (name)=(Test1) already exists.\",\n    \"error\": \"Bad Request\",\n    \"statusCode\": 400\n}"
+            },
+            {
+              "name": "Invalid data",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/user",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user"
+                  ]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "205"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"cd-jZ/6fOmxS68JxcAfSd8PNKVc/KM\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:54:51 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"response\": {\n        \"message\": [\n            \"name should not be empty\",\n            \"name must be a string\"\n        ],\n        \"error\": \"Bad Request\",\n        \"statusCode\": 400\n    },\n    \"status\": 400,\n    \"options\": {},\n    \"message\": \"Bad Request Exception\",\n    \"name\": \"BadRequestException\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get current user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "protocolProfileBehavior": {
+            "disabledSystemHeaders": {
+              "connection": true,
+              "accept-encoding": true
+            }
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/api/user/current",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "current"
+              ]
+            },
+            "description": "This endpoint is used to retrieve the details of the current user. User is identified based on the token value in Headers.\n\nIn case if token is not provided, invalid or user not found all other endpoints will return the same errors like this.\n\n**Response Body**:\n\n- `id` (string): The unique identifier of the user.\n    \n- `name` (string): The name of the user.\n    \n- `createdAt` (string): The timestamp when the user was created.\n    \n- `updatedAt` (string): The timestamp when the user was last updated."
+          },
+          "response": [
+            {
+              "name": "Current user",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/api/user/current",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "current"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Age",
+                  "value": "0"
+                },
+                {
+                  "key": "Cache-Control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "138"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 10:55:48 GMT"
+                },
+                {
+                  "key": "Etag",
+                  "value": "W/\"8a-zZjyrn3YN268IS46R98/AALWbrc\""
+                },
+                {
+                  "key": "Server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "X-Robots-Tag",
+                  "value": "noindex"
+                },
+                {
+                  "key": "X-Vercel-Cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "X-Vercel-Id",
+                  "value": "arn1::fra1::lgzs6-1721904948059-6895333d1c43"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": \"c4b2c562-b6d7-42f9-819b-d2741dc0751e\",\n    \"name\": \"Test1\",\n    \"createdAt\": \"2024-07-01T21:31:41.190Z\",\n    \"updatedAt\": \"2024-07-01T21:31:41.190Z\"\n}"
+            },
+            {
+              "name": "Unauthorized",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/api/user/current",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "current"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "68"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"44-azqE+goSbX1dVEGeG9I7ZMbRHZE\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:08:43 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"User not found\",\n    \"error\": \"Unauthorized\",\n    \"statusCode\": 401\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update current user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"test_user_bc1a9fbf-e3a3-4a18-be24-bd3b797fd17d\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/api/user/current",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "current"
+              ]
+            },
+            "description": "This endpoint is used to update the current user's information. If no data provided, just returns current user data.\n\n#### Request Body\n\n- `name` (string, optional): The new name of the user.\n    \n- `registrationToken` (string, optional): new user registration token\n    \n\n#### Response\n\nReturns updated user model"
+          },
+          "response": [
+            {
+              "name": "Successfully updated",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"name\": \"Test2\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/user/current",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "current"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "138"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"8a-+onZ7/LE8/oSPxeYYPXSYg0TeDU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:21:27 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": \"201e671d-e875-4369-bb8d-1e4eb370e12c\",\n    \"name\": \"Test2\",\n    \"createdAt\": \"2024-05-06T15:18:46.220Z\",\n    \"updatedAt\": \"2024-07-25T11:21:27.415Z\"\n}"
+            },
+            {
+              "name": "Unauthorized",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"name\": \"Test3\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/user/current",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "current"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "68"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"44-azqE+goSbX1dVEGeG9I7ZMbRHZE\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:29:10 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"User not found\",\n    \"error\": \"Unauthorized\",\n    \"statusCode\": 401\n}"
+            }
+          ]
+        },
+        {
+          "name": "Check user name availability",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/api/user/check-name-availability?name=Test",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "user",
+                "check-name-availability"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Test"
+                }
+              ]
+            },
+            "description": "### Check Name Availability\n\nStartFragmentThis endpoint allows to check is new username is available in the system or not. **This endpoint doesn't requires authorization**.\n\n#### Request query parameters:\n\n- `name` (string, required): The name to be checked for availability.\n    \n\n#### Response\n\n``` json\n{ \n    \"nameIsAvailable\": true\n}\n\n ```\n\nThe response returns a boolean value indicating whether the specified name is available or not."
+          },
+          "response": [
+            {
+              "name": "Successfully checked",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/api/user/check-name-availability?name=Test",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "check-name-availability"
+                  ],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "Test"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "24"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"18-qENaVckuadUgU1KnqPbm1er8pIk\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 04 Sep 2024 08:00:23 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"nameIsAvailable\": true\n}"
+            },
+            {
+              "name": "Invalid data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/api/user/check-name-availability",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "user",
+                    "check-name-availability"
+                  ],
+                  "query": [
+                    {
+                      "key": "name",
+                      "value": "Test",
+                      "disabled": true
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "103"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"67-vqylUHWH9pvMEn8MZKjiH8tv+fE\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 04 Sep 2024 08:03:51 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": [\n        \"name should not be empty\",\n        \"name must be a string\"\n    ],\n    \"error\": \"Bad Request\",\n    \"statusCode\": 400\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Device-Id",
+                "value": "test-id",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{host}}/api/auth/login",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "description": "User is a main model of the system. User can create messages, read messages and perform a lot of other actions."
+    },
+    {
+      "name": "Message",
+      "item": [
+        {
+          "name": "Create message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"body\": \"Test message\",\r\n    \"mode\": \"dark\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/api/message",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "message"
+              ]
+            },
+            "description": "This endpoint allows the creation of a new message via an HTTP POST request. The request should include a JSON payload with the message content and mode. This endpoint requires authorization to identify the message author.\n\n### Request Body\n\n- `body` (string, required): Message body that user want to create.\n    \n- `mode` (string, required): Message mode. Now it can be `light` or `dark`\n    \n\nUpon a successful creation, the response will have a status code of 201 and a JSON content type. The response body will include the details of the newly created message, including their unique ID, body, author ID (user ID from headers token), mode, and timestamps for when the user was created and last updated.\n\n### Response Body\n\n- `id` (string): The unique identifier of the newly created message.\n    \n- `body` (string): The body of the newly created message.\n    \n- `authorId` (string): ID of the user who creates a message.\n    \n- `mode` (string): A mode of the newly created message.\n    \n- `parent`: Always `null`.\n    \n- `public`: Always `true`.\n    \n- `updatedAt` (string): Timestamp indicating when the user was last updated.\n    \n- `createdAt` (string): Timestamp indicating when the user was created.\n    \n\n**Example Response**:\n\n``` json\n{\n    \"id\": \"message_id\",\n    \"body\": \"Test message\",\n    \"authorId\": \"user_id\",\n    \"mode\": \"light\",\n    \"parent\": null,\n    \"public\": true,\n    \"createdAt\": \"timestamp\",\n    \"updatedAt\": \"timestamp\"\n}\n\n ```"
+          },
+          "response": [
+            {
+              "name": "Message created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"body\": \"Test message\",\r\n    \"mode\": \"dark\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/message",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "message"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "255"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"ff-K8EO9fBSNxRGY+SynX3Jv+uXlzI\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:52:10 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": \"d7e1fd17-c930-4a87-b46f-80b43729ff54\",\n    \"public\": true,\n    \"wasSent\": false,\n    \"body\": \"Test message\",\n    \"mode\": \"dark\",\n    \"authorId\": \"201e671d-e875-4369-bb8d-1e4eb370e12c\",\n    \"updatedAt\": \"2024-07-25T11:52:10.241Z\",\n    \"createdAt\": \"2024-07-25T11:52:10.241Z\",\n    \"parentId\": null\n}"
+            }
+          ]
+        },
+        {
+          "name": "Rate message",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"rating\": \"like\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/api/message/:id/rate",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "message",
+                ":id",
+                "rate"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "88cfc516-212d-4e20-a8f5-cf559bf60478"
+                }
+              ]
+            },
+            "description": "This endpoint allows the creation of a new message via an HTTP POST request. The request should include a JSON payload with the message content and mode. This endpoint requires authorization to identify the message author.\n\nAlso, it adds message author coins based on rating\n\n| **Rating** | **Coins to add** |\n| --- | --- |\n| Dislike | 0 |\n| Like | 1 |\n| Superlike | 2 |\n\n### Request Body\n\n- `body` (string, required): Message body that user want to create.\n    \n- `mode` (string, required): Message mode. Now it can be `light` or `dark`\n    \n\nUpon a successful creation, the response will have a status code of 201 and a JSON content type. The response body will include the details of the newly created message, including their unique ID, body, author ID (user ID from headers token), mode, and timestamps for when the user was created and last updated.\n\n### Response Body\n\n- `id` (string): The unique identifier of the newly created message.\n    \n- `body` (string): The body of the newly created message.\n    \n- `authorId` (string): ID of the user who creates a message.\n    \n- `mode` (string): A mode of the newly created message.\n    \n- `parent`: Always `null`.\n    \n- `public`: Always `true`.\n    \n- `updatedAt` (string): Timestamp indicating when the user was last updated.\n    \n- `createdAt` (string): Timestamp indicating when the user was created.\n    \n\n**Example Response**:\n\n``` json\n{\n    \"id\": \"message_id\",\n    \"body\": \"Test message\",\n    \"authorId\": \"user_id\",\n    \"mode\": \"light\",\n    \"parent\": null,\n    \"public\": true,\n    \"createdAt\": \"timestamp\",\n    \"updatedAt\": \"timestamp\"\n}\n\n ```"
+          },
+          "response": [
+            {
+              "name": "Successfully rated",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"rating\": \"like\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/message/:id/rate",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "message",
+                    ":id",
+                    "rate"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "88cfc516-212d-4e20-a8f5-cf559bf60478"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "plain",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:39:04 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "0"
+                }
+              ],
+              "cookie": [],
+              "body": null
+            },
+            {
+              "name": "Cannot rate own message",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"rating\": \"like\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/message/:id/rate",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "message",
+                    ":id",
+                    "rate"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "1847f4be-b784-4d8a-9ad1-025293521675"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "99"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"63-u0mqE5u3kgR/gd//Mzpgr0BxZ8o\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:29:47 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Operation not allowed: Cannot rate own message\",\n    \"error\": \"Bad Request\",\n    \"statusCode\": 400\n}"
+            },
+            {
+              "name": "Invalid data",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/message/:id/rate",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "message",
+                    ":id",
+                    "rate"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "88cfc516-212d-4e20-a8f5-cf559bf60478"
+                    }
+                  ]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "254"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"fe-Q32KQjPZpi9SXHUj7HCYkPKa0bg\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:55:31 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"response\": {\n        \"message\": [\n            \"rating must be one of the following values: dislike, like, superlike\",\n            \"rating should not be empty\"\n        ],\n        \"error\": \"Bad Request\",\n        \"statusCode\": 400\n    },\n    \"status\": 400,\n    \"options\": {},\n    \"message\": \"Bad Request Exception\",\n    \"name\": \"BadRequestException\"\n}"
+            },
+            {
+              "name": "Message to rate wasn't found",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"rating\": \"like\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/message/:id/rate",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "message",
+                    ":id",
+                    "rate"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "88cfc516-212d-4e20-a8f5-cf559bf60478"
+                    }
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "117"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"75-RtaNm1a7BvbStCXgPSiwRzTumv8\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Fri, 16 Aug 2024 20:45:19 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Message with id 88cfc516-212d-4e20-a8f5-cf559bf60478 was not found\",\n    \"error\": \"Not Found\",\n    \"statusCode\": 404\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get incoming messages",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/api/message/current/incoming",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "message",
+                "current",
+                "incoming"
+              ]
+            },
+            "description": "This endpoint retrieves the current user's incoming messages.\n\n### Response\n\nThe response is a JSON array with the following schema:\n\n- `id` (string): The ID of the message.\n    \n- `body` (string): The content of the message.\n    \n- `mode` (string): The mode of the message.\n    \n- `public` (boolean): Indicates whether the message is public.\n    \n- `createdAt` (string): The timestamp when the message was created.\n    \n- `updatedAt` (string): The timestamp when the message was last updated.\n    \n- `authorId` (string): The ID of the message author.\n    \n- `parentId` (string or null): Always null.\n    \n- replies (array, optional): An array of replies for the message. Each element here is a reply. Please check reply documentation to know more. If no replies in the message - no field will be provided."
+          },
+          "response": [
+            {
+              "name": "Get incoming messages",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/api/message/current/incoming",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "message",
+                    "current",
+                    "incoming"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "3613"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"e1d-ET+S65DwAjxMThjzSWoOGD2XOQU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:52:35 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n    {\n        \"id\": \"88cfc516-212d-4e20-a8f5-cf559bf60478\",\n        \"body\": \"Nice message\",\n        \"mode\": \"light\",\n        \"public\": true,\n        \"wasSent\": true,\n        \"createdAt\": \"2024-06-07T12:00:23.777Z\",\n        \"updatedAt\": \"2024-06-28T09:08:12.513Z\",\n        \"authorId\": \"109156be-c4fb-41ea-b1b4-efe1671c580f\",\n        \"parentId\": \"1847f4be-b784-4d8a-9ad1-025293521675\",\n        \"replies\": [\n            {\n                \"id\": \"1bfcc539-7f7a-4a0a-b429-fd322b6b0ecd\",\n                \"body\": \"Nice message 2\",\n                \"mode\": \"light\",\n                \"public\": false,\n                \"wasSent\": true,\n                \"createdAt\": \"2024-06-16T16:07:19.533Z\",\n                \"updatedAt\": \"2024-06-28T09:08:12.481Z\",\n                \"authorId\": \"109156be-c4fb-41ea-b1b4-efe1671c580f\",\n                \"parentId\": \"88cfc516-212d-4e20-a8f5-cf559bf60478\"\n            }\n        ]\n    },\n    {\n        \"id\": \"42d0458c-af35-4d65-875c-9a268d0ba943\",\n        \"body\": \"Test message\",\n        \"mode\": \"light\",\n        \"public\": true,\n        \"wasSent\": true,\n        \"createdAt\": \"2024-05-14T12:35:43.138Z\",\n        \"updatedAt\": \"2024-06-28T09:08:12.080Z\",\n        \"authorId\": \"201e671d-e875-4369-bb8d-1e4eb370e12c\",\n        \"parentId\": null,\n        \"replies\": []\n    }\n]"
+            },
+            {
+              "name": "[NEW] Get incoming messages",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/api/message/current/incoming",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "message",
+                    "current",
+                    "incoming"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "323"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"143-tobMfez67ckRex2ZC2fHtFG+xi0\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 12 Jan 2026 21:06:02 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n    {\n        \"id\": \"a253cf03-8d02-4cd1-a4f4-4aade3644afa\",\n        \"body\": \"Parent message\",\n        \"author\": {\n            \"id\": \"e5bea071-2de0-439d-9538-8831ffbbeb14\",\n            \"name\": \"user_08b83a53-2886-497c-b954-012547d19774\",\n            \"createdAt\": \"2026-01-11T22:16:31.439Z\"\n        },\n        \"mode\": \"dark\",\n        \"createdAt\": \"2026-01-11T22:16:31.456Z\",\n        \"ratingStats\": {\n            \"likes\": 0,\n            \"dislikes\": 0,\n            \"superLikes\": 0\n        }\n    }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Get outcoming messages",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/api/message/current/outcoming",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "message",
+                "current",
+                "outcoming"
+              ]
+            },
+            "description": "This endpoint retrieves the current user's outgoing messages.\n\n### Response\n\nThe response is a JSON array with the following schema:\n\n- `id` (string): The ID of the message.\n    \n- `body` (string): The content of the message.\n    \n- `mode` (string): The mode of the message.\n    \n- `public` (boolean): Indicates whether the message is public.\n    \n- `createdAt` (string): The timestamp when the message was created.\n    \n- `updatedAt` (string): The timestamp when the message was last updated.\n    \n- `authorId` (string): The ID of the message author.\n    \n- `parentId` (null): Always null.\n    \n- replies (array, optional): An array of replies for the message. Each element here is a reply. Please check reply documentation to know more. If no replies in the message - no field will be provided."
+          },
+          "response": [
+            {
+              "name": "Get outcoming messages",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/api/message/current/outcoming",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "message",
+                    "current",
+                    "outcoming"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "4331"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"10eb-iduJSqF9+DZWokkfEQo7aYkTSnQ\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:53:13 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n    {\n        \"id\": \"1847f4be-b784-4d8a-9ad1-025293521675\",\n        \"body\": \"Test message\",\n        \"mode\": \"light\",\n        \"public\": true,\n        \"wasSent\": false,\n        \"createdAt\": \"2024-05-15T07:29:41.958Z\",\n        \"updatedAt\": \"2024-05-15T07:29:41.958Z\",\n        \"authorId\": \"201e671d-e875-4369-bb8d-1e4eb370e12c\",\n        \"parentId\": null,\n        \"replies\": [\n            {\n                \"id\": \"88cfc516-212d-4e20-a8f5-cf559bf60478\",\n                \"body\": \"Nice message\",\n                \"mode\": \"light\",\n                \"public\": true,\n                \"wasSent\": true,\n                \"createdAt\": \"2024-06-07T12:00:23.777Z\",\n                \"updatedAt\": \"2024-06-28T09:08:12.513Z\",\n                \"authorId\": \"109156be-c4fb-41ea-b1b4-efe1671c580f\",\n                \"parentId\": \"1847f4be-b784-4d8a-9ad1-025293521675\"\n            }\n        ]\n    },\n    {\n        \"id\": \"29fb1744-4545-42fd-bfca-4eb437dbc4c3\",\n        \"body\": \"Test message\",\n        \"mode\": \"light\",\n        \"public\": true,\n        \"wasSent\": true,\n        \"createdAt\": \"2024-05-16T08:47:49.760Z\",\n        \"updatedAt\": \"2024-06-28T09:08:12.441Z\",\n        \"authorId\": \"201e671d-e875-4369-bb8d-1e4eb370e12c\",\n        \"parentId\": null,\n        \"replies\": []\n    }\n]"
+            },
+            {
+              "name": "[NEW] Get outcoming messages",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/api/message/current/outcoming",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "message",
+                    "current",
+                    "outcoming"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": null,
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "651"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"28b-/5aL+vi4IrQpHtxh8mGGEN3lMMg\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Mon, 12 Jan 2026 21:06:19 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "[\n    {\n        \"id\": \"ccd9e8bd-afb9-4b8a-bfcd-577ca05cc3a7\",\n        \"body\": \"Test message\",\n        \"author\": {\n            \"id\": \"2cf09df1-b000-414a-a5f9-e1ab78e9ef8a\",\n            \"name\": \"Ilya\",\n            \"createdAt\": \"2026-01-12T17:48:34.257Z\"\n        },\n        \"mode\": \"dark\",\n        \"createdAt\": \"2026-01-12T17:49:18.918Z\",\n        \"updatedAt\": \"2026-01-12T17:49:18.918Z\",\n        \"ratingStats\": {\n            \"likes\": 0,\n            \"dislikes\": 0,\n            \"superLikes\": 0\n        }\n    },\n    {\n        \"id\": \"322a96e1-fcd5-45bf-a7b1-3db81bda5b52\",\n        \"body\": \"Nice message reply\",\n        \"author\": {\n            \"id\": \"2cf09df1-b000-414a-a5f9-e1ab78e9ef8a\",\n            \"name\": \"Ilya\",\n            \"createdAt\": \"2026-01-12T17:48:34.257Z\"\n        },\n        \"mode\": \"dark\",\n        \"createdAt\": \"2026-01-12T17:49:55.587Z\",\n        \"updatedAt\": \"2026-01-12T17:49:55.587Z\",\n        \"ratingStats\": {\n            \"likes\": 0,\n            \"dislikes\": 0,\n            \"superLikes\": 0\n        }\n    }\n]"
+            }
+          ]
+        }
+      ],
+      "description": "Message is the representation of the thoughts that user want to write"
+    },
+    {
+      "name": "Reply",
+      "item": [
+        {
+          "name": "Create new reply",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"body\": \"Nice message\",\r\n    \"public\": false,\r\n    \"parentId\": \"6e149db8-4e4e-4996-afbb-eaca2bf9e161\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/api/reply",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "reply"
+              ]
+            },
+            "description": "This endpoint is used to create a new reply.\n\nUser can create reply if have enough coins. Is it's not, reply cannot be created. If true - some amount of coins will be taken from the user.\n\n### Request\n\nThe request body should be in raw JSON format and include the following parameters:\n\n- `body` (string, required): The body of the reply.\n    \n- `public` (boolean, required): Indicates whether the reply is public.\n    \n- `parentId` (string, required): The ID of the parent reply.\n    \n\n### Response\n\n- `id` (string): The unique identifier of the reply.\n    \n- `body` (string): The content of the reply.\n    \n- `mode` (string): The mode of the reply.\n    \n- `public` (boolean): Indicates if the reply is public.\n    \n- `authorId` (string): The ID of the user who created the reply.\n    \n- `parentId` (string or null): The ID of the parent reply, if any.\n    \n- `createdAt` (string): The timestamp when the reply was created.\n    \n- `updatedAt` (string): The timestamp when the reply was last updated.\n    \n\nExample:\n\n``` json\n{\n  \"id\": \"reply_id\",\n  \"body\": \"Nice message\",\n  \"public\": false,\n  \"mode\": \"light\",\n  \"authorId\": \"author_id\",\n  \"parentId\": \"1847f4be-b784-4d8a-9ad1-025293521675\",\n  \"createdAt\": \"timestamp\",\n  \"updatedAt\": \"timestamp\"\n}\n\n ```\n\nThe response will include the ID, body, public status, mode, author ID, parent ID, update timestamp, and creation timestamp of the newly created reply."
+          },
+          "response": [
+            {
+              "name": "Reply created",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"body\": \"Nice message\",\r\n    \"public\": false,\r\n    \"parentId\": \"1847f4be-b784-4d8a-9ad1-025293521675\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/reply",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "reply"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "291"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"123-ysKuKcMkYuexmDBAmII9uVfi0jc\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:53:46 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": \"8b53c683-864c-4612-8430-f13dc5b9a4b4\",\n    \"wasSent\": false,\n    \"body\": \"Nice message\",\n    \"public\": false,\n    \"mode\": \"light\",\n    \"parentId\": \"1847f4be-b784-4d8a-9ad1-025293521675\",\n    \"authorId\": \"201e671d-e875-4369-bb8d-1e4eb370e12c\",\n    \"updatedAt\": \"2024-07-25T11:53:46.202Z\",\n    \"createdAt\": \"2024-07-25T11:53:46.202Z\"\n}"
+            },
+            {
+              "name": "Invalid",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"body\": \"Nice message\",\r\n    \"public\": false,\r\n    \"parentId\": \"1847f4be-b784-4d8a-9ad1-0252935231675\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/reply",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "reply"
+                  ]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "180"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"b4-BHTFuy5XuZdFha+nTGAGtKgBGoA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:53:58 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"response\": {\n        \"message\": [\n            \"parentId must be a UUID\"\n        ],\n        \"error\": \"Bad Request\",\n        \"statusCode\": 400\n    },\n    \"status\": 400,\n    \"options\": {},\n    \"message\": \"Bad Request Exception\",\n    \"name\": \"BadRequestException\"\n}"
+            },
+            {
+              "name": "Message not found",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"body\": \"Nice message\",\r\n    \"public\": false,\r\n    \"parentId\": \"1847f4be-b784-4d8a-9ad1-025293531675\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/reply",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "reply"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "113"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"71-g1XP2dj+mV8aK+u//WkQDOF4FHA\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Thu, 25 Jul 2024 11:54:22 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Message with id 1847f4be-b784-4d8a-9ad1-025293531675 not found\",\n    \"error\": \"Not Found\",\n    \"statusCode\": 404\n}"
+            },
+            {
+              "name": "Not enough coints",
+              "originalRequest": {
+                "method": "POST",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"body\": \"Nice message\",\r\n    \"public\": false,\r\n    \"parentId\": \"6e149db8-4e4e-4996-afbb-eaca2bf9e161\"\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/reply",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "reply"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Cache-Control",
+                  "value": "public, max-age=0, must-revalidate"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "162"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Date",
+                  "value": "Fri, 16 Aug 2024 20:50:09 GMT"
+                },
+                {
+                  "key": "Etag",
+                  "value": "W/\"a2-RSL4A1tnEWljfbVtfVR4M2SQygI\""
+                },
+                {
+                  "key": "Server",
+                  "value": "Vercel"
+                },
+                {
+                  "key": "Strict-Transport-Security",
+                  "value": "max-age=63072000; includeSubDomains; preload"
+                },
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "X-Robots-Tag",
+                  "value": "noindex"
+                },
+                {
+                  "key": "X-Vercel-Cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "X-Vercel-Id",
+                  "value": "arn1::fra1::c5mv5-1723841408874-56546062b38c"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Operation not allowed: User with id c4b2c562-b6d7-42f9-819b-d2741dc0751e has not enough coins to create reply\",\n    \"error\": \"Bad Request\",\n    \"statusCode\": 400\n}"
+            }
+          ]
+        },
+        {
+          "name": "Update reply",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": \"88cfc516-212d-4e20-a8f5-cf559bf60478\",\r\n    \"public\": true\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{host}}/api/reply",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "reply"
+              ]
+            },
+            "description": "This endpoint is used to update a reply with the provided payload.\n\n### Request Body\n\n- `id` (string, required): Unique identifier for the reply.\n    \n- `public` (boolean, optional): Indicates if the reply is public.\n    \n\n**Response Body**:\n\n- `id` (string): The unique identifier of the reply.\n    \n- `body` (string): The content of the reply.\n    \n- `mode` (string): The mode of the reply.\n    \n- `public` (boolean): Indicates if the reply is public.\n    \n- `authorId` (string): The ID of the user who created the reply.\n    \n- `parentId` (string or null): The ID of the parent reply, if any.\n    \n- `createdAt` (string): The timestamp when the reply was created.\n    \n- `updatedAt` (string): The timestamp when the reply was last updated.\n    \n\n**Example Response**:\n\n``` json\n{\n    \"id\": \"reply_id\",\n    \"body\": \"Updated message\",\n    \"public\": true,\n    \"mode\": \"light\",\n    \"authorId\": \"author_id\",\n    \"parentId\": \"parent_reply_id\",\n    \"createdAt\": \"timestamp\",\n    \"updatedAt\": \"timestamp\"\n}\n\n ```"
+          },
+          "response": [
+            {
+              "name": "Successfully updated",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"id\": \"88cfc516-212d-4e20-a8f5-cf559bf60478\",\r\n    \"public\": true\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/reply",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "reply"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "289"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"121-V/C/7XxMiJggYqXt9rJWGQczVOU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Fri, 09 Aug 2024 09:26:28 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": \"88cfc516-212d-4e20-a8f5-cf559bf60478\",\n    \"body\": \"Nice message\",\n    \"mode\": \"light\",\n    \"public\": true,\n    \"wasSent\": true,\n    \"createdAt\": \"2024-06-07T12:00:23.777Z\",\n    \"updatedAt\": \"2024-08-09T09:26:28.133Z\",\n    \"authorId\": \"109156be-c4fb-41ea-b1b4-efe1671c580f\",\n    \"parentId\": \"1847f4be-b784-4d8a-9ad1-025293521675\"\n}"
+            },
+            {
+              "name": "Not found",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"id\": \"88cfc516-212d-4e20-a8f5-cf559bf60418\",\r\n    \"public\": true\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/reply",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "reply"
+                  ]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "194"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"c2-NKlG2TMB+Bauy6VzzP0uUOQt8U4\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Fri, 09 Aug 2024 09:26:50 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"response\": {\n        \"message\": \"Reply with such id was not found\",\n        \"error\": \"Not Found\",\n        \"statusCode\": 404\n    },\n    \"status\": 404,\n    \"options\": {},\n    \"message\": \"Reply with such id was not found\",\n    \"name\": \"NotFoundException\"\n}"
+            },
+            {
+              "name": "Invalid",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\r\n    \"id\": \"88cfc516-212d-4e20-a8f5-cf559bf6048\",\r\n    \"public\": true\r\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{host}}/api/reply",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "reply"
+                  ]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "174"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"ae-Sp97EA6EOqLc4NO/3OW98EBd1So\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Fri, 09 Aug 2024 09:27:08 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"response\": {\n        \"message\": [\n            \"id must be a UUID\"\n        ],\n        \"error\": \"Bad Request\",\n        \"statusCode\": 400\n    },\n    \"status\": 400,\n    \"options\": {},\n    \"message\": \"Bad Request Exception\",\n    \"name\": \"BadRequestException\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get reply by ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/api/reply/:id",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "reply",
+                ":id"
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "88cfc516-212d-4e20-a8f5-cf559bf60478"
+                }
+              ]
+            },
+            "description": "This endpoint retrieves a reply by its unique identifier.\n\n### Parameters\n\n`id` (string, required): The unique identifier of the reply.\n\n**Response Body**:\n\n- `id` (string): The unique identifier of the reply.\n    \n- `body` (string): The content of the reply.\n    \n- `mode` (string): The mode of the reply.\n    \n- `public` (boolean): Indicates if the reply is public.\n    \n- `authorId` (string): The ID of the user who created the reply.\n    \n- `parentId` (string or null): The ID of the parent reply, if any.\n    \n- `createdAt` (string): The timestamp when the reply was created.\n    \n- `updatedAt` (string): The timestamp when the reply was last updated.\n    \n\nThe response will be in JSON format and will have the following schema:\n\n``` json\n{\n  \"id\": \"string\",\n  \"body\": \"string\",\n  \"mode\": \"string\",\n  \"public\": true,\n  \"createdAt\": \"string\",\n  \"updatedAt\": \"string\",\n  \"authorId\": \"string\",\n  \"parentId\": \"string\",\n  \"replies\": [\n    {\n      \"id\": \"string\",\n      \"body\": \"string\",\n      \"mode\": \"string\",\n      \"public\": true,\n      \"createdAt\": \"string\",\n      \"updatedAt\": \"string\",\n      \"authorId\": \"string\",\n      \"parentId\": \"string\"\n    }\n  ]\n}\n\n ```\n\nThe response will have a status code of 200 upon successful execution."
+          },
+          "response": [
+            {
+              "name": "Successfully",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/api/reply/:id",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "reply",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "88cfc516-212d-4e20-a8f5-cf559bf60478"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "594"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"252-7FrXXP8ROXI1Yv4x4IDaGTqsuM8\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Fri, 09 Aug 2024 09:27:30 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"id\": \"88cfc516-212d-4e20-a8f5-cf559bf60478\",\n    \"body\": \"Nice message\",\n    \"mode\": \"light\",\n    \"public\": true,\n    \"wasSent\": true,\n    \"createdAt\": \"2024-06-07T12:00:23.777Z\",\n    \"updatedAt\": \"2024-08-09T09:27:21.919Z\",\n    \"authorId\": \"109156be-c4fb-41ea-b1b4-efe1671c580f\",\n    \"parentId\": \"1847f4be-b784-4d8a-9ad1-025293521675\",\n    \"replies\": [\n        {\n            \"id\": \"1bfcc539-7f7a-4a0a-b429-fd322b6b0ecd\",\n            \"body\": \"Nice message 2\",\n            \"mode\": \"light\",\n            \"public\": false,\n            \"wasSent\": true,\n            \"createdAt\": \"2024-06-16T16:07:19.533Z\",\n            \"updatedAt\": \"2024-06-28T09:08:12.481Z\",\n            \"authorId\": \"109156be-c4fb-41ea-b1b4-efe1671c580f\",\n            \"parentId\": \"88cfc516-212d-4e20-a8f5-cf559bf60478\"\n        }\n    ]\n}"
+            },
+            {
+              "name": "Not found",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/api/reply/:id",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "reply",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "88cfc516-212d-4e20-a8f5-cf559bf60478"
+                    }
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "115"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"73-kTDLB8antSFEO8Ee4uEyTug6w0A\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 13 Aug 2024 13:53:13 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Reply with id 88cfc516-212d-4e20-a8f5-cf559bf60478 was not found\",\n    \"error\": \"Not Found\",\n    \"statusCode\": 404\n}"
+            },
+            {
+              "name": "Invalid UUID",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{host}}/api/reply/:id",
+                  "host": [
+                    "{{host}}"
+                  ],
+                  "path": [
+                    "api",
+                    "reply",
+                    ":id"
+                  ],
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "88cfc516-212d-4e20-a8f5-cf559bf604781"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "X-Powered-By",
+                  "value": "Express"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json; charset=utf-8"
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "89"
+                },
+                {
+                  "key": "ETag",
+                  "value": "W/\"59-kArN5xCcYXjUJs5yv8pQBq+GJsU\""
+                },
+                {
+                  "key": "Date",
+                  "value": "Tue, 13 Aug 2024 13:53:34 GMT"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive"
+                },
+                {
+                  "key": "Keep-Alive",
+                  "value": "timeout=5"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n    \"message\": \"Validation failed (uuid is expected)\",\n    \"error\": \"Bad Request\",\n    \"statusCode\": 400\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Reply is an entity that allow user to create a message on another messages."
+    },
+    {
+      "name": "[System] Cron jobs",
+      "item": [
+        {
+          "name": "Send messages job",
+          "request": {
+            "auth": {
+              "type": "apikey",
+              "apikey": [
+                {
+                  "key": "value",
+                  "value": "{{api-token}}",
+                  "type": "string"
+                },
+                {
+                  "key": "key",
+                  "value": "x-api-key",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{host}}/api/cron/send-messages",
+              "host": [
+                "{{host}}"
+              ],
+              "path": [
+                "api",
+                "cron",
+                "send-messages"
+              ]
+            },
+            "description": "This endpoint send messages using algo via an HTTP POST request.\n\nAuthorization using `x-api-key` in header is required"
+          },
+          "response": []
+        }
+      ],
+      "description": "Cron jobs are scheduled tasks that run at specific intervals."
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{user-token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

@@ -2,42 +2,49 @@ package remote.api.dto
 
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.RatingStats
 
 /**
- * Network DTO for Message - only contains server fields
+ * Network DTO for Message - matches 2026 API structure exactly.
+ * Data layer as optional medium between API and UI.
  */
 data class MessageDto(
     val id: String,
     val body: String,
+    val author: AuthorDto,
     val mode: String,
-    val public: Boolean,
-    val wasSent: Boolean,
     val createdAt: String,
-    val updatedAt: String,
-    val authorId: String,
-    val parentId: String? = null,
+    val ratingStats: RatingStatsDto? = null,
+    val ownRating: String? = null,
     val replies: List<ReplyDto>? = null
 )
 
-// Extension functions for mapping
+/**
+ * Maps MessageDto to domain model.
+ */
 fun MessageDto.toDomainModel(): Message {
     return Message(
         id = id,
         body = body,
         mode = mode,
-        isPublic = public,
         createdAt = createdAt,
-        updatedAt = updatedAt,
-        parentId = parentId,
-        authorId = authorId,
+        authorId = author.id,
+        authorName = author.name,
+        ratingStats = ratingStats?.let {
+            RatingStats(
+                likes = it.likes,
+                dislikes = it.dislikes,
+                superLikes = it.superLikes
+            )
+        } ?: RatingStats(),
+        ownRating = ownRating,
         // Client-only fields get default values
         localState = MessageState.SENT,
         localCreatedAt = System.currentTimeMillis(),
         tempId = null,
         needsSync = false,
-        // New messages from server are unread by default
         isRead = false,
         readAt = null,
-        replies = replies?.map { it.toDomainModel() }
+        replies = replies?.map { it.toDomainModel(parentMessageId = id) }
     )
 }
