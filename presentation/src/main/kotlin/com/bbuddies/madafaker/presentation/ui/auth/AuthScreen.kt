@@ -1,9 +1,9 @@
 package com.bbuddies.madafaker.presentation.ui.auth
 
 import android.content.Context
-import androidx.activity.compose.BackHandler
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -131,12 +131,13 @@ fun AuthScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(32.dp),
+                .padding(top = 32.dp, bottom = 12.dp)
+                .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
             Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             when (authUiState) {
                 AuthUiState.INITIAL -> {
@@ -162,6 +163,18 @@ fun AuthScreen(
             }
 
             Spacer(modifier = Modifier.weight(1f))
+
+            val context = LocalContext.current
+            // Privacy Policy Link
+            Text(
+                text = stringResource(R.string.privacy_policy),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.clickable {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.privacy_policy_url)))
+                    context.startActivity(intent)
+                }
+            )
         }
     }
 }
@@ -172,8 +185,6 @@ fun InitialAuthContent(
     onGoogleSignIn: () -> Unit,
     isSigningIn: Boolean
 ) {
-    val context = LocalContext.current
-    
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -201,18 +212,6 @@ fun InitialAuthContent(
             onClick = onGoogleSignIn,
             enabled = !isSigningIn,
             modifier = Modifier.fillMaxWidth()
-        )
-        
-        // Privacy Policy Link
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(R.string.privacy_policy),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.clickable {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.privacy_policy_url)))
-                context.startActivity(intent)
-            }
         )
     }
 }
@@ -317,7 +316,7 @@ fun NicknameInputBlock(
 fun AuthScreenPreview() {
     MadafakerTheme(Mode.SHINE) {
         AuthScreen(
-            authUiState = AuthUiState.POST_GOOGLE_AUTH,
+            authUiState = AuthUiState.INITIAL,
             draftNickname = "Nickname",
             validationResult = ValidationState.Success,
             onNicknameChange = {},
