@@ -1,11 +1,11 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
-import androidx.compose.foundation.BorderStroke
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -50,7 +50,6 @@ import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
-import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
@@ -82,8 +81,7 @@ fun AccountTab(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp)
-                    .padding(bottom = 100.dp),
+                    .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(32.dp))
@@ -107,6 +105,21 @@ fun AccountTab(
                     onLogoutClick = viewModel::onLogoutClick,
                     onFeedbackClick = viewModel::onFeedbackClick,
                     modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(100.dp))
+
+                // Privacy Policy Link
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = stringResource(R.string.privacy_policy),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.clickable {
+                        val intent =
+                            Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.privacy_policy_url)))
+                        context.startActivity(intent)
+                    }
                 )
             }
         }
