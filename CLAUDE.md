@@ -146,6 +146,27 @@ Each module has specific responsibilities - maintain clean boundaries:
 - Google Sign-In for user authentication
 - FCM registration token management
 
+### Auth System (V2 - Optimistic Auth)
+
+The authentication system uses **optimistic auth** - local session data is the source of truth, not Firebase state.
+
+Key concepts:
+
+- **`isSessionActive`** flag in DataStore determines if user is logged in
+- Firebase's state is used for token refresh, NOT for auth decisions
+- Cached user data provides immediate access on cold start
+- Session only cleared on explicit logout or confirmed 401 after token refresh
+
+Components:
+
+- `PreferenceManager.isSessionActive` - Persisted login session flag
+- `TokenRefreshService` (GoogleAuthManager) - Firebase operations
+- `UserRepositoryImpl.authenticationState` - Combines isSessionActive + cached user
+- `AuthInterceptor` - Token refresh on 401 (doesn't clear session on transient errors)
+
+Debug logging tags: `AUTH_MANAGER`, `AUTH_REPO`, `AUTH_INTERCEPTOR`, `SPLASH_NAV`, `SPLASH_VM`
+
+See `docs/AUTH_SYSTEM_V2.md` for detailed documentation.
 
 ### API Security
 

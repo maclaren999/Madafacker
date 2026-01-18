@@ -16,6 +16,13 @@ interface PreferenceManager {
     val userId: StateFlow<String?>
     val currentMode: StateFlow<Mode>
 
+    /**
+     * Indicates whether user has an active login session.
+     * This is set to true on successful login and only cleared on explicit logout
+     * or confirmed authentication failure (not on Firebase state changes).
+     */
+    val isSessionActive: StateFlow<Boolean>
+
     suspend fun updateAuthToken(googleIdToken: String)
     suspend fun updateFirebaseIdToken(firebaseIdToken: String)
     suspend fun updateGoogleUserId(googleUserId: String)
@@ -29,5 +36,16 @@ interface PreferenceManager {
     )
     suspend fun updateCurrentMode(mode: Mode)
     suspend fun updateMode(mode: Mode)
+
+    /**
+     * Sets the session active flag. Call with true on successful login,
+     * and false only on explicit logout or confirmed auth failure.
+     */
+    suspend fun setSessionActive(active: Boolean)
+
+    /**
+     * Clears all user data including session state.
+     * Should be called on logout.
+     */
     suspend fun clearUserData()
 }

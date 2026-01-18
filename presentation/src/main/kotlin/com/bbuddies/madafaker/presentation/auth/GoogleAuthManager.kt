@@ -8,7 +8,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
-import com.bbuddies.madafaker.common_domain.auth.AuthSessionState
+import com.bbuddies.madafaker.common_domain.auth.FirebaseAuthStatus
 import com.bbuddies.madafaker.common_domain.auth.TokenRefreshService
 import com.bbuddies.madafaker.presentation.BuildConfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
@@ -25,6 +25,8 @@ import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val TAG = "AUTH_MANAGER"
+
 /**
  * Manages Google authentication operations including credential management,
  * token extraction, and authentication flow.
@@ -40,18 +42,30 @@ class GoogleAuthManager @Inject constructor(
     // Store Google credentials for later use in account creation
     private var storedGoogleIdToken: String? = null
     private var storedGoogleUserId: String? = null
-    private val _authState = MutableStateFlow<AuthSessionState>(AuthSessionState.Initializing)
-    override val authState: StateFlow<AuthSessionState> = _authState.asStateFlow()
+
+    private val _firebaseStatus = MutableStateFlow<FirebaseAuthStatus>(FirebaseAuthStatus.Initializing)
+    override val firebaseStatus: StateFlow<FirebaseAuthStatus> = _firebaseStatus.asStateFlow()
+
     private val authStateListener = FirebaseAuth.AuthStateListener { auth ->
-        _authState.value = if (auth.currentUser != null) {
-            AuthSessionState.SignedIn
+        val newStatus = if (auth.currentUser != null) {
+            FirebaseAuthStatus.SignedIn
         } else {
-            AuthSessionState.SignedOut
+            FirebaseAuthStatus.SignedOut
         }
+        Timber.tag(TAG)
+            .d("Firebase AuthStateListener: ${_firebaseStatus.value} -> $newStatus (user=${auth.currentUser?.uid})")
+        _firebaseStatus.value = newStatus
     }
 
     init {
+        Timber.tag(TAG).d("GoogleAuthManager init - current Firebase user: ${firebaseAuth.currentUser?.uid}")
         firebaseAuth.addAuthStateListener(authStateListener)
+    }
+
+    override fun hasFirebaseUser(): Boolean {
+        val hasUser = firebaseAuth.currentUser != null
+        Timber.tag(TAG).d("hasFirebaseUser: $hasUser (uid=${firebaseAuth.currentUser?.uid})")
+        return hasUser
     }
 
     /**
@@ -186,24 +200,27 @@ class GoogleAuthManager @Inject constructor(
     /**
      * Signs out the user from both Firebase and clears credential state.
      */
-    suspend fun signOut() {
+    override suspend fun signOut() {
+        Timber.tag(TAG).d("signOut() called - starting logout process")
         try {
             // Firebase sign out
+            Timber.tag(TAG).d("Signing out from Firebase...")
             firebaseAuth.signOut()
 
             // Clear stored credentials
             clearStoredCredentials()
 
             // Clear credential state from Credential Manager
+            Timber.tag(TAG).d("Clearing credential state from Credential Manager...")
             val clearRequest = ClearCredentialStateRequest()
             credentialManager.clearCredentialState(clearRequest)
 
-            Timber.d("User signed out successfully")
+            Timber.tag(TAG).d("User signed out successfully")
         } catch (e: ClearCredentialException) {
-            Timber.e(e, "Failed to clear credential state: ${e.localizedMessage}")
+            Timber.tag(TAG).e(e, "Failed to clear credential state: ${e.localizedMessage}")
             throw e
         } catch (e: Exception) {
-            Timber.e(e, "Sign out failed")
+            Timber.tag(TAG).e(e, "Sign out failed")
             throw e
         }
     }
@@ -225,17 +242,22 @@ class GoogleAuthManager @Inject constructor(
      */
     override suspend fun refreshFirebaseIdToken(forceRefresh: Boolean): String {
         val currentUser = firebaseAuth.currentUser
-            ?: throw IllegalStateException("User is not signed in to Firebase")
+        Timber.tag(TAG).d("refreshFirebaseIdToken(forceRefresh=$forceRefresh) - currentUser: ${currentUser?.uid}")
+
+        if (currentUser == null) {
+            Timber.tag(TAG).e("Cannot refresh token - no Firebase user")
+            throw IllegalStateException("User is not signed in to Firebase")
+        }
 
         return try {
             val tokenResult = currentUser.getIdToken(forceRefresh).await()
             val token = tokenResult?.token
                 ?: throw IllegalStateException("Failed to get Firebase ID token")
 
-            Timber.d("Firebase ID token refreshed successfully")
+            Timber.tag(TAG).d("Firebase ID token refreshed successfully (length=${token.length})")
             token
         } catch (e: Exception) {
-            Timber.e(e, "Failed to refresh Firebase ID token")
+            Timber.tag(TAG).e(e, "Failed to refresh Firebase ID token")
             throw e
         }
     }
