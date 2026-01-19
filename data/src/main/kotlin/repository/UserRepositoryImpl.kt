@@ -1,5 +1,6 @@
 package repository
 
+import com.bbuddies.madafaker.common_data.BuildConfig
 import com.bbuddies.madafaker.common_domain.auth.FirebaseAuthStatus
 import com.bbuddies.madafaker.common_domain.auth.TokenRefreshService
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
@@ -23,7 +24,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import local.MadafakerDao
+import org.json.JSONObject
 import remote.api.MadafakerApi
 import remote.api.request.CreateUserRequest
 import retrofit2.HttpException
@@ -33,6 +36,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val TAG = "AUTH_REPO"
+private const val DEBUG_AUTO_RESTORE_OBSERVE_MS = 15000L
 
 /**
  * UserRepository implementation with optimistic authentication.
@@ -54,6 +58,10 @@ class UserRepositoryImpl @Inject constructor(
     private val localDao: MadafakerDao,
     private val tokenRefreshService: TokenRefreshService
 ) : UserRepository {
+    companion object {
+        @Volatile
+        private var debugSkipRecoveryOnce: Boolean = BuildConfig.DEBUG
+    }
 
     val firebaseMessaging by lazy { FirebaseMessaging.getInstance() }
     private val firebaseCrashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
@@ -190,6 +198,14 @@ class UserRepositoryImpl @Inject constructor(
                 FirebaseAuthStatus.SignedOut -> {
                     // Firebase has no user after initialization - this is a real issue
                     Timber.tag(TAG).w("Firebase confirmed SignedOut - attempting recovery")
+                    if (shouldSkipRecoveryOnce()) {
+                        val autoRestored = observeAutoRestoreWindow()
+                        if (autoRestored) {
+                            refreshTokenAndSyncUser()
+                            return
+                        }
+                        Timber.tag(TAG).w("DEBUG: Auto-restore did not occur, proceeding with recovery")
+                    }
                     attemptFirebaseRecovery()
                 }
 
@@ -204,6 +220,30 @@ class UserRepositoryImpl @Inject constructor(
             isBackgroundValidationInProgress = false
             Timber.tag(TAG).d("=== Background validation complete ===")
         }
+    }
+
+    private fun shouldSkipRecoveryOnce(): Boolean {
+        if (!BuildConfig.DEBUG) return false
+        return if (debugSkipRecoveryOnce) {
+            debugSkipRecoveryOnce = false
+            true
+        } else {
+            false
+        }
+    }
+
+    private suspend fun observeAutoRestoreWindow(): Boolean {
+        Timber.tag(TAG)
+            .w("DEBUG: Skipping recovery once. Waiting ${DEBUG_AUTO_RESTORE_OBSERVE_MS}ms for Firebase auto-restore...")
+
+        val restored = withTimeoutOrNull(DEBUG_AUTO_RESTORE_OBSERVE_MS) {
+            tokenRefreshService.firebaseStatus.first { it == FirebaseAuthStatus.SignedIn }
+            true
+        } ?: false
+
+        Timber.tag(TAG)
+            .w("DEBUG: Auto-restore window complete (restored=$restored, status=${tokenRefreshService.firebaseStatus.value})")
+        return restored
     }
 
     /**
@@ -248,15 +288,7 @@ class UserRepositoryImpl @Inject constructor(
 
         // Log token age if possible (Google ID tokens have exp claim)
         if (storedGoogleToken != null) {
-            try {
-                val parts = storedGoogleToken.split(".")
-                if (parts.size == 3) {
-                    val payload = String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE))
-                    Timber.tag(TAG).d("Google token payload (partial): ${payload.take(100)}...")
-                }
-            } catch (e: Exception) {
-                Timber.tag(TAG).d("Could not decode token: ${e.message}")
-            }
+            logGoogleTokenExpiry(storedGoogleToken)
         }
 
         if (storedGoogleToken == null) {
@@ -661,6 +693,41 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+}
+
+private fun logGoogleTokenExpiry(token: String) {
+    try {
+        val parts = token.split(".")
+        if (parts.size != 3) {
+            Timber.tag(TAG).d("Google token payload decode skipped: invalid JWT format")
+            return
+        }
+
+        val payloadJson = String(
+            android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE)
+        )
+        val payload = JSONObject(payloadJson)
+        val expSec = payload.optLong("exp", -1)
+        val iatSec = payload.optLong("iat", -1)
+        val nowMs = System.currentTimeMillis()
+
+        if (expSec > 0) {
+            val expMs = expSec * 1000L
+            val expiresInSec = (expMs - nowMs) / 1000L
+            Timber.tag(TAG)
+                .d("Google token exp=$expSec (expiresIn=${expiresInSec}s, expired=${expMs <= nowMs})")
+        } else {
+            Timber.tag(TAG).d("Google token exp claim missing")
+        }
+
+        if (iatSec > 0) {
+            val iatMs = iatSec * 1000L
+            val ageSec = (nowMs - iatMs) / 1000L
+            Timber.tag(TAG).d("Google token iat=$iatSec (age=${ageSec}s)")
+        }
+    } catch (e: Exception) {
+        Timber.tag(TAG).d("Could not parse Google token claims: ${e.message}")
+    }
 }
 
 private fun isDuplicateRegistrationTokenError(exception: Exception): Boolean {

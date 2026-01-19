@@ -4,6 +4,8 @@
 **Status:** Implemented  
 **Previous Version:** V2 (January 18, 2026)
 
+## Debug logging filter: FIREBASE_DEBUG | APP_INIT | AUTH_MANAGER | AUTH_REPO | AUTH_INTERCEPTOR | SEND_WORKER | FirebaseAuth | FirebaseApp | Firebear | KeyStore | AndroidKeyStore
+
 ## Problem Statement
 
 The V2 auth system had a critical bug discovered on January 18-19, 2026:

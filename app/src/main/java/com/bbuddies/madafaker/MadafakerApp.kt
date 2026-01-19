@@ -1,8 +1,12 @@
 package com.bbuddies.madafaker
 
 import android.app.Application
+import android.os.Build
+import android.os.Process
+import android.os.UserManager
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.messaging.FirebaseMessaging
@@ -28,6 +32,17 @@ class MadafakerApp : Application(), Configuration.Provider {
         // === FIREBASE PERSISTENCE DIAGNOSTICS ===
         Timber.tag("FIREBASE_DEBUG").d("=== Firebase Persistence Debug ===")
 
+        val userManager = getSystemService(UserManager::class.java)
+        val isUserUnlocked = userManager?.isUserUnlocked ?: true
+        Timber.tag("FIREBASE_DEBUG")
+            .d("DirectBoot: isDeviceProtectedStorage=$isDeviceProtectedStorage, isUserUnlocked=$isUserUnlocked")
+        Timber.tag("FIREBASE_DEBUG")
+            .d("Process: pid=${Process.myPid()} uid=${Process.myUid()}")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            Timber.tag("FIREBASE_DEBUG").d("Process name: ${Application.getProcessName()}")
+        }
+        Timber.tag("FIREBASE_DEBUG").d("DataDir: ${applicationInfo.dataDir}")
+
         // Check if Firebase shared prefs exist
         val sharedPrefsDir = File(filesDir.parent, "shared_prefs")
         val allPrefsFiles = sharedPrefsDir.listFiles()
@@ -42,11 +57,14 @@ class MadafakerApp : Application(), Configuration.Provider {
         Timber.tag("FIREBASE_DEBUG")
             .d("Firebase-related prefs files: ${firebaseFiles?.map { "${it.name} (${it.length()} bytes)" }}")
 
-        // Check the specific Firebase Auth storage file
-        val firebaseAuthFile = File(sharedPrefsDir, "com.google.firebase.auth.api.Store.madafaker-43c30.xml")
-        Timber.tag("FIREBASE_DEBUG").d("Firebase Auth Store file exists: ${firebaseAuthFile.exists()}")
-        if (firebaseAuthFile.exists()) {
-            Timber.tag("FIREBASE_DEBUG").d("Firebase Auth Store file size: ${firebaseAuthFile.length()} bytes")
+        // Check Firebase Auth storage files (actual filename includes encoded app info)
+        val firebaseAuthStoreFiles = allPrefsFiles?.filter {
+            it.name.startsWith("com.google.firebase.auth.api.Store")
+        }
+        Timber.tag("FIREBASE_DEBUG")
+            .d("Firebase Auth Store files: ${firebaseAuthStoreFiles?.map { "${it.name} (${it.length()} bytes)" }}")
+        firebaseAuthStoreFiles?.firstOrNull()?.let { firebaseAuthFile ->
+            Timber.tag("FIREBASE_DEBUG").d("Firebase Auth Store lastModified: ${firebaseAuthFile.lastModified()}")
             try {
                 val content = firebaseAuthFile.readText()
                 // Log a sanitized version (don't log actual tokens)
@@ -60,9 +78,16 @@ class MadafakerApp : Application(), Configuration.Provider {
             }
         }
 
-        // Check for alternative Firebase Auth storage locations
-        val alternateAuthFile = File(sharedPrefsDir, "com.google.firebase.auth.api.Store.xml")
-        Timber.tag("FIREBASE_DEBUG").d("Alternate Firebase Auth Store exists: ${alternateAuthFile.exists()}")
+        val firebaseAuthCryptoFiles = allPrefsFiles?.filter {
+            it.name.startsWith("com.google.firebase.auth.api.crypto")
+        }
+        Timber.tag("FIREBASE_DEBUG")
+            .d("Firebase Auth Crypto files: ${firebaseAuthCryptoFiles?.map { "${it.name} (${it.length()} bytes)" }}")
+
+        // Check DataStore file (session state + cached tokens)
+        val dataStoreFile = File(filesDir, "datastore/MF_DATA_STORE.preferences_pb")
+        Timber.tag("FIREBASE_DEBUG")
+            .d("DataStore file exists: ${dataStoreFile.exists()} (${dataStoreFile.length()} bytes)")
 
         // Check Firebase app data directories
         val firebaseDir = File(filesDir, "firebase")
@@ -75,6 +100,15 @@ class MadafakerApp : Application(), Configuration.Provider {
 
         // Log Firebase Auth state IMMEDIATELY on app start
         val firebaseAuth = FirebaseAuth.getInstance()
+        try {
+            val apps = FirebaseApp.getApps(this)
+            Timber.tag("FIREBASE_DEBUG").d("Firebase apps: ${apps.map { it.name }}")
+            val options = FirebaseApp.getInstance().options
+            Timber.tag("FIREBASE_DEBUG")
+                .d("Firebase options: appId=${options.applicationId}, projectId=${options.projectId}, storageBucket=${options.storageBucket}")
+        } catch (e: Exception) {
+            Timber.tag("FIREBASE_DEBUG").w(e, "Failed to read FirebaseApp options")
+        }
 
         // Test: Add an AuthStateListener BEFORE checking currentUser
         // to see if there's any async behavior

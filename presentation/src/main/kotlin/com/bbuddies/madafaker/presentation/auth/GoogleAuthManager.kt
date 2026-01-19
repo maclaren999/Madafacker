@@ -14,6 +14,7 @@ import com.bbuddies.madafaker.presentation.BuildConfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -193,6 +194,9 @@ class GoogleAuthManager @Inject constructor(
                 Timber.tag(TAG).e("Firebase session restoration returned no user")
                 false
             }
+        } catch (e: FirebaseAuthException) {
+            Timber.tag(TAG).e(e, "Failed to restore Firebase session (code=${e.errorCode})")
+            false
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Failed to restore Firebase session: ${e.message}")
             false
