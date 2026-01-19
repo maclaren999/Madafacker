@@ -30,12 +30,39 @@ class MadafakerApp : Application(), Configuration.Provider {
 
         // Check if Firebase shared prefs exist
         val sharedPrefsDir = File(filesDir.parent, "shared_prefs")
-        val firebaseFiles = sharedPrefsDir.listFiles()?.filter {
+        val allPrefsFiles = sharedPrefsDir.listFiles()
+        Timber.tag("FIREBASE_DEBUG")
+            .d("All SharedPrefs files: ${allPrefsFiles?.map { "${it.name} (${it.length()} bytes)" }}")
+
+        val firebaseFiles = allPrefsFiles?.filter {
             it.name.contains("firebase", ignoreCase = true) ||
-                    it.name.contains("google", ignoreCase = true)
+                    it.name.contains("google", ignoreCase = true) ||
+                    it.name.contains("fiam", ignoreCase = true) // Firebase In-App Messaging
         }
         Timber.tag("FIREBASE_DEBUG")
             .d("Firebase-related prefs files: ${firebaseFiles?.map { "${it.name} (${it.length()} bytes)" }}")
+
+        // Check the specific Firebase Auth storage file
+        val firebaseAuthFile = File(sharedPrefsDir, "com.google.firebase.auth.api.Store.madafaker-43c30.xml")
+        Timber.tag("FIREBASE_DEBUG").d("Firebase Auth Store file exists: ${firebaseAuthFile.exists()}")
+        if (firebaseAuthFile.exists()) {
+            Timber.tag("FIREBASE_DEBUG").d("Firebase Auth Store file size: ${firebaseAuthFile.length()} bytes")
+            try {
+                val content = firebaseAuthFile.readText()
+                // Log a sanitized version (don't log actual tokens)
+                val hasRefreshToken = content.contains("refresh_token") || content.contains("refreshToken")
+                val hasIdToken = content.contains("id_token") || content.contains("idToken")
+                val hasUser = content.contains("user") || content.contains("uid")
+                Timber.tag("FIREBASE_DEBUG")
+                    .d("Firebase Auth Store contains: refreshToken=$hasRefreshToken, idToken=$hasIdToken, user=$hasUser")
+            } catch (e: Exception) {
+                Timber.tag("FIREBASE_DEBUG").e(e, "Failed to read Firebase Auth Store file")
+            }
+        }
+
+        // Check for alternative Firebase Auth storage locations
+        val alternateAuthFile = File(sharedPrefsDir, "com.google.firebase.auth.api.Store.xml")
+        Timber.tag("FIREBASE_DEBUG").d("Alternate Firebase Auth Store exists: ${alternateAuthFile.exists()}")
 
         // Check Firebase app data directories
         val firebaseDir = File(filesDir, "firebase")
@@ -48,12 +75,27 @@ class MadafakerApp : Application(), Configuration.Provider {
 
         // Log Firebase Auth state IMMEDIATELY on app start
         val firebaseAuth = FirebaseAuth.getInstance()
+
+        // Test: Add an AuthStateListener BEFORE checking currentUser
+        // to see if there's any async behavior
+        var listenerCallCount = 0
+        firebaseAuth.addAuthStateListener { auth ->
+            listenerCallCount++
+            Timber.tag("APP_INIT")
+                .d("Early AuthStateListener callback #$listenerCallCount: user=${auth.currentUser?.uid}")
+        }
+
         val currentUser = firebaseAuth.currentUser
         Timber.tag("APP_INIT").d("=== MadafakerApp.onCreate() ===")
         Timber.tag("APP_INIT").d("Timestamp: ${System.currentTimeMillis()}")
         Timber.tag("APP_INIT").d("Firebase Auth currentUser: ${currentUser?.uid}")
         Timber.tag("APP_INIT").d("Firebase Auth currentUser email: ${currentUser?.email}")
         Timber.tag("APP_INIT").d("Firebase Auth currentUser isAnonymous: ${currentUser?.isAnonymous}")
+
+        // Also check FirebaseAuth internal settings
+        Timber.tag("APP_INIT").d("FirebaseAuth languageCode: ${firebaseAuth.languageCode}")
+        Timber.tag("APP_INIT").d("FirebaseAuth pendingAuthResult: ${firebaseAuth.pendingAuthResult}")
+
         if (currentUser != null) {
             Timber.tag("APP_INIT").d("Firebase Auth lastSignIn: ${currentUser.metadata?.lastSignInTimestamp}")
             Timber.tag("APP_INIT").d("Firebase Auth creation: ${currentUser.metadata?.creationTimestamp}")

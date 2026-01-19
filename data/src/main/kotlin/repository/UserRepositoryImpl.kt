@@ -237,10 +237,27 @@ class UserRepositoryImpl @Inject constructor(
     private suspend fun attemptFirebaseRecovery() {
         val storedGoogleToken = preferenceManager.googleIdAuthToken.value
         val storedFirebaseToken = preferenceManager.firebaseIdToken.value
+        val storedFirebaseUid = preferenceManager.firebaseUid.value
+        val storedUserId = preferenceManager.userId.value
 
-        Timber.tag(TAG).d("Attempting Firebase recovery...")
+        Timber.tag(TAG).d("=== Attempting Firebase recovery ===")
         Timber.tag(TAG).d("Has stored Google token: ${storedGoogleToken != null}")
         Timber.tag(TAG).d("Has stored Firebase token: ${storedFirebaseToken != null}")
+        Timber.tag(TAG).d("Stored Firebase UID: $storedFirebaseUid")
+        Timber.tag(TAG).d("Stored User ID: $storedUserId")
+
+        // Log token age if possible (Google ID tokens have exp claim)
+        if (storedGoogleToken != null) {
+            try {
+                val parts = storedGoogleToken.split(".")
+                if (parts.size == 3) {
+                    val payload = String(android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE))
+                    Timber.tag(TAG).d("Google token payload (partial): ${payload.take(100)}...")
+                }
+            } catch (e: Exception) {
+                Timber.tag(TAG).d("Could not decode token: ${e.message}")
+            }
+        }
 
         if (storedGoogleToken == null) {
             Timber.tag(TAG).e("No stored Google token - cannot recover Firebase session")

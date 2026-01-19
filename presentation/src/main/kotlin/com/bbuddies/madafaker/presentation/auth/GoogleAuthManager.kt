@@ -318,11 +318,23 @@ class GoogleAuthManager @Inject constructor(
      */
     suspend fun firebaseAuthWithGoogle(idToken: String): FirebaseUser? {
         return try {
+            Timber.tag(TAG).d("firebaseAuthWithGoogle: Starting authentication...")
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             val authResult = firebaseAuth.signInWithCredential(credential).await()
 
             val firebaseUser = authResult.user
             if (firebaseUser != null) {
+                Timber.tag(TAG).d("firebaseAuthWithGoogle: SUCCESS")
+                Timber.tag(TAG).d("  User UID: ${firebaseUser.uid}")
+                Timber.tag(TAG).d("  User email: ${firebaseUser.email}")
+                Timber.tag(TAG).d("  isNewUser: ${authResult.additionalUserInfo?.isNewUser}")
+                Timber.tag(TAG).d("  providerId: ${authResult.additionalUserInfo?.providerId}")
+
+                // Verify that Firebase now reports this user
+                val verifyUser = firebaseAuth.currentUser
+                Timber.tag(TAG).d("  VERIFY - currentUser after login: ${verifyUser?.uid}")
+                Timber.tag(TAG).d("  VERIFY - same user: ${verifyUser?.uid == firebaseUser.uid}")
+
                 firebaseUser
             } else {
                 Timber.e("Firebase authentication failed - No user returned")
