@@ -1,5 +1,6 @@
 package repository
 
+import com.bbuddies.madafaker.common_domain.auth.FirebaseAuthStatus
 import com.bbuddies.madafaker.common_domain.auth.TokenRefreshService
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.User
@@ -41,6 +42,10 @@ private const val TAG = "AUTH_REPO"
  * - Cached user data is trusted for immediate app access
  * - Firebase/network validation happens in background
  * - Only explicit logout or confirmed auth failure clears session
+ *
+ * IMPORTANT: Firebase Auth may report SignedOut on cold start before finishing initialization.
+ * We use cached session data (isSessionActive + cached user) as the source of truth,
+ * and validate Firebase in the background.
  */
 @Singleton
 class UserRepositoryImpl @Inject constructor(
@@ -57,11 +62,16 @@ class UserRepositoryImpl @Inject constructor(
     // Track if we've attempted background validation this session
     private var hasAttemptedBackgroundValidation = false
 
+    // Track if background validation is currently in progress
+    private var isBackgroundValidationInProgress = false
+
     /**
      * Authentication State Flow - OPTIMISTIC approach:
      * 1. If session is active AND we have cached user → Authenticated immediately
      * 2. If session is NOT active → NotAuthenticated
      * 3. Background: validate Firebase and refresh tokens as needed
+     *
+     * This flow does NOT depend on Firebase state - that's validated separately.
      */
     override val authenticationState: StateFlow<AuthenticationState> =
         combine(
@@ -80,7 +90,7 @@ class UserRepositoryImpl @Inject constructor(
     init {
         // Start background validation after initial state is determined
         repositoryScope.launch {
-            // Small delay to let initial state settle
+            // Small delay to let initial state settle and UI to render
             delay(500)
             performBackgroundValidation()
         }
@@ -139,7 +149,7 @@ class UserRepositoryImpl @Inject constructor(
     }
 
     /**
-     * Background validation: refresh Firebase token if needed, sync with server.
+     * Background validation: Wait for Firebase to initialize, then refresh token if needed.
      * This runs AFTER the user already has access to the app.
      */
     private suspend fun performBackgroundValidation() {
@@ -147,57 +157,133 @@ class UserRepositoryImpl @Inject constructor(
             Timber.tag(TAG).d("Background validation already attempted this session")
             return
         }
+        if (isBackgroundValidationInProgress) {
+            Timber.tag(TAG).d("Background validation already in progress")
+            return
+        }
+
         hasAttemptedBackgroundValidation = true
+        isBackgroundValidationInProgress = true
 
         val sessionActive = preferenceManager.isSessionActive.value
         if (!sessionActive) {
             Timber.tag(TAG).d("No active session, skipping background validation")
+            isBackgroundValidationInProgress = false
             return
         }
 
-        Timber.tag(TAG).d("Starting background validation...")
+        Timber.tag(TAG).d("=== Starting background validation ===")
 
-        // Check Firebase status
-        val firebaseStatus = tokenRefreshService.firebaseStatus.value
-        Timber.tag(TAG).d("Firebase status: $firebaseStatus, hasFirebaseUser: ${tokenRefreshService.hasFirebaseUser()}")
-
-        // Try to refresh token in background
         try {
-            if (tokenRefreshService.hasFirebaseUser()) {
-                val newToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = false)
-                preferenceManager.updateFirebaseIdToken(newToken)
-                Timber.tag(TAG).d("Background token refresh successful")
+            // CRITICAL: Wait for Firebase to finish initializing before making decisions
+            Timber.tag(TAG).d("Waiting for Firebase to initialize...")
+            val firebaseStatus = tokenRefreshService.awaitInitialization(timeoutMs = 5000)
+            Timber.tag(TAG).d("Firebase initialization complete: $firebaseStatus")
 
-                // Optionally sync user data from server
-                tryRefreshUserFromServer()
-            } else {
-                Timber.tag(TAG).w("Firebase has no user during background validation")
-                // Don't immediately log out - Firebase might still be restoring
-                // Schedule a delayed check
-                scheduleFirebaseRecoveryCheck()
+            when (firebaseStatus) {
+                FirebaseAuthStatus.SignedIn -> {
+                    // Firebase has user - refresh token
+                    Timber.tag(TAG).d("Firebase confirmed SignedIn - refreshing token")
+                    refreshTokenAndSyncUser()
+                }
+
+                FirebaseAuthStatus.SignedOut -> {
+                    // Firebase has no user after initialization - this is a real issue
+                    Timber.tag(TAG).w("Firebase confirmed SignedOut - attempting recovery")
+                    attemptFirebaseRecovery()
+                }
+
+                FirebaseAuthStatus.Initializing -> {
+                    // Still initializing after timeout - unusual, log and skip
+                    Timber.tag(TAG).w("Firebase still initializing after timeout - skipping validation")
+                }
             }
         } catch (e: Exception) {
-            Timber.tag(TAG).w(e, "Background token refresh failed (non-critical)")
-            // Don't clear session on background failures - token will be refreshed on next API call
+            Timber.tag(TAG).e(e, "Background validation failed")
+        } finally {
+            isBackgroundValidationInProgress = false
+            Timber.tag(TAG).d("=== Background validation complete ===")
         }
     }
 
     /**
-     * If Firebase has no user, wait a bit and check again.
-     * Only force logout if Firebase definitely has no user after reasonable delay.
+     * Refresh token and sync user data from server.
      */
-    private fun scheduleFirebaseRecoveryCheck() {
-        repositoryScope.launch {
-            Timber.tag(TAG).d("Scheduling Firebase recovery check in 3 seconds...")
-            delay(3000)
+    private suspend fun refreshTokenAndSyncUser() {
+        try {
+            val newToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = false)
+            preferenceManager.updateFirebaseIdToken(newToken)
+            Timber.tag(TAG).d("Token refresh successful (length=${newToken.length})")
 
-            if (tokenRefreshService.hasFirebaseUser()) {
-                Timber.tag(TAG).d("Firebase user recovered after delay")
-                performBackgroundValidation()
+            // Optionally sync user data from server
+            tryRefreshUserFromServer()
+        } catch (e: Exception) {
+            Timber.tag(TAG).w(e, "Token refresh failed (non-critical)")
+            // Don't clear session - token will be refreshed on next API call if needed
+        }
+    }
+
+    /**
+     * Attempt to recover Firebase session when it reports SignedOut.
+     *
+     * This can happen when:
+     * 1. Firebase truly has no session (user logged out or never logged in)
+     * 2. Firebase session expired (very rare, Firebase handles refresh internally)
+     * 3. Firebase data was cleared
+     *
+     * We try to restore using stored Google ID token, but this will fail
+     * if the token is expired (>1 hour old).
+     */
+    private suspend fun attemptFirebaseRecovery() {
+        val storedGoogleToken = preferenceManager.googleIdAuthToken.value
+        val storedFirebaseToken = preferenceManager.firebaseIdToken.value
+
+        Timber.tag(TAG).d("Attempting Firebase recovery...")
+        Timber.tag(TAG).d("Has stored Google token: ${storedGoogleToken != null}")
+        Timber.tag(TAG).d("Has stored Firebase token: ${storedFirebaseToken != null}")
+
+        if (storedGoogleToken == null) {
+            Timber.tag(TAG).e("No stored Google token - cannot recover Firebase session")
+            // We have a session but no way to restore Firebase
+            // Let the AuthInterceptor handle token refresh on API calls
+            // If API calls fail, user will be logged out
+            return
+        }
+
+        // Try to restore Firebase session with stored Google token
+        Timber.tag(TAG).d("Attempting to restore Firebase session with stored Google token...")
+        val restorationSuccessful = tokenRefreshService.restoreFirebaseSession(storedGoogleToken)
+
+        if (restorationSuccessful) {
+            Timber.tag(TAG).d("Firebase session restored successfully!")
+            // Refresh the Firebase ID token now
+            refreshTokenAndSyncUser()
+        } else {
+            Timber.tag(TAG).e("Firebase session restoration failed - Google token likely expired")
+            // Google ID token has expired (>1 hour old)
+            // The stored Firebase ID token might still work for API calls if not expired
+            // Let the AuthInterceptor handle this - if API calls return 401, force logout
+
+            if (storedFirebaseToken != null) {
+                Timber.tag(TAG).d("Will use cached Firebase token for API calls")
+                // Validate the cached token by making an API call
+                try {
+                    val user = webService.getCurrentUser()
+                    Timber.tag(TAG).d("Cached Firebase token still valid - user: ${user.name}")
+                    cacheUser(user)
+                } catch (e: HttpException) {
+                    if (e.code() == 401) {
+                        Timber.tag(TAG).e("Cached Firebase token is also expired - forcing logout")
+                        forceLogout("Firebase session lost and cached token expired")
+                    } else {
+                        Timber.tag(TAG).w(e, "API error during validation (non-401)")
+                    }
+                } catch (e: Exception) {
+                    Timber.tag(TAG).w(e, "Network error during validation - will retry later")
+                }
             } else {
-                Timber.tag(TAG).w("Firebase still has no user after delay")
-                // Still don't force logout here - let the AuthInterceptor handle 401s
-                // The user might be offline or Firebase might have issues
+                Timber.tag(TAG).e("No cached Firebase token - forcing logout")
+                forceLogout("Firebase session lost and no cached token")
             }
         }
     }
@@ -263,13 +349,15 @@ class UserRepositoryImpl @Inject constructor(
      * Only call this for confirmed auth failures, NOT for transient issues.
      */
     private suspend fun forceLogout(reason: String) {
-        Timber.tag(TAG).w("Force logout triggered: $reason")
+        Timber.tag(TAG).w("=== FORCE LOGOUT ===")
+        Timber.tag(TAG).w("Reason: $reason")
         try {
             tokenRefreshService.signOut()
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Error during Firebase signOut")
         }
         clearAllUserData()
+        Timber.tag(TAG).w("=== FORCE LOGOUT COMPLETE ===")
     }
 
     override val currentUser: StateFlow<User?> = authenticationState

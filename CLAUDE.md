@@ -146,7 +146,7 @@ Each module has specific responsibilities - maintain clean boundaries:
 - Google Sign-In for user authentication
 - FCM registration token management
 
-### Auth System (V2 - Optimistic Auth)
+### Auth System (V2.1 - Optimistic Auth with Firebase Init Handling)
 
 The authentication system uses **optimistic auth** - local session data is the source of truth, not Firebase state.
 
@@ -156,15 +156,22 @@ Key concepts:
 - Firebase's state is used for token refresh, NOT for auth decisions
 - Cached user data provides immediate access on cold start
 - Session only cleared on explicit logout or confirmed 401 after token refresh
+- **V2.1**: `awaitInitialization()` waits for Firebase to finish loading before making auth decisions
+
+Why awaitInitialization is needed:
+
+- On cold start, Firebase's `currentUser` may be `null` temporarily
+- Firebase restores the session asynchronously from SharedPreferences
+- Without waiting, background validation would see SignedOut prematurely
 
 Components:
 
 - `PreferenceManager.isSessionActive` - Persisted login session flag
-- `TokenRefreshService` (GoogleAuthManager) - Firebase operations
+- `TokenRefreshService` (GoogleAuthManager) - Firebase operations, `awaitInitialization()`
 - `UserRepositoryImpl.authenticationState` - Combines isSessionActive + cached user
 - `AuthInterceptor` - Token refresh on 401 (doesn't clear session on transient errors)
 
-Debug logging tags: `AUTH_MANAGER`, `AUTH_REPO`, `AUTH_INTERCEPTOR`, `SPLASH_NAV`, `SPLASH_VM`
+Debug logging tags: `AUTH_MANAGER`, `AUTH_REPO`, `AUTH_INTERCEPTOR`, `SPLASH_NAV`, `SPLASH_VM`, `APP_INIT`, `FIREBASE_DEBUG`
 
 See `docs/AUTH_SYSTEM_V2.md` for detailed documentation.
 

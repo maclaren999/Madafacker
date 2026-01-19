@@ -88,6 +88,7 @@ dependencies {
 
     // Firebase BOM
     implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
     implementation(libs.firebase.messaging)
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.firebase.analytics)
