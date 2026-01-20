@@ -15,13 +15,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.ContentScale
@@ -59,6 +65,8 @@ import com.bbuddies.madafaker.presentation.design.theme.ShineSunGradient
 fun ModeBackground(
     mode: Mode,
     showDecorative: Boolean = false,
+    showModeTip: Boolean = false,
+    onModeTipDismiss: () -> Unit = {},
     onModeToggle: () -> Unit = {},
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
@@ -72,6 +80,10 @@ fun ModeBackground(
         animationSpec = tween(durationMillis = 400),
         label = "handwriting_alpha"
     )
+
+    var isModeTipVisible by rememberSaveable(showDecorative, showModeTip) {
+        mutableStateOf(showDecorative && showModeTip)
+    }
 
     Box(modifier = modifier.fillMaxSize()) {
         // Layer 1: Animated gradient background with crossfade
@@ -145,6 +157,14 @@ fun ModeBackground(
         // Content on top of all background layers
         content()
 
+        if (showDecorative && isModeTipVisible) {
+            ModeToggleTip(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 22.dp, top = 44.dp)
+            )
+        }
+
         // Transparent hitbox above everything to ensure taps reach the sun area
         if (showDecorative) {
             Box(modifier = Modifier.fillMaxSize()) {
@@ -160,6 +180,10 @@ fun ModeBackground(
                             indication = null
                         ) {
                             Log.i("ModeBackground", "Decorative sun tapped")
+                            if (isModeTipVisible) {
+                                isModeTipVisible = false
+                                onModeTipDismiss()
+                            }
                             onModeToggle()
                         }
                 )
@@ -221,6 +245,25 @@ private fun DrawScope.drawRepeatingPattern(
     }
 }
 
+@Composable
+private fun ModeToggleTip(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .background(
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(horizontal = 24.dp)
+    ) {
+        Text(
+            text = "Tip: Tap the sun to switch modes",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFF1C1C1C)
+        )
+    }
+}
+
 
 @Preview(name = "Shine Mode", showBackground = true)
 @Composable
@@ -236,7 +279,7 @@ private fun ModeBackgroundShadowPreview() {
 
 @Composable
 private fun ModeBackgroundPreview(mode: Mode) {
-    ModeBackground(mode = mode,true) {
+    ModeBackground(mode = mode, true, showModeTip = true) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -247,16 +290,16 @@ private fun ModeBackgroundPreview(mode: Mode) {
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = when (mode) {
-                    Mode.SHINE -> androidx.compose.ui.graphics.Color.Black
-                    Mode.SHADOW -> androidx.compose.ui.graphics.Color.White
+                    Mode.SHINE -> Color.Black
+                    Mode.SHADOW -> Color.White
                 }
             )
             Text(
                 text = "Preview content",
                 fontSize = 16.sp,
                 color = when (mode) {
-                    Mode.SHINE -> androidx.compose.ui.graphics.Color.DarkGray
-                    Mode.SHADOW -> androidx.compose.ui.graphics.Color.LightGray
+                    Mode.SHINE -> Color.DarkGray
+                    Mode.SHADOW -> Color.LightGray
                 }
             )
         }

@@ -3,6 +3,7 @@ package local
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -36,6 +37,8 @@ class PreferenceManagerImpl @Inject constructor(
             object UnsentDraftBody : PreferenceKey<String>(stringPreferencesKey("unsent_draft_body"))
             object UnsentDraftMode : PreferenceKey<String>(stringPreferencesKey("unsent_draft_mode"))
             object UnsentDraftTimestamp : PreferenceKey<Long>(longPreferencesKey("unsent_draft_timestamp"))
+            object HasSeenModeToggleTip :
+                PreferenceKey<Boolean>(booleanPreferencesKey("has_seen_mode_toggle_tip"))
         }
     }
 
@@ -46,6 +49,15 @@ class PreferenceManagerImpl @Inject constructor(
             started = SharingStarted.Eagerly,
             initialValue = Mode.SHINE
         )
+
+    override val hasSeenModeToggleTip: StateFlow<Boolean> =
+        dataStore.get<Boolean>(PreferenceKey.HasSeenModeToggleTip)
+            .map { it ?: false }
+            .stateIn(
+                scope = CoroutineScope(Dispatchers.IO),
+                started = SharingStarted.Eagerly,
+                initialValue = false
+            )
 
     override suspend fun updateCurrentMode(mode: Mode) {
         dataStore.set(PreferenceKey.CurrentMode, mode.name)
@@ -110,13 +122,20 @@ class PreferenceManagerImpl @Inject constructor(
     }
 
     override suspend fun clearUserData() {
-        dataStore.edit {
-            it.clear()
+        dataStore.edit { preferences ->
+            val preserveModeTip = preferences[PreferenceKey.HasSeenModeToggleTip.key]
+            preferences.clear()
+            // Keep UX education flag across logouts so it only shows on first install
+            preserveModeTip?.let { preferences[PreferenceKey.HasSeenModeToggleTip.key] = it }
         }
     }
 
     override suspend fun updateMode(mode: Mode) {
         dataStore.set(PreferenceKey.CurrentMode, mode.name)
+    }
+
+    override suspend fun setHasSeenModeToggleTip(seen: Boolean) {
+        dataStore.set(PreferenceKey.HasSeenModeToggleTip, seen)
     }
 }
 

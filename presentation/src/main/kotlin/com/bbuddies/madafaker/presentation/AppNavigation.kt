@@ -172,10 +172,13 @@ fun AppNavHost(
 
     // Get current mode from MainViewModel
     val currentMode by mainViewModel.currentMode.collectAsState()
+    val hasSeenModeToggleTip by mainViewModel.hasSeenModeToggleTip.collectAsState()
 
     ModeBackground(
         mode = currentMode,
         showDecorative = shouldShowNavigation,
+        showModeTip = shouldShowNavigation && !hasSeenModeToggleTip,
+        onModeTipDismiss = { mainViewModel.markModeToggleTipSeen() },
         onModeToggle = { mainViewModel.toggleMode() }
     ) {
         Box(

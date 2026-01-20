@@ -87,6 +87,8 @@ class MainViewModel @Inject constructor(
     // Expose SharedTextManager to the UI
     override val sharedTextManager = sharedTextManagerImpl
 
+    val hasSeenModeToggleTip = preferenceManager.hasSeenModeToggleTip
+
     val authState = userRepository.authenticationState
 
     val currentUser = userRepository.currentUser
@@ -107,7 +109,7 @@ class MainViewModel @Inject constructor(
 
                     is AuthenticationState.Authenticated -> {
                         // Use state.user (guaranteed non-null!)
-                        val user = state.user
+                        state.user
                         // ... use user
                     }
 
@@ -486,6 +488,16 @@ class MainViewModel @Inject constructor(
                 )
             } catch (e: Exception) {
                 showError("Failed to rate message: ${e.message}")
+            }
+        }
+    }
+
+    fun markModeToggleTipSeen() {
+        viewModelScope.launch {
+            try {
+                preferenceManager.setHasSeenModeToggleTip(true)
+            } catch (_: Exception) {
+                // Non-critical; ignore errors
             }
         }
     }
