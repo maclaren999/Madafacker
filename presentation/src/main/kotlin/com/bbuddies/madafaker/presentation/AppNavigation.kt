@@ -249,8 +249,6 @@ fun AppNavHost(
                                 redirectRoute = null,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .windowInsetsPadding(WindowInsets.navigationBars)
-                                    .windowInsetsPadding(WindowInsets.ime)
                             )
                         }
 
