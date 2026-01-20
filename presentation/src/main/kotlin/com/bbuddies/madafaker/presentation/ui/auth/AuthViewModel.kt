@@ -1,9 +1,12 @@
 package com.bbuddies.madafaker.presentation.ui.auth
 
 import android.content.Context
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.viewModelScope
-import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
+import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.bbuddies.madafaker.presentation.BuildConfig
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.auth.GoogleAuthManager
@@ -80,7 +83,7 @@ class AuthViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                handleAuthenticationFailure(e, "Google Sign-In failed. Please try again.")
+                handleAuthenticationFailure(e, authErrorMessage(e))
             } finally {
                 _isSigningIn.value = false
             }
@@ -118,6 +121,29 @@ class AuthViewModel @Inject constructor(
                 handleAccountCreationFailure(e, "Account creation failed. Please try again.")
             } finally {
                 _isSigningIn.value = false
+            }
+        }
+    }
+
+    fun onPostGoogleAuthBack() {
+        viewModelScope.launch {
+            _draftNickname.value = ""
+            _authUiState.value = AuthUiState.INITIAL
+            _isSigningIn.value = false
+
+            launch {
+                try {
+                    googleAuthManager.signOut()
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to sign out after post-Google auth back")
+                    googleAuthManager.clearStoredCredentials()
+                }
+
+                try {
+                    userRepository.clearAllUserData()
+                } catch (e: Exception) {
+                    Timber.w(e, "Failed to clear user data after post-Google auth back")
+                }
             }
         }
     }
@@ -236,7 +262,7 @@ class AuthViewModel @Inject constructor(
             }
         } catch (e: Exception) {
             Timber.e(e, "Authentication failed")
-            AuthenticationResult.Failure(e, "Authentication failed. Please try again.")
+            AuthenticationResult.Failure(e, authErrorMessage(e))
         }
     }
 
@@ -324,6 +350,22 @@ class AuthViewModel @Inject constructor(
         Timber.e(error, "Authentication failed - $userMessage")
         _warningsFlow.emit { userMessage }
         _authUiState.value = AuthUiState.INITIAL
+    }
+
+    private fun authErrorMessage(error: Throwable): String {
+        return when (error) {
+            is NoCredentialException ->
+                "No Google credentials available. Add an account on this device and try again."
+
+            is GetCredentialCancellationException ->
+                "Sign-in canceled."
+
+            is GetCredentialException ->
+                "Couldn't retrieve Google credentials. Please try again."
+
+            else ->
+                "Authentication failed. Please try again."
+        }
     }
 
     // MARK: - Helper Classes

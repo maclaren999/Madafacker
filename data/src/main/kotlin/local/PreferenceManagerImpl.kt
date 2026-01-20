@@ -3,6 +3,7 @@ package local
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -32,7 +33,9 @@ class PreferenceManagerImpl @Inject constructor(
             object FirebaseIdToken : PreferenceKey<String>(stringPreferencesKey("firebase_id_token"))
             object GoogleUserId : PreferenceKey<String>(stringPreferencesKey("google_user_id"))
             object FirebaseUid : PreferenceKey<String>(stringPreferencesKey("firebase_uid"))
+            object UserId : PreferenceKey<String>(stringPreferencesKey("user_id"))
             object CurrentMode : PreferenceKey<String>(stringPreferencesKey("current_mode"))
+            object SessionActive : PreferenceKey<Boolean>(booleanPreferencesKey("session_active"))
             object UnsentDraftBody : PreferenceKey<String>(stringPreferencesKey("unsent_draft_body"))
             object UnsentDraftMode : PreferenceKey<String>(stringPreferencesKey("unsent_draft_mode"))
             object UnsentDraftTimestamp : PreferenceKey<Long>(longPreferencesKey("unsent_draft_timestamp"))
@@ -79,6 +82,20 @@ class PreferenceManagerImpl @Inject constructor(
             initialValue = null
         )
 
+    override val userId: StateFlow<String?> = dataStore.get<String>(PreferenceKey.UserId)
+        .stateIn(
+            scope = CoroutineScope(Dispatchers.IO),
+            started = SharingStarted.Eagerly,
+            initialValue = null
+        )
+
+    override val isSessionActive: StateFlow<Boolean> = dataStore.getBool(PreferenceKey.SessionActive)
+        .stateIn(
+            scope = CoroutineScope(Dispatchers.IO),
+            started = SharingStarted.Eagerly,
+            initialValue = false
+        )
+
     override suspend fun updateAuthToken(googleIdToken: String) {
         dataStore.set(PreferenceKey.AuthToken, googleIdToken)
     }
@@ -93,6 +110,10 @@ class PreferenceManagerImpl @Inject constructor(
 
     override suspend fun updateFirebaseUid(firebaseUid: String) {
         dataStore.set(PreferenceKey.FirebaseUid, firebaseUid)
+    }
+
+    override suspend fun updateUserId(userId: String) {
+        dataStore.set(PreferenceKey.UserId, userId)
     }
 
     override suspend fun updateAllAuthTokens(
@@ -115,6 +136,10 @@ class PreferenceManagerImpl @Inject constructor(
         }
     }
 
+    override suspend fun setSessionActive(active: Boolean) {
+        dataStore.setBool(PreferenceKey.SessionActive, active)
+    }
+
     override suspend fun updateMode(mode: Mode) {
         dataStore.set(PreferenceKey.CurrentMode, mode.name)
     }
@@ -133,5 +158,20 @@ private fun <T> DataStore<Preferences>.get(
     key: PreferenceKey<T>
 ): Flow<T?> = data.map { preferences ->
     preferences[key.key]
+}
+
+private fun DataStore<Preferences>.getBool(
+    key: PreferenceKey<Boolean>
+): Flow<Boolean> = data.map { preferences ->
+    preferences[key.key] ?: false
+}
+
+private suspend fun DataStore<Preferences>.setBool(
+    key: PreferenceKey<Boolean>,
+    value: Boolean
+) {
+    edit { preferences ->
+        preferences[key.key] = value
+    }
 }
 

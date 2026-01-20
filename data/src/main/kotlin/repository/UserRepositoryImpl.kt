@@ -1,5 +1,6 @@
 package repository
 
+import com.bbuddies.madafaker.common_domain.auth.FirebaseAuthStatus
 import com.bbuddies.madafaker.common_domain.auth.TokenRefreshService
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.User
@@ -10,13 +11,16 @@ import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNot
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import local.MadafakerDao
@@ -24,52 +28,272 @@ import remote.api.MadafakerApi
 import remote.api.request.CreateUserRequest
 import retrofit2.HttpException
 import timber.log.Timber
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private const val TAG = "AUTH_REPO"
+
+/**
+ * UserRepository implementation with optimistic authentication.
+ *
+ * Auth Philosophy:
+ * - Session is active if user has logged in and not explicitly logged out
+ * - Cached user data is trusted for immediate app access
+ * - Firebase/network validation happens in background
+ * - Only explicit logout or confirmed auth failure clears session
+ *
+ * IMPORTANT: Firebase Auth may report SignedOut on cold start before finishing initialization.
+ * We use cached session data (isSessionActive + cached user) as the source of truth,
+ * and validate Firebase in the background.
+ */
 @Singleton
 class UserRepositoryImpl @Inject constructor(
     private val webService: MadafakerApi,
     private val preferenceManager: PreferenceManager,
-    private val localDao: MadafakerDao, // Add this for local caching
+    private val localDao: MadafakerDao,
     private val tokenRefreshService: TokenRefreshService
 ) : UserRepository {
-
     val firebaseMessaging by lazy { FirebaseMessaging.getInstance() }
     private val firebaseCrashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    // Track if we've attempted background validation this session
+    private var hasAttemptedBackgroundValidation = false
+
+    // Track if background validation is currently in progress
+    private var isBackgroundValidationInProgress = false
+
+    /**
+     * Authentication State Flow - OPTIMISTIC approach:
+     * 1. If session is active AND we have cached user → Authenticated immediately
+     * 2. If session is NOT active → NotAuthenticated
+     * 3. Background: validate Firebase and refresh tokens as needed
+     *
+     * This flow does NOT depend on Firebase state - that's validated separately.
+     */
     override val authenticationState: StateFlow<AuthenticationState> =
-        preferenceManager.googleIdAuthToken
-            .map { authToken ->
-                when {
-                    authToken == null -> AuthenticationState.NotAuthenticated
-                    else -> {
-                        try {
-                            val user = localDao.getUserById(authToken)
-                            if (user != null) {
-                                // Update Crashlytics for cached user
-                                updateCrashlyticsUserIdentification(user)
-                                AuthenticationState.Authenticated(user)
-                            } else {
-                                // Try to fetch from network
-                                val networkUser = webService.getCurrentUser()
-                                localDao.insertUser(networkUser)
-                                // Update Crashlytics for network user
-                                updateCrashlyticsUserIdentification(networkUser)
-                                AuthenticationState.Authenticated(networkUser)
-                            }
-                        } catch (e: Exception) {
-                            AuthenticationState.Error(e)
-                        }
-                    }
-                }
-            }
+        combine(
+            preferenceManager.isSessionActive,
+            preferenceManager.userId
+        ) { sessionActive, userId ->
+            Timber.tag(TAG).d("authenticationState combine: sessionActive=$sessionActive, userId=$userId")
+            resolveAuthState(sessionActive, userId)
+        }
             .stateIn(
                 scope = repositoryScope,
                 started = SharingStarted.Eagerly,
                 initialValue = AuthenticationState.Loading
             )
+
+    init {
+        // Start background validation after initial state is determined
+        repositoryScope.launch {
+            // Small delay to let initial state settle and UI to render
+            delay(500)
+            performBackgroundValidation()
+        }
+    }
+
+    /**
+     * Resolves authentication state based on local session data.
+     * This does NOT depend on Firebase state - Firebase validation is background.
+     */
+    private suspend fun resolveAuthState(sessionActive: Boolean, userId: String?): AuthenticationState {
+        Timber.tag(TAG).d("resolveAuthState: sessionActive=$sessionActive, userId=$userId")
+
+        if (!sessionActive) {
+            Timber.tag(TAG).d("Session not active -> NotAuthenticated")
+            return AuthenticationState.NotAuthenticated
+        }
+
+        if (userId == null) {
+            Timber.tag(TAG).w("Session active but no userId -> NotAuthenticated (inconsistent state)")
+            // Inconsistent state - session marked active but no user ID
+            // This shouldn't happen, but handle gracefully
+            return AuthenticationState.NotAuthenticated
+        }
+
+        // Try to get cached user
+        val cachedUser = try {
+            localDao.getUserById(userId)
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "Failed to get cached user by ID: $userId")
+            null
+        }
+
+        return if (cachedUser != null) {
+            Timber.tag(TAG).d("Found cached user: ${cachedUser.name} (id=${cachedUser.id})")
+            updateCrashlyticsUserIdentification(cachedUser)
+            AuthenticationState.Authenticated(cachedUser)
+        } else {
+            // Try any cached user as fallback
+            val anyUser = try {
+                localDao.getAnyUser()
+            } catch (e: Exception) {
+                Timber.tag(TAG).e(e, "Failed to get any cached user")
+                null
+            }
+
+            if (anyUser != null) {
+                Timber.tag(TAG).d("Using fallback cached user: ${anyUser.name}")
+                updateCrashlyticsUserIdentification(anyUser)
+                AuthenticationState.Authenticated(anyUser)
+            } else {
+                Timber.tag(TAG).w("Session active but no cached user found -> attempting network fetch")
+                // Last resort: try network
+                fetchUserFromNetwork()
+            }
+        }
+    }
+
+    /**
+     * Background validation: Wait for Firebase to initialize, then refresh token if needed.
+     * This runs AFTER the user already has access to the app.
+     */
+    private suspend fun performBackgroundValidation() {
+        if (hasAttemptedBackgroundValidation) {
+            Timber.tag(TAG).d("Background validation already attempted this session")
+            return
+        }
+        if (isBackgroundValidationInProgress) {
+            Timber.tag(TAG).d("Background validation already in progress")
+            return
+        }
+
+        hasAttemptedBackgroundValidation = true
+        isBackgroundValidationInProgress = true
+
+        val sessionActive = preferenceManager.isSessionActive.value
+        if (!sessionActive) {
+            Timber.tag(TAG).d("No active session, skipping background validation")
+            isBackgroundValidationInProgress = false
+            return
+        }
+
+        Timber.tag(TAG).d("=== Starting background validation ===")
+
+        try {
+            // CRITICAL: Wait for Firebase to finish initializing before making decisions
+            Timber.tag(TAG).d("Waiting for Firebase to initialize...")
+            val firebaseStatus = tokenRefreshService.awaitInitialization(timeoutMs = 5000)
+            Timber.tag(TAG).d("Firebase initialization complete: $firebaseStatus")
+
+            when (firebaseStatus) {
+                FirebaseAuthStatus.SignedIn -> {
+                    // Firebase has user - refresh token
+                    Timber.tag(TAG).d("Firebase confirmed SignedIn - refreshing token")
+                    refreshTokenAndSyncUser()
+                }
+
+                FirebaseAuthStatus.SignedOut -> {
+                    // Firebase has no user after initialization.
+                    // Session recovery is handled by UI (silent re-auth or interactive prompt).
+                    Timber.tag(TAG).w("Firebase confirmed SignedOut - waiting for UI re-auth flow")
+                }
+
+                FirebaseAuthStatus.Initializing -> {
+                    // Still initializing after timeout - unusual, log and skip
+                    Timber.tag(TAG).w("Firebase still initializing after timeout - skipping validation")
+                }
+            }
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "Background validation failed")
+        } finally {
+            isBackgroundValidationInProgress = false
+            Timber.tag(TAG).d("=== Background validation complete ===")
+        }
+    }
+
+    /**
+     * Refresh token and sync user data from server.
+     */
+    private suspend fun refreshTokenAndSyncUser() {
+        try {
+            val newToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = false)
+            preferenceManager.updateFirebaseIdToken(newToken)
+            Timber.tag(TAG).d("Token refresh successful (length=${newToken.length})")
+
+            // Optionally sync user data from server
+            tryRefreshUserFromServer()
+        } catch (e: Exception) {
+            Timber.tag(TAG).w(e, "Token refresh failed (non-critical)")
+            // Don't clear session - token will be refreshed on next API call if needed
+        }
+    }
+
+
+    /**
+     * Try to refresh user data from server (non-critical).
+     */
+    private suspend fun tryRefreshUserFromServer() {
+        try {
+            val networkUser = webService.getCurrentUser()
+            cacheUser(networkUser)
+            Timber.tag(TAG).d("User data synced from server: ${networkUser.name}")
+        } catch (e: Exception) {
+            Timber.tag(TAG).w(e, "Failed to sync user from server (non-critical)")
+            // Don't log out on network failure - cached data is sufficient
+        }
+    }
+
+    /**
+     * Fetch user from network when no cache exists.
+     */
+    private suspend fun fetchUserFromNetwork(): AuthenticationState {
+        Timber.tag(TAG).d("Attempting to fetch user from network...")
+
+        // First try to refresh token if Firebase is available
+        try {
+            if (tokenRefreshService.hasFirebaseUser()) {
+                val freshToken = tokenRefreshService.refreshFirebaseIdToken(forceRefresh = true)
+                preferenceManager.updateFirebaseIdToken(freshToken)
+            }
+        } catch (e: Exception) {
+            Timber.tag(TAG).w(e, "Token refresh before network fetch failed")
+        }
+
+        return try {
+            val networkUser = webService.getCurrentUser()
+            cacheUser(networkUser)
+            updateCrashlyticsUserIdentification(networkUser)
+            Timber.tag(TAG).d("Fetched user from network: ${networkUser.name}")
+            AuthenticationState.Authenticated(networkUser)
+        } catch (e: HttpException) {
+            if (e.code() == 401) {
+                Timber.tag(TAG).e("401 during initial user fetch - invalid session")
+                // 401 means our session is definitely invalid
+                forceLogout("Received 401 during initial fetch")
+                AuthenticationState.NotAuthenticated
+            } else {
+                Timber.tag(TAG).e(e, "HTTP error fetching user: ${e.code()}")
+                AuthenticationState.Error(e)
+            }
+        } catch (e: IOException) {
+            Timber.tag(TAG).w(e, "Network error fetching user - staying authenticated offline")
+            // Network error - stay authenticated (user might be offline)
+            AuthenticationState.Error(e)
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "Unknown error fetching user")
+            AuthenticationState.Error(e)
+        }
+    }
+
+    /**
+     * Force logout - clears all auth state and signs out from Firebase.
+     * Only call this for confirmed auth failures, NOT for transient issues.
+     */
+    private suspend fun forceLogout(reason: String) {
+        Timber.tag(TAG).w("=== FORCE LOGOUT ===")
+        Timber.tag(TAG).w("Reason: $reason")
+        try {
+            tokenRefreshService.signOut()
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "Error during Firebase signOut")
+        }
+        clearAllUserData()
+        Timber.tag(TAG).w("=== FORCE LOGOUT COMPLETE ===")
+    }
 
     override val currentUser: StateFlow<User?> = authenticationState
         .map { state ->
@@ -121,7 +345,7 @@ class UserRepositoryImpl @Inject constructor(
             // Force refresh: fetch fresh data from server
             try {
                 val freshUser = webService.getCurrentUser()
-                localDao.insertUser(freshUser)
+                cacheUser(freshUser)
                 Timber.d("Force refreshed user data from server")
                 return@withContext freshUser
             } catch (e: Exception) {
@@ -131,9 +355,9 @@ class UserRepositoryImpl @Inject constructor(
         }
 
         // Cache-only lookup - network fetching is handled by authenticationState flow
-        preferenceManager.googleIdAuthToken.value?.let { token ->
+        preferenceManager.userId.value?.let { userId ->
             try {
-                localDao.getUserById(token)
+                localDao.getUserById(userId)
             } catch (exception: Exception) {
                 Timber.e(exception, "Error getting user from cache")
                 null
@@ -144,52 +368,22 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun updateUserName(name: String): User = withContext(Dispatchers.IO) {
         val updatedUser = webService.updateCurrentUser(name)
         // Update local cache
-        localDao.insertUser(updatedUser) // Direct use of domain model
+        cacheUser(updatedUser)
         updatedUser
     }
-
-//    override suspend fun createUser(name: String): User = withContext(Dispatchers.IO) {
-//        // First attempt with current FCM token
-//        val initialFcmToken = firebaseMessaging.token.await()
-//
-//        try {
-//            val user = webService.createUser(CreateUserRequest(name, initialFcmToken))
-//            preferenceManager.updateAuthToken(user.id)
-//            localDao.insertUser(user)
-//            Timber.tag("USER_REPO").d("User created with FCM token: $initialFcmToken")
-//            return@withContext user
-//        } catch (e: Exception) {
-//            // Check if it's a duplicate registration token error
-//            if (isDuplicateRegistrationTokenError(e)) {
-//                // Refresh FCM token and retry
-//                val freshFcmToken = refreshFcmToken()
-//                try {
-//                    val user = webService.createUser(CreateUserRequest(name, freshFcmToken))
-//                    preferenceManager.updateAuthToken(user.id)
-//                    localDao.insertUser(user)
-//                    return@withContext user
-//                } catch (retryException: Exception) {
-//                    // If retry also fails, throw the retry exception
-//                    throw retryException
-//                }
-//            } else {
-//                // If it's not a duplicate token error, rethrow original exception
-//                throw e
-//            }
-//        }
-//    }
 
     override suspend fun isNameAvailable(name: String): Boolean = withContext(Dispatchers.IO) {
         webService.checkNameAvailability(name).nameIsAvailable
     }
 
     override suspend fun clearAllUserData() = withContext(Dispatchers.IO) {
+        Timber.tag(TAG).d("clearAllUserData() called - clearing all auth data")
         try {
             // Delete current FCM token to ensure fresh token for new account
             firebaseMessaging.deleteToken().await()
+            Timber.tag(TAG).d("FCM token deleted")
         } catch (e: Exception) {
-            // Log but don't fail the logout process if token deletion fails
-            // The user should still be able to logout even if FCM cleanup fails
+            Timber.tag(TAG).w(e, "Failed to delete FCM token (non-critical)")
         }
 
         // Clear Crashlytics user identification
@@ -197,8 +391,11 @@ class UserRepositoryImpl @Inject constructor(
 
         // Clear all local data
         localDao.clearAllData()
-        // Clear preferences
+        Timber.tag(TAG).d("Local DB cleared")
+
+        // Clear preferences (this also clears sessionActive)
         preferenceManager.clearUserData()
+        Timber.tag(TAG).d("Preferences cleared - user is now logged out")
     }
 
     private suspend fun refreshFcmToken(): String = withContext(Dispatchers.IO) {
@@ -213,15 +410,22 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    private suspend fun cacheUser(user: User) {
+        localDao.insertUser(user)
+        preferenceManager.updateUserId(user.id)
+    }
+
     override suspend fun storeGoogleAuth(
         googleIdToken: String,
         googleUserId: String,
         firebaseIdToken: String,
         firebaseUid: String
     ) = withContext(Dispatchers.IO) {
+        Timber.tag(TAG).d("Storing Google auth credentials (firebaseUid=$firebaseUid)")
         preferenceManager.updateAllAuthTokens(googleIdToken, googleUserId, firebaseIdToken, firebaseUid)
-        Timber.tag("USER_REPO")
-            .d("Auth googleIdToken: $googleIdToken \n googleUserId: $googleUserId \n firebaseIdToken: $firebaseIdToken \n firebaseUid: $firebaseUid")
+        // Mark session as active - this is what keeps user logged in across cold starts
+        preferenceManager.setSessionActive(true)
+        Timber.tag(TAG).d("Session marked as active")
     }
 
     override suspend fun refreshFirebaseIdToken(): String = withContext(Dispatchers.IO) {
@@ -232,10 +436,10 @@ class UserRepositoryImpl @Inject constructor(
             // Update stored token
             preferenceManager.updateFirebaseIdToken(newToken)
 
-            Timber.tag("USER_REPO").d("Firebase ID token refreshed and updated in preferences")
+            Timber.tag(TAG).d("Firebase ID token refreshed and updated in preferences")
             newToken
         } catch (e: Exception) {
-            Timber.e(e, "Failed to refresh Firebase ID token")
+            Timber.tag(TAG).e(e, "Failed to refresh Firebase ID token")
             throw e
         }
     }
@@ -265,12 +469,14 @@ class UserRepositoryImpl @Inject constructor(
             val user = webService.createUser(CreateUserRequest(nickname, fcmToken))
             // Note: We only update googleIdToken here since all tokens were already stored in storeGoogleAuth
             preferenceManager.updateAuthToken(idToken)
-            localDao.insertUser(user)
-
+            cacheUser(user)
+            // Ensure session is active after successful creation
+            preferenceManager.setSessionActive(true)
+            Timber.tag(TAG).d("User created successfully: ${user.name}")
             user
         } catch (e: Exception) {
             if (isDuplicateRegistrationTokenError(e)) {
-                Timber.w("FCM token conflict detected, retrying with fresh token")
+                Timber.tag(TAG).w("FCM token conflict detected, retrying with fresh token")
                 retryUserCreationWithFreshToken(nickname, idToken)
             } else {
                 throw e
@@ -288,7 +494,9 @@ class UserRepositoryImpl @Inject constructor(
         val freshFcmToken = refreshFcmToken()
         val user = webService.createUser(CreateUserRequest(nickname, freshFcmToken))
         preferenceManager.updateAuthToken(idToken)
-        localDao.insertUser(user)
+        cacheUser(user)
+        preferenceManager.setSessionActive(true)
+        Timber.tag(TAG).d("User created on retry: ${user.name}")
         return user
     }
 
@@ -308,16 +516,19 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun authenticateWithGoogle(googleIdToken: String, googleUserId: String): User =
         withContext(Dispatchers.IO) {
             try {
+                Timber.tag(TAG).d("Authenticating with Google (googleUserId=$googleUserId)")
                 // For existing users, get current user info using Firebase ID token in header
                 val user = webService.getCurrentUser()
 
                 // Update local storage
                 preferenceManager.updateAuthToken(googleIdToken)
-                localDao.insertUser(user)
-
+                cacheUser(user)
+                // Ensure session is active
+                preferenceManager.setSessionActive(true)
+                Timber.tag(TAG).d("Authenticated successfully: ${user.name}")
                 user
             } catch (e: Exception) {
-                Timber.e(e, "Authentication failed for googleUserId: $googleUserId")
+                Timber.tag(TAG).e(e, "Authentication failed for googleUserId: $googleUserId")
                 throw e
             }
         }
@@ -369,6 +580,7 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 }
+
 
 private fun isDuplicateRegistrationTokenError(exception: Exception): Boolean {
     return when (exception) {

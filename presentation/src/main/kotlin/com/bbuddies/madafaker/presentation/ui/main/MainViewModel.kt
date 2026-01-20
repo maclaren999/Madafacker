@@ -122,6 +122,7 @@ class MainViewModel @Inject constructor(
     init {
         refreshMessages()
         observeMessages()
+        observeAuthRefresh()
         restoreDraft()
         setupDraftAutoSave()
         setupSharedTextHandling()
@@ -153,6 +154,24 @@ class MainViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    private var lastRefreshedUserId: String? = null
+
+    private fun observeAuthRefresh() {
+        // Retry message refresh once authentication finishes (startup token race).
+        currentUser
+            .onEach { user ->
+                if (user == null) {
+                    lastRefreshedUserId = null
+                    return@onEach
+                }
+                if (lastRefreshedUserId != user.id) {
+                    lastRefreshedUserId = user.id
+                    refreshMessages()
+                }
+            }
+            .launchIn(viewModelScope)
     }
 
     private suspend fun saveDraft(message: String) {

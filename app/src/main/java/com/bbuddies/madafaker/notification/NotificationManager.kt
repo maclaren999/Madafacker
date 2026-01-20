@@ -45,18 +45,26 @@ class NotificationManager @Inject constructor(
     }
 
     private fun createNotificationChannel() {
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.O) {
+            return
+        }
+
         val channel = NotificationChannel(
             CHANNEL_ID,
             "Message Notifications",
             NotificationManager.IMPORTANCE_DEFAULT
-        ).apply {
-            description = "Notifications for new messages"
-            setSound(null, null) // Silent notifications
-            enableVibration(false)
-            setShowBadge(true)
+        )
+
+        runCatching {
+            channel.description = "Notifications for new messages"
+            channel.setSound(null, null) // Silent notifications
+            channel.enableVibration(false)
+            channel.setShowBadge(true)
         }
 
-        notificationManager.createNotificationChannel(channel)
+        runCatching {
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     suspend fun showNotification(payload: NotificationPayload) {

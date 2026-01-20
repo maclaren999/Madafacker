@@ -11,6 +11,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import javax.inject.Inject
 
 
@@ -85,7 +86,7 @@ class MadafakerFirebaseMessagingService : FirebaseMessagingService() {
 
 
     override fun onNewToken(token: String) {
-        Log.d(TAG, "Refreshed token: $token")
+        Timber.tag(TAG).d("Refreshed FCM token: $token")
 
         // If you want to send messages to this application instance or
         // manage this apps subscriptions on the server side, send the

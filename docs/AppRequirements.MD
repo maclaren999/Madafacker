@@ -146,8 +146,8 @@ This hybrid solution gives robust, free moderation out of the box, minimizes fal
 
 flowchart TD
   Mobile(Android) -- REST/JSON --> API(Gateway)
-  API --> Node(NestJS Service Cluster)
-  Node -- ORM --> DB(PostgreSQL)
+API --> Node
+Node -- ORM --> DB
   Node --> FCM(Push)
   Cron(Scheduled Jobs) --> Node
 

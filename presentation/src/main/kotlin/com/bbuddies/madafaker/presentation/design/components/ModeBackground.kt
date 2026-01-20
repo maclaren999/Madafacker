@@ -1,19 +1,25 @@
 package com.bbuddies.madafaker.presentation.design.components
 
+import android.util.Log
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.ImageBitmap
@@ -29,9 +35,8 @@ import androidx.compose.ui.unit.sp
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.design.theme.ShadowBackgroundGradient
-import com.bbuddies.madafaker.presentation.design.theme.ShineBackgroundGradient
-import androidx.compose.ui.Alignment
 import com.bbuddies.madafaker.presentation.design.theme.ShadowSunGradient
+import com.bbuddies.madafaker.presentation.design.theme.ShineBackgroundGradient
 import com.bbuddies.madafaker.presentation.design.theme.ShineSunGradient
 
 /**
@@ -54,6 +59,7 @@ import com.bbuddies.madafaker.presentation.design.theme.ShineSunGradient
 fun ModeBackground(
     mode: Mode,
     showDecorative: Boolean = false,
+    onModeToggle: () -> Unit = {},
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
@@ -114,10 +120,11 @@ fun ModeBackground(
                 Box(modifier = Modifier.fillMaxSize()) {
                     MovingSunEffect(
                         baseColors = if (currentMode == Mode.SHINE) ShineSunGradient else ShadowSunGradient,
-                        size = 72.dp,
+                        size = 92.dp,
                         alignment = Alignment.TopStart,
                         glowEnabled = true,
-                        padding = 24.dp
+                        padding = 16.dp,
+                        onTap = onModeToggle
                     )
 
                     Image(
@@ -137,6 +144,27 @@ fun ModeBackground(
 
         // Content on top of all background layers
         content()
+
+        // Transparent hitbox above everything to ensure taps reach the sun area
+        if (showDecorative) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(16.dp)
+                        .height(60.dp)
+                        .width(120.dp)
+                        .alpha(0f)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null
+                        ) {
+                            Log.i("ModeBackground", "Decorative sun tapped")
+                            onModeToggle()
+                        }
+                )
+            }
+        }
     }
 }
 
@@ -208,7 +236,7 @@ private fun ModeBackgroundShadowPreview() {
 
 @Composable
 private fun ModeBackgroundPreview(mode: Mode) {
-    ModeBackground(mode = mode) {
+    ModeBackground(mode = mode,true) {
         Column(
             modifier = Modifier
                 .fillMaxSize()

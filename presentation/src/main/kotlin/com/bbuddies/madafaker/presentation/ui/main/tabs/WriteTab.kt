@@ -1,18 +1,14 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
 import android.content.Context
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
 import com.bbuddies.madafaker.common_domain.model.Reply
+import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
@@ -24,12 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun WriteTab(viewModel: MainScreenContract) {
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
+    ScreenWithWarnings(warningsFlow = viewModel.warningsFlow) {
         SendMessageView(viewModel)
     }
 }
@@ -39,22 +30,18 @@ private val previewOutgoingMessages = listOf(
         id = "sent-1",
         body = "Shared a reminder to drink water today.",
         mode = Mode.SHINE.apiValue,
-        isPublic = true,
         createdAt = "2024-04-01T08:00:00Z",
-        updatedAt = "2024-04-01T08:05:00Z",
         authorId = "preview-user",
-        replies = emptyList(),
+        authorName = "Preview User",
         localState = MessageState.SENT
     ),
     Message(
         id = "sent-2",
         body = "Drafting a note about handling tough days.",
         mode = Mode.SHADOW.apiValue,
-        isPublic = true,
         createdAt = "2024-04-02T10:00:00Z",
-        updatedAt = "2024-04-02T10:05:00Z",
         authorId = "preview-user",
-        replies = emptyList(),
+        authorName = "Preview User",
         localState = MessageState.PENDING
     )
 )

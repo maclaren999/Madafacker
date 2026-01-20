@@ -13,7 +13,6 @@
     <string name="tab_write">write</string>
     <string name="tab_inbox">inbox</string>
     <string name="tab_my_posts">my posts</string>
-    <string name="tab_feed">feed</string>
     <string name="tab_discussions">discussions</string>
     <string name="tab_account">account</string>
 
@@ -32,6 +31,8 @@
     <string name="message_sending">sending</string>
     <string name="message_failed">failed</string>
     <string name="replies_count">%d replies</string>
+    <string name="latest_reply_title">Latest reply</string>
+    <string name="latest_reply_from">From %1$s</string>
 
     <!-- Mode Toggle -->
     <string name="mode_shine">shine mode</string>
@@ -230,4 +231,8 @@
     <string name="refreshing">Refreshing…</string>
     <string name="refresh_complete">Refresh complete</string>
     <string name="refresh_failed">Refresh failed</string>
+
+    <!-- Privacy Policy -->
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="privacy_policy_url">https://bytebuddiesgroup.github.io/RandomBytes-policy/</string>
 </resources>

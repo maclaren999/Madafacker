@@ -1,10 +1,14 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
 import android.content.Context
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -19,12 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
@@ -50,7 +55,6 @@ fun InboxTab(
     val replyingMessageId by viewModel.replyingMessageId.collectAsState()
     val userRepliesForMessage by viewModel.userRepliesForMessage.collectAsState()
 
-    // Get current user from viewModel if available
     val currentUser = if (viewModel is com.bbuddies.madafaker.presentation.ui.main.MainViewModel) {
         viewModel.currentUser.collectAsState().value
     } else null
@@ -88,16 +92,20 @@ private fun InboxMessageList(
     }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
+        modifier = Modifier.fillMaxSize(),
     ) {
         items(messages) { msg ->
             val isHighlighted = highlightedMessageId == msg.id
             val isReplying = replyingMessageId == msg.id
 
+            val cardContainerModifier = Modifier
+                .fillMaxWidth()
+                .animateContentSize()
+                .padding(4.dp)
+
             MessageCard(
                 message = msg,
+                modifier = cardContainerModifier,
                 isReplying = isReplying,
                 userReplies = if (isReplying) userRepliesForMessage else emptyList(),
                 onMessageTapped = {
@@ -117,14 +125,11 @@ private fun InboxMessageList(
                 currentUserId = currentUserId
             )
 
-            // Mark highlighted message as read when displayed
             if (isHighlighted) {
                 LaunchedEffect(msg.id) {
                     viewModel.markMessageAsRead(msg.id)
                 }
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
@@ -137,20 +142,12 @@ private fun InboxEmptyState() {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = 32.dp)
         ) {
             Text(
-                text = "📬",
-                fontSize = 64.sp,
-                modifier = Modifier.padding(bottom = 24.dp)
-            )
-
-            Text(
                 text = stringResource(R.string.inbox_empty_title),
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = 12.dp)
+                textAlign = TextAlign.Center
             )
 
             Text(
@@ -161,7 +158,7 @@ private fun InboxEmptyState() {
                 lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = stringResource(R.string.inbox_empty_description),
@@ -174,26 +171,39 @@ private fun InboxEmptyState() {
     }
 }
 
+@Composable
+private fun ReplySummaryRow(count: Int, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.replies_count, count),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+        )
+    }
+}
+
 private val previewInboxReplies = listOf(
     Reply(
         id = "reply-1",
         body = "Appreciate the positive energy here.",
         mode = Mode.SHINE.apiValue,
-        isPublic = true,
         createdAt = "2024-02-01T10:00:00Z",
-        updatedAt = "2024-02-01T10:05:00Z",
         authorId = "user-reply-1",
-        parentId = "message-1"
+        authorName = "ReplyUser1",
+        parentMessageId = "message-1"
     ),
     Reply(
         id = "reply-2",
         body = "Thanks for sharing this perspective.",
         mode = Mode.SHADOW.apiValue,
-        isPublic = true,
         createdAt = "2024-02-02T09:30:00Z",
-        updatedAt = "2024-02-02T09:40:00Z",
         authorId = "user-reply-2",
-        parentId = "message-1"
+        authorName = "ReplyUser2",
+        parentMessageId = "message-1"
     )
 )
 
@@ -202,21 +212,52 @@ private val previewInboxMessages = listOf(
         id = "message-1",
         body = "What helps you reset after a long week?",
         mode = Mode.SHINE.apiValue,
-        isPublic = true,
         createdAt = "2024-02-01T09:00:00Z",
-        updatedAt = "2024-02-01T09:15:00Z",
         authorId = "user-1",
+        authorName = "User1",
+        ratingStats = RatingStats(likes = 5, dislikes = 1, superLikes = 2),
+        ownRating = null,
+        localState = MessageState.SENT,
+        localCreatedAt = System.currentTimeMillis(),
+        tempId = null,
+        needsSync = false,
+        isRead = false,
+        readAt = null,
         replies = previewInboxReplies
     ),
     Message(
         id = "message-2",
         body = "Share a small win you had today.",
         mode = Mode.SHADOW.apiValue,
-        isPublic = true,
         createdAt = "2024-02-02T14:00:00Z",
-        updatedAt = "2024-02-02T14:10:00Z",
         authorId = "user-2",
+        authorName = "User2",
+        ratingStats = RatingStats(likes = 3, dislikes = 0, superLikes = 1),
+        ownRating = null,
+        localState = MessageState.SENT,
+        localCreatedAt = System.currentTimeMillis(),
+        tempId = null,
+        needsSync = false,
+        isRead = false,
+        readAt = null,
         replies = emptyList()
+    ),
+    Message(
+        id = "message-3",
+        body = "Share a small win you had today.",
+        mode = Mode.SHADOW.apiValue,
+        createdAt = "2024-02-02T14:00:00Z",
+        authorId = "user-2",
+        authorName = "User2",
+        ratingStats = RatingStats(likes = 8, dislikes = 2, superLikes = 3),
+        ownRating = null,
+        localState = MessageState.SENT,
+        localCreatedAt = System.currentTimeMillis(),
+        tempId = null,
+        needsSync = false,
+        isRead = false,
+        readAt = null,
+        replies = previewInboxReplies
     )
 )
 
@@ -263,5 +304,13 @@ private fun InboxTabPreview() {
             viewModel = PreviewInboxContract(),
             highlightedMessageId = previewInboxMessages.first().id
         )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun InboxTabEmptyPreview() {
+    MadafakerTheme(mode = Mode.SHINE) {
+        InboxEmptyState()
     }
 }

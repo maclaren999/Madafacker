@@ -34,10 +34,10 @@ interface MadafakerDao {
     @Update
     suspend fun updateMessage(message: Message)
 
-    @Query("SELECT * FROM messages WHERE authorId != :currentUserId ORDER BY localCreatedAt DESC")
+    @Query("SELECT * FROM messages WHERE authorId != :currentUserId ORDER BY createdAt DESC")
     fun observeIncomingMessages(currentUserId: String): Flow<List<Message>>
 
-    @Query("SELECT * FROM messages WHERE authorId = :currentUserId AND parentId IS NULL ORDER BY localCreatedAt DESC")
+    @Query("SELECT * FROM messages WHERE authorId = :currentUserId ORDER BY createdAt DESC")
     fun observeOutgoingMessages(currentUserId: String): Flow<List<Message>>
 
     @Query("SELECT * FROM messages WHERE localState = :state")
@@ -53,7 +53,7 @@ interface MadafakerDao {
     fun observePendingCount(): Flow<Int>
 
     // Read state management
-    @Query("SELECT * FROM messages WHERE authorId != :currentUserId AND isRead = false ORDER BY localCreatedAt DESC LIMIT 1")
+    @Query("SELECT * FROM messages WHERE authorId != :currentUserId AND isRead = false ORDER BY createdAt DESC LIMIT 1")
     suspend fun getMostRecentUnreadMessage(currentUserId: String): Message?
 
     @Query("UPDATE messages SET isRead = true, readAt = :readAt WHERE id = :messageId")
@@ -69,11 +69,11 @@ interface MadafakerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertReplies(replies: List<Reply>)
 
-    @Query("SELECT * FROM replies WHERE parentId = :parentId ORDER BY createdAt ASC")
-    suspend fun getRepliesByParentId(parentId: String): List<Reply>
+    @Query("SELECT * FROM replies WHERE parentMessageId = :parentMessageId ORDER BY createdAt ASC")
+    suspend fun getRepliesByParentId(parentMessageId: String): List<Reply>
 
-    @Query("SELECT * FROM replies WHERE parentId = :parentId AND authorId = :authorId ORDER BY createdAt ASC")
-    suspend fun getRepliesByParentIdAndAuthor(parentId: String, authorId: String): List<Reply>
+    @Query("SELECT * FROM replies WHERE parentMessageId = :parentMessageId AND authorId = :authorId ORDER BY createdAt ASC")
+    suspend fun getRepliesByParentIdAndAuthor(parentMessageId: String, authorId: String): List<Reply>
 
     @Query("SELECT * FROM replies WHERE id = :replyId")
     suspend fun getReplyById(replyId: String): Reply?
@@ -87,6 +87,10 @@ interface MadafakerDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUsers(users: List<User>)
+
+    // Single-user app: allow offline fallback without relying on a token-mapped ID.
+    @Query("SELECT * FROM users LIMIT 1")
+    suspend fun getAnyUser(): User?
 
     @Query("SELECT * FROM users WHERE id = :userId")
     suspend fun getUserById(userId: String): User?

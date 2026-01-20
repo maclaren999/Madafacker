@@ -14,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import com.bbuddies.madafaker.presentation.R
@@ -26,9 +27,14 @@ fun SplashScreen(
     splashViewModel: SplashViewModel,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val navigationEvent by splashViewModel.navigationEvent.collectAsState()
     val userName = "Madafaker"
     val animationState = splashViewModel.animationState
+
+    LaunchedEffect(Unit) {
+        splashViewModel.start(context)
+    }
 
     LaunchedEffect(navigationEvent) {
         animationState.targetState = false

@@ -179,7 +179,7 @@ fun NotificationPermissionScreen(
                         imageVector = Icons.Outlined.Notifications,
                         contentDescription = null,
                         modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
