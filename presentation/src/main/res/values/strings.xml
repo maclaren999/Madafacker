@@ -105,6 +105,7 @@
     <string name="notification_permission_settings">Settings</string>
     <string name="notification_permission_dismiss">Dismiss</string>
     <string name="notification_permission_snackbar">Notifications are essential for the best experience. Enable them in Settings.</string>
+    <string name="account_notifications_disabled">Notifications disabled</string>
 
     <!-- Splash Screen -->
     <string name="splash_greeting">Hi, %s!</string>

@@ -52,6 +52,7 @@ fun AuthScreen(
     val validationResult by viewModel.nicknameDraftValidationResult.collectAsState()
     val isSigningIn by viewModel.isSigningIn.collectAsState()
     val currentMode by viewModel.currentMode.collectAsState()
+    val notificationPermissionPromptDismissed by viewModel.notificationPermissionPromptDismissed.collectAsState()
     val context = LocalContext.current
 
     BackHandler(enabled = authUiState == AuthUiState.POST_GOOGLE_AUTH) {
@@ -71,7 +72,8 @@ fun AuthScreen(
                 onSuccessfulSignIn = { notificationPermissionHelper ->
                     navAction.navigateAfterSuccessfulAuth(
                         notificationPermissionHelper = notificationPermissionHelper,
-                        redirectRoute = redirectRoute
+                        redirectRoute = redirectRoute,
+                        isNotificationPermissionPromptDismissed = notificationPermissionPromptDismissed
                     )
                 }
             )
@@ -81,7 +83,8 @@ fun AuthScreen(
                 onSuccessfulCreation = { notificationPermissionHelper ->
                     navAction.navigateAfterSuccessfulAuth(
                         notificationPermissionHelper = notificationPermissionHelper,
-                        redirectRoute = redirectRoute
+                        redirectRoute = redirectRoute,
+                        isNotificationPermissionPromptDismissed = notificationPermissionPromptDismissed
                     )
                 }
             )

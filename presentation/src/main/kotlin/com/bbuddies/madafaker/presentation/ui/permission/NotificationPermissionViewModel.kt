@@ -97,6 +97,7 @@ class NotificationPermissionViewModel @Inject constructor(
         viewModelScope.launch {
             // Log analytics event for skipped notification permission
             // You might want to set a flag to not show this again for a while
+            preferenceManager.setNotificationPermissionPromptDismissed(true)
             _shouldNavigateToMain.value = true
         }
     }

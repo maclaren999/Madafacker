@@ -3,6 +3,7 @@ package local
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -36,6 +37,8 @@ class PreferenceManagerImpl @Inject constructor(
             object UnsentDraftBody : PreferenceKey<String>(stringPreferencesKey("unsent_draft_body"))
             object UnsentDraftMode : PreferenceKey<String>(stringPreferencesKey("unsent_draft_mode"))
             object UnsentDraftTimestamp : PreferenceKey<Long>(longPreferencesKey("unsent_draft_timestamp"))
+            object NotificationPermissionPromptDismissed :
+                PreferenceKey<Boolean>(booleanPreferencesKey("notification_permission_prompt_dismissed"))
         }
     }
 
@@ -79,6 +82,15 @@ class PreferenceManagerImpl @Inject constructor(
             initialValue = null
         )
 
+    override val notificationPermissionPromptDismissed: StateFlow<Boolean> =
+        dataStore.get<Boolean>(PreferenceKey.NotificationPermissionPromptDismissed)
+            .map { it ?: false }
+            .stateIn(
+                scope = CoroutineScope(Dispatchers.IO),
+                started = SharingStarted.Eagerly,
+                initialValue = false
+            )
+
     override suspend fun updateAuthToken(googleIdToken: String) {
         dataStore.set(PreferenceKey.AuthToken, googleIdToken)
     }
@@ -117,6 +129,10 @@ class PreferenceManagerImpl @Inject constructor(
 
     override suspend fun updateMode(mode: Mode) {
         dataStore.set(PreferenceKey.CurrentMode, mode.name)
+    }
+
+    override suspend fun setNotificationPermissionPromptDismissed(dismissed: Boolean) {
+        dataStore.set(PreferenceKey.NotificationPermissionPromptDismissed, dismissed)
     }
 }
 

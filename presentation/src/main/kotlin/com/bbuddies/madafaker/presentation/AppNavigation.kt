@@ -278,8 +278,6 @@ fun AppNavHost(
                                 viewModel = hiltViewModel(),
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .windowInsetsPadding(WindowInsets.navigationBars)
-                                    .windowInsetsPadding(WindowInsets.ime)
                             )
                         }
 

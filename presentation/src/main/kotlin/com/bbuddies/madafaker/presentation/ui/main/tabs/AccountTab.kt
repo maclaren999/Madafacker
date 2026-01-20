@@ -1,7 +1,13 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
+import android.Manifest
+import android.app.Activity
+import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,8 +39,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -46,6 +56,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.User
 import com.bbuddies.madafaker.presentation.R
@@ -67,13 +81,34 @@ fun AccountTab(
     onNavigateToAuth: () -> Unit
 ) {
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
     val currentUser by viewModel.currentUser.collectAsState()
+    val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
+    val notificationPermissionPromptDismissed by viewModel.notificationPermissionPromptDismissed.collectAsState()
     val showDeleteDialog by viewModel.showDeleteAccountDialog.collectAsState()
     val showLogoutDialog by viewModel.showLogoutDialog.collectAsState()
     val showFeedbackDialog by viewModel.showFeedbackDialog.collectAsState()
     val feedbackText by viewModel.feedbackText.collectAsState()
     val selectedRating by viewModel.selectedRating.collectAsState()
     val isSubmittingFeedback by viewModel.isSubmittingFeedback.collectAsState()
+    val activity = remember(context) { context.findActivity() }
+    val hasRequestedPermission = rememberSaveable { mutableStateOf(false) }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { _ ->
+        viewModel.refreshNotificationPermission()
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refreshNotificationPermission()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
 
     ScreenWithWarnings(
         warningsFlow = viewModel.warningsFlow
@@ -104,6 +139,26 @@ fun AccountTab(
                     onDeleteAccountClick = viewModel::onDeleteAccountClick,
                     onLogoutClick = viewModel::onLogoutClick,
                     onFeedbackClick = viewModel::onFeedbackClick,
+                    showNotificationsDisabled = !notificationsEnabled && notificationPermissionPromptDismissed,
+                    onEnableNotificationsClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            val shouldShowRationale = activity != null &&
+                                    ActivityCompat.shouldShowRequestPermissionRationale(
+                                        activity,
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    )
+                            if (!shouldShowRationale && hasRequestedPermission.value) {
+                                openNotificationSettings(context)
+                            } else if (activity != null) {
+                                hasRequestedPermission.value = true
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                openNotificationSettings(context)
+                            }
+                        } else {
+                            openNotificationSettings(context)
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -262,6 +317,8 @@ private fun AccountActionsSectionPreview() {
             onDeleteAccountClick = {},
             onLogoutClick = {},
             onFeedbackClick = {},
+            showNotificationsDisabled = true,
+            onEnableNotificationsClick = {},
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
@@ -324,12 +381,26 @@ private fun AccountActionsSection(
     onDeleteAccountClick: () -> Unit,
     onLogoutClick: () -> Unit,
     onFeedbackClick: () -> Unit,
+    showNotificationsDisabled: Boolean,
+    onEnableNotificationsClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        if (showNotificationsDisabled) {
+            //TODO: polish styling
+            Text(
+                text = stringResource(R.string.account_notifications_disabled),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onEnableNotificationsClick() }
+            )
+        }
+
         // Logout Button
         MadafakerPrimaryButton(
             text = stringResource(R.string.account_logout_button),
@@ -628,6 +699,27 @@ private fun StarRating(
             }
         }
     }
+}
+
+private tailrec fun android.content.Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
+
+private fun openNotificationSettings(context: android.content.Context) {
+    val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+        }
+    } else {
+        android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = android.net.Uri.fromParts("package", context.packageName, null)
+        }
+    }.apply {
+        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    context.startActivity(intent)
 }
 
 
