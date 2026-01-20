@@ -1,5 +1,9 @@
 # Repository Guidelines
 
+## General guidelines
+
+- you MUST build project after code changes to ensure nothing is broken
+
 ## Project Structure & Module Organization
 
 - `app/`: Android application entry point, DI wiring, manifest, and build variants.

@@ -4,13 +4,9 @@ import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
@@ -18,14 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
@@ -33,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
@@ -77,7 +71,10 @@ private fun MyPostsList(messages: List<Message>, mode: Mode) {
             .fillMaxSize()
             .padding(bottom = 16.dp),
     ) {
-        items(messages) { message ->
+        items(
+            items = messages,
+            key = { message -> message.id }
+        ) { message ->
             MyPostCard(message, mode)
         }
     }
@@ -116,58 +113,91 @@ private fun MyPostCard(message: Message, mode: Mode) {
     val latestReply = replies.maxByOrNull { reply ->
         reply.createdAt
     }
-    var columnHeightPx by remember { mutableIntStateOf(0) }
-    val columnHeight = with(LocalDensity.current) { columnHeightPx.toDp() }
 
-    Row(
+    MyPostCardLayout(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .padding(top = 16.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .width(4.dp)
-                .then(
-                    if (columnHeightPx > 0) Modifier.height(columnHeight) else Modifier
-                )
-        ) {
+            .padding(top = 16.dp),
+        indicator = {
             Image(
                 contentDescription = null,
-                contentScale = ContentScale.FillHeight,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .width(8.dp),
+                contentScale = ContentScale.FillBounds,
+                modifier = Modifier.fillMaxSize(),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSecondary),
                 painter = painterResource(
                     if (mode == Mode.SHINE) R.drawable.untitled_vertical_light
                     else R.drawable.untitled_vertical_dark
                 )
             )
         }
-        Spacer(modifier = Modifier.width(4.dp))
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .onSizeChanged { columnHeightPx = it.height }
-        ) {
-            Text(
-                text = message.body,
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
-                maxLines = 6,
-                overflow = TextOverflow.Ellipsis
-            )
+    ) {
+        Text(
+            text = message.body,
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium),
+            maxLines = 6,
+            overflow = TextOverflow.Ellipsis
+        )
 
-            Text(
-                text = stringResource(R.string.replies_count, replies.size),
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                style = MaterialTheme.typography.labelSmall
-            )
+        Text(
+            text = stringResource(R.string.replies_count, replies.size),
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            style = MaterialTheme.typography.labelSmall
+        )
 
 
-            latestReply?.let { reply ->
-                LatestReplyHighlight(reply = reply)
+        latestReply?.let { reply ->
+            LatestReplyHighlight(reply = reply)
+        }
+    }
+}
+
+@Composable
+private fun MyPostCardLayout(
+    modifier: Modifier = Modifier,
+    indicator: @Composable () -> Unit,
+    content: @Composable () -> Unit
+) {
+    val indicatorWidth = 4.dp
+    val spacerWidth = 8.dp
+
+    Layout(
+        modifier = modifier,
+        content = {
+            Box { indicator() }
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                content()
             }
+        }
+    ) { measurables, constraints ->
+        val indicatorWidthPx = indicatorWidth.roundToPx()
+        val spacerWidthPx = spacerWidth.roundToPx()
+        val contentMaxWidth = (constraints.maxWidth - indicatorWidthPx - spacerWidthPx)
+            .coerceAtLeast(0)
+
+        val contentPlaceable = measurables[1].measure(
+            constraints.copy(
+                minWidth = 0,
+                maxWidth = contentMaxWidth
+            )
+        )
+
+        val indicatorPlaceable = measurables[0].measure(
+            Constraints.fixed(
+                width = indicatorWidthPx,
+                height = contentPlaceable.height
+            )
+        )
+
+        val layoutWidth = indicatorPlaceable.width + spacerWidthPx + contentPlaceable.width
+        val layoutHeight = contentPlaceable.height
+
+        layout(layoutWidth, layoutHeight) {
+            indicatorPlaceable.placeRelative(0, 0)
+            contentPlaceable.placeRelative(indicatorPlaceable.width + spacerWidthPx, 0)
         }
     }
 }

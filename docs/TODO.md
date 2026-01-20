@@ -12,12 +12,13 @@
    prototype)
 9. [] Likes: impl dislike, like and superlike buttons(similar to Netflix). For 'my posts' they have to be small, with numbers, as they are
    non clickable. For 'inbox' they have to be bigger, clickable.
-10.
+10. [X] My posts: scroll glitch.
 
 ## UI secondary issues
 
 51. [] Recent messages: hide section if no messages yet.
 52. [] Tabs swipe animation: titles slide horizontally, underline graphics stays in place.
+53. [] Improve button "Send reply" styling/states.
 
 ## Logic
 
@@ -36,8 +37,14 @@
      choose new account.
 301. [X] Logged in user. No internet connection. User opens the app (cold start) the sees Welcome AuthScreen instead of MainScreen.
 302. [X] Messages arrangement by dates my be unstable. Messages mix up sometimes.
+303. [] Error on sending a reply. Ignore the response body. If 200 -> fetch whole list of replies.
+304. [] Replies are not shown for incoming message. (check outcoming messages too)
+305. [X] The Auth state/navigation logic - FIXED with V2.1 Optimistic Auth.
+     Note: Firebase Auth doesn't persist session across cold starts (known issue with Credential Manager flow).
+     Workaround: Use `awaitInitialization()` to wait for Firebase, then restore session with stored Google ID token.
+     See docs/AUTH_SYSTEM_V2.md for details.
 
 ## Docs
 
 900. Revise the AppRequirements and DevStatus
-901. [] Create a Privacy Policy document. Add To Welcome screen and Account tab.
+901. [X] Create a Privacy Policy document. Add To Welcome screen and Account tab.
