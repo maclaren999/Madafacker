@@ -1,6 +1,5 @@
 package repository
 
-import com.bbuddies.madafaker.common_data.BuildConfig
 import com.bbuddies.madafaker.common_domain.auth.FirebaseAuthStatus
 import com.bbuddies.madafaker.common_domain.auth.TokenRefreshService
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
@@ -24,9 +23,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import local.MadafakerDao
-import org.json.JSONObject
 import remote.api.MadafakerApi
 import remote.api.request.CreateUserRequest
 import retrofit2.HttpException
@@ -36,7 +33,6 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 private const val TAG = "AUTH_REPO"
-private const val DEBUG_AUTO_RESTORE_OBSERVE_MS = 15000L
 
 /**
  * UserRepository implementation with optimistic authentication.
@@ -58,11 +54,6 @@ class UserRepositoryImpl @Inject constructor(
     private val localDao: MadafakerDao,
     private val tokenRefreshService: TokenRefreshService
 ) : UserRepository {
-    companion object {
-        @Volatile
-        private var debugSkipRecoveryOnce: Boolean = BuildConfig.DEBUG
-    }
-
     val firebaseMessaging by lazy { FirebaseMessaging.getInstance() }
     private val firebaseCrashlytics: FirebaseCrashlytics by lazy { FirebaseCrashlytics.getInstance() }
     private val repositoryScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -196,17 +187,9 @@ class UserRepositoryImpl @Inject constructor(
                 }
 
                 FirebaseAuthStatus.SignedOut -> {
-                    // Firebase has no user after initialization - this is a real issue
-                    Timber.tag(TAG).w("Firebase confirmed SignedOut - attempting recovery")
-                    if (shouldSkipRecoveryOnce()) {
-                        val autoRestored = observeAutoRestoreWindow()
-                        if (autoRestored) {
-                            refreshTokenAndSyncUser()
-                            return
-                        }
-                        Timber.tag(TAG).w("DEBUG: Auto-restore did not occur, proceeding with recovery")
-                    }
-                    attemptFirebaseRecovery()
+                    // Firebase has no user after initialization.
+                    // Session recovery is handled by UI (silent re-auth or interactive prompt).
+                    Timber.tag(TAG).w("Firebase confirmed SignedOut - waiting for UI re-auth flow")
                 }
 
                 FirebaseAuthStatus.Initializing -> {
@@ -220,30 +203,6 @@ class UserRepositoryImpl @Inject constructor(
             isBackgroundValidationInProgress = false
             Timber.tag(TAG).d("=== Background validation complete ===")
         }
-    }
-
-    private fun shouldSkipRecoveryOnce(): Boolean {
-        if (!BuildConfig.DEBUG) return false
-        return if (debugSkipRecoveryOnce) {
-            debugSkipRecoveryOnce = false
-            true
-        } else {
-            false
-        }
-    }
-
-    private suspend fun observeAutoRestoreWindow(): Boolean {
-        Timber.tag(TAG)
-            .w("DEBUG: Skipping recovery once. Waiting ${DEBUG_AUTO_RESTORE_OBSERVE_MS}ms for Firebase auto-restore...")
-
-        val restored = withTimeoutOrNull(DEBUG_AUTO_RESTORE_OBSERVE_MS) {
-            tokenRefreshService.firebaseStatus.first { it == FirebaseAuthStatus.SignedIn }
-            true
-        } ?: false
-
-        Timber.tag(TAG)
-            .w("DEBUG: Auto-restore window complete (restored=$restored, status=${tokenRefreshService.firebaseStatus.value})")
-        return restored
     }
 
     /**
@@ -263,79 +222,6 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    /**
-     * Attempt to recover Firebase session when it reports SignedOut.
-     *
-     * This can happen when:
-     * 1. Firebase truly has no session (user logged out or never logged in)
-     * 2. Firebase session expired (very rare, Firebase handles refresh internally)
-     * 3. Firebase data was cleared
-     *
-     * We try to restore using stored Google ID token, but this will fail
-     * if the token is expired (>1 hour old).
-     */
-    private suspend fun attemptFirebaseRecovery() {
-        val storedGoogleToken = preferenceManager.googleIdAuthToken.value
-        val storedFirebaseToken = preferenceManager.firebaseIdToken.value
-        val storedFirebaseUid = preferenceManager.firebaseUid.value
-        val storedUserId = preferenceManager.userId.value
-
-        Timber.tag(TAG).d("=== Attempting Firebase recovery ===")
-        Timber.tag(TAG).d("Has stored Google token: ${storedGoogleToken != null}")
-        Timber.tag(TAG).d("Has stored Firebase token: ${storedFirebaseToken != null}")
-        Timber.tag(TAG).d("Stored Firebase UID: $storedFirebaseUid")
-        Timber.tag(TAG).d("Stored User ID: $storedUserId")
-
-        // Log token age if possible (Google ID tokens have exp claim)
-        if (storedGoogleToken != null) {
-            logGoogleTokenExpiry(storedGoogleToken)
-        }
-
-        if (storedGoogleToken == null) {
-            Timber.tag(TAG).e("No stored Google token - cannot recover Firebase session")
-            // We have a session but no way to restore Firebase
-            // Let the AuthInterceptor handle token refresh on API calls
-            // If API calls fail, user will be logged out
-            return
-        }
-
-        // Try to restore Firebase session with stored Google token
-        Timber.tag(TAG).d("Attempting to restore Firebase session with stored Google token...")
-        val restorationSuccessful = tokenRefreshService.restoreFirebaseSession(storedGoogleToken)
-
-        if (restorationSuccessful) {
-            Timber.tag(TAG).d("Firebase session restored successfully!")
-            // Refresh the Firebase ID token now
-            refreshTokenAndSyncUser()
-        } else {
-            Timber.tag(TAG).e("Firebase session restoration failed - Google token likely expired")
-            // Google ID token has expired (>1 hour old)
-            // The stored Firebase ID token might still work for API calls if not expired
-            // Let the AuthInterceptor handle this - if API calls return 401, force logout
-
-            if (storedFirebaseToken != null) {
-                Timber.tag(TAG).d("Will use cached Firebase token for API calls")
-                // Validate the cached token by making an API call
-                try {
-                    val user = webService.getCurrentUser()
-                    Timber.tag(TAG).d("Cached Firebase token still valid - user: ${user.name}")
-                    cacheUser(user)
-                } catch (e: HttpException) {
-                    if (e.code() == 401) {
-                        Timber.tag(TAG).e("Cached Firebase token is also expired - forcing logout")
-                        forceLogout("Firebase session lost and cached token expired")
-                    } else {
-                        Timber.tag(TAG).w(e, "API error during validation (non-401)")
-                    }
-                } catch (e: Exception) {
-                    Timber.tag(TAG).w(e, "Network error during validation - will retry later")
-                }
-            } else {
-                Timber.tag(TAG).e("No cached Firebase token - forcing logout")
-                forceLogout("Firebase session lost and no cached token")
-            }
-        }
-    }
 
     /**
      * Try to refresh user data from server (non-critical).
@@ -695,40 +581,6 @@ class UserRepositoryImpl @Inject constructor(
 
 }
 
-private fun logGoogleTokenExpiry(token: String) {
-    try {
-        val parts = token.split(".")
-        if (parts.size != 3) {
-            Timber.tag(TAG).d("Google token payload decode skipped: invalid JWT format")
-            return
-        }
-
-        val payloadJson = String(
-            android.util.Base64.decode(parts[1], android.util.Base64.URL_SAFE)
-        )
-        val payload = JSONObject(payloadJson)
-        val expSec = payload.optLong("exp", -1)
-        val iatSec = payload.optLong("iat", -1)
-        val nowMs = System.currentTimeMillis()
-
-        if (expSec > 0) {
-            val expMs = expSec * 1000L
-            val expiresInSec = (expMs - nowMs) / 1000L
-            Timber.tag(TAG)
-                .d("Google token exp=$expSec (expiresIn=${expiresInSec}s, expired=${expMs <= nowMs})")
-        } else {
-            Timber.tag(TAG).d("Google token exp claim missing")
-        }
-
-        if (iatSec > 0) {
-            val iatMs = iatSec * 1000L
-            val ageSec = (nowMs - iatMs) / 1000L
-            Timber.tag(TAG).d("Google token iat=$iatSec (age=${ageSec}s)")
-        }
-    } catch (e: Exception) {
-        Timber.tag(TAG).d("Could not parse Google token claims: ${e.message}")
-    }
-}
 
 private fun isDuplicateRegistrationTokenError(exception: Exception): Boolean {
     return when (exception) {

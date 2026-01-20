@@ -7,18 +7,18 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.GetCredentialResponse
 import androidx.credentials.exceptions.ClearCredentialException
+import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.bbuddies.madafaker.common_domain.auth.FirebaseAuthStatus
 import com.bbuddies.madafaker.common_domain.auth.TokenRefreshService
 import com.bbuddies.madafaker.presentation.BuildConfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -125,8 +125,7 @@ class GoogleAuthManager @Inject constructor(
      * Waits for Firebase to complete its initial auth state restoration.
      *
      * On cold start, Firebase may report SignedOut before finishing initialization.
-     * This method waits for the AuthStateListener to be called at least once,
-     * then optionally waits a bit longer to catch late sign-in events.
+     * This method waits for the AuthStateListener to be called at least once.
      *
      * @param timeoutMs Maximum time to wait for initialization
      * @return The confirmed FirebaseAuthStatus after initialization
@@ -140,7 +139,6 @@ class GoogleAuthManager @Inject constructor(
             return FirebaseAuthStatus.SignedIn
         }
 
-        // Wait for first AuthStateListener callback
         val result = withTimeoutOrNull(timeoutMs) {
             // First, wait for at least one auth callback
             if (!_hasReceivedAuthCallback.value) {
@@ -148,21 +146,7 @@ class GoogleAuthManager @Inject constructor(
                 _hasReceivedAuthCallback.first { it }
             }
 
-            // If signed in after callback, great!
-            if (_firebaseStatus.value == FirebaseAuthStatus.SignedIn) {
-                Timber.tag(TAG).d("Got SignedIn after first callback")
-                return@withTimeoutOrNull FirebaseAuthStatus.SignedIn
-            }
-
-            // Firebase reported SignedOut - but on cold start this might be premature
-            // Wait a short grace period to see if Firebase recovers the session
-            Timber.tag(TAG).d("Got SignedOut after first callback, waiting grace period...")
-            delay(1500) // 1.5 second grace period
-
-            // Check again
-            val finalStatus = _firebaseStatus.value
-            Timber.tag(TAG).d("After grace period: $finalStatus")
-            finalStatus
+            _firebaseStatus.value
         }
 
         val finalStatus = result ?: run {
@@ -172,35 +156,6 @@ class GoogleAuthManager @Inject constructor(
 
         Timber.tag(TAG).d("awaitInitialization completed: $finalStatus")
         return finalStatus
-    }
-
-    /**
-     * Attempts to restore Firebase session using stored Google ID token.
-     * Call this when Firebase has no user but we have stored credentials.
-     * @param googleIdToken The stored Google ID token
-     * @return true if restoration successful, false otherwise
-     */
-    override suspend fun restoreFirebaseSession(googleIdToken: String): Boolean {
-        Timber.tag(TAG).d("Attempting to restore Firebase session...")
-        return try {
-            val credential = GoogleAuthProvider.getCredential(googleIdToken, null)
-            val authResult = firebaseAuth.signInWithCredential(credential).await()
-            val user = authResult.user
-
-            if (user != null) {
-                Timber.tag(TAG).d("Firebase session restored successfully: uid=${user.uid}, email=${user.email}")
-                true
-            } else {
-                Timber.tag(TAG).e("Firebase session restoration returned no user")
-                false
-            }
-        } catch (e: FirebaseAuthException) {
-            Timber.tag(TAG).e(e, "Failed to restore Firebase session (code=${e.errorCode})")
-            false
-        } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "Failed to restore Firebase session: ${e.message}")
-            false
-        }
     }
 
     override fun hasFirebaseUser(): Boolean {
@@ -216,9 +171,70 @@ class GoogleAuthManager @Inject constructor(
      * @throws GetCredentialException if authentication fails
      */
     suspend fun performGoogleAuthentication(activityContext: Context): GetCredentialResponse? {
+        return getGoogleCredential(
+            activityContext = activityContext,
+            filterByAuthorizedAccounts = false,
+            autoSelect = false
+        )
+    }
+
+    /**
+     * Attempts silent re-authentication using Credential Manager.
+     * This will only succeed if there is exactly one authorized credential available.
+     */
+    suspend fun trySilentReauth(activityContext: Context): SilentReauthResult {
+        Timber.tag(TAG).d("trySilentReauth() - starting silent credential request")
+        val response = try {
+            getGoogleCredential(
+                activityContext = activityContext,
+                filterByAuthorizedAccounts = true,
+                autoSelect = true
+            )
+        } catch (e: NoCredentialException) {
+            Timber.tag(TAG).w("Silent reauth failed: no credential")
+            return SilentReauthResult.Failure(SilentReauthFailure.NoCredential, e)
+        } catch (e: GetCredentialCancellationException) {
+            Timber.tag(TAG).w("Silent reauth canceled by user")
+            return SilentReauthResult.Failure(SilentReauthFailure.UserCancelled, e)
+        } catch (e: GetCredentialException) {
+            Timber.tag(TAG).e(e, "Silent reauth failed")
+            return SilentReauthResult.Failure(SilentReauthFailure.ProviderError, e)
+        }
+
+        if (response == null) {
+            return SilentReauthResult.Failure(SilentReauthFailure.NoCredential, null)
+        }
+
+        val googleAuthResult = extractAndStoreCredentials(response)
+            ?: return SilentReauthResult.Failure(SilentReauthFailure.ProviderError, null)
+
+        return try {
+            val firebaseUser = firebaseAuthWithGoogle(googleAuthResult.idToken)
+                ?: return SilentReauthResult.Failure(SilentReauthFailure.ProviderError, null)
+            val firebaseIdToken = firebaseUser.getIdToken(true).await()?.token
+                ?: return SilentReauthResult.Failure(SilentReauthFailure.ProviderError, null)
+
+            SilentReauthResult.Success(
+                googleIdToken = googleAuthResult.idToken,
+                googleUserId = googleAuthResult.googleUserId,
+                firebaseUid = firebaseUser.uid,
+                firebaseIdToken = firebaseIdToken
+            )
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "Silent reauth Firebase sign-in failed")
+            SilentReauthResult.Failure(SilentReauthFailure.ProviderError, e)
+        }
+    }
+
+    private suspend fun getGoogleCredential(
+        activityContext: Context,
+        filterByAuthorizedAccounts: Boolean,
+        autoSelect: Boolean
+    ): GetCredentialResponse? {
         return try {
             val googleIdOption = GetGoogleIdOption.Builder()
-                .setFilterByAuthorizedAccounts(false)
+                .setFilterByAuthorizedAccounts(filterByAuthorizedAccounts)
+                .setAutoSelectEnabled(autoSelect)
                 .setServerClientId(webClientId)
                 .build()
 
@@ -423,3 +439,23 @@ data class GoogleAuthResult(
     val idToken: String,
     val googleUserId: String
 )
+
+enum class SilentReauthFailure {
+    NoCredential,
+    UserCancelled,
+    ProviderError
+}
+
+sealed class SilentReauthResult {
+    data class Success(
+        val googleIdToken: String,
+        val googleUserId: String,
+        val firebaseUid: String,
+        val firebaseIdToken: String
+    ) : SilentReauthResult()
+
+    data class Failure(
+        val reason: SilentReauthFailure,
+        val throwable: Throwable?
+    ) : SilentReauthResult()
+}

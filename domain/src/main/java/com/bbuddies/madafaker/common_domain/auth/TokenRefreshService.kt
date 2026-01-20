@@ -55,14 +55,4 @@ interface TokenRefreshService {
      */
     fun hasFirebaseUser(): Boolean
 
-    /**
-     * Attempts to restore Firebase session using stored Google ID token.
-     * Call this when Firebase has no user but we have stored credentials.
-     *
-     * WARNING: Google ID tokens expire after ~1 hour. This will fail with expired tokens.
-     *
-     * @param googleIdToken The stored Google ID token
-     * @return true if restoration successful, false otherwise
-     */
-    suspend fun restoreFirebaseSession(googleIdToken: String): Boolean
 }

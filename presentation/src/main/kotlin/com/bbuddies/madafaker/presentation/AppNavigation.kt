@@ -27,6 +27,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.toRoute
 import com.bbuddies.madafaker.common_domain.enums.Mode
+import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.DeepLinkData
 import com.bbuddies.madafaker.presentation.design.components.ModeBackground
 import com.bbuddies.madafaker.presentation.ui.auth.AuthNavigationAction
@@ -172,6 +173,22 @@ fun AppNavHost(
 
     // Get current mode from MainViewModel
     val currentMode by mainViewModel.currentMode.collectAsState()
+    val authState by mainViewModel.authState.collectAsState()
+
+    LaunchedEffect(authState, currentRoute) {
+        if (authState is AuthenticationState.NotAuthenticated) {
+            val isOnSplash =
+                currentRoute?.contains(SplashRoute::class.simpleName ?: "") == true
+            val isAlreadyOnAuth =
+                currentRoute?.contains(AuthRoute::class.simpleName ?: "") == true ||
+                        currentRoute?.contains(AuthWithRedirectRoute::class.simpleName ?: "") == true
+            if (!isOnSplash && !isAlreadyOnAuth) {
+                navController.navigate(AuthRoute) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        }
+    }
 
     ModeBackground(
         mode = currentMode,
