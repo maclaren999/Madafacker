@@ -17,6 +17,7 @@ import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
+@Deprecated("Postponed sending removed; kept for legacy background retries.")
 @HiltWorker
 class SendMessageWorker @AssistedInject constructor(
     @Assisted context: Context,

@@ -6,6 +6,7 @@ import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageSendException
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.UnsentDraft
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
@@ -61,6 +62,9 @@ class MainViewModel @Inject constructor(
 
     private val _isSending = MutableStateFlow(false)
     override val isSending: StateFlow<Boolean> = _isSending
+
+    private val _sendStatus = MutableStateFlow<SendMessageStatus>(SendMessageStatus.Idle)
+    override val sendStatus: StateFlow<SendMessageStatus> = _sendStatus
 
     private val _isReplySending = MutableStateFlow(false)
     override val isReplySending: StateFlow<Boolean> = _isReplySending
@@ -223,6 +227,7 @@ class MainViewModel @Inject constructor(
 
         viewModelScope.launch {
             _isSending.value = true
+            _sendStatus.value = SendMessageStatus.Sending
 
             val result = suspendUiStateOf {
                 messageRepository.createMessage(message.trim())
@@ -232,10 +237,18 @@ class MainViewModel @Inject constructor(
                 is UiState.Success -> {
                     _draftMessage.value = ""
                     clearDraft() // Clear draft after successful sending
+                    _sendStatus.value = SendMessageStatus.Success
+
+                    viewModelScope.launch {
+                        delay(1500)
+                        if (_sendStatus.value is SendMessageStatus.Success) {
+                            _sendStatus.value = SendMessageStatus.Idle
+                        }
+                    }
                 }
 
                 is UiState.Error -> {
-                    showError(result.message ?: "Failed to send message")
+                    _sendStatus.value = resolveSendError(result.exception)
                 }
 
                 is UiState.Loading -> {} // Won't happen with suspendUiStateOf
@@ -245,9 +258,33 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private fun resolveSendError(error: Throwable): SendMessageStatus.Error {
+        return when (error) {
+            is MessageSendException -> {
+                SendMessageStatus.Error(
+                    message = mapSendErrorMessage(error),
+                    errorCode = error.errorCode
+                )
+            }
+
+            else -> SendMessageStatus.Error()
+        }
+    }
+
+    private fun mapSendErrorMessage(error: MessageSendException): String? {
+        return when (error.errorCode) {
+            // TODO: Map server error codes to localized strings.
+            else -> error.errorMessage
+        }
+    }
+
     override fun onDraftMessageChanged(message: String) {
         if (message.length <= AppConfig.MAX_MESSAGE_LENGTH) {
             _draftMessage.value = message
+
+            if (_sendStatus.value is SendMessageStatus.Error || _sendStatus.value is SendMessageStatus.Success) {
+                _sendStatus.value = SendMessageStatus.Idle
+            }
         }
     }
 
@@ -490,3 +527,9 @@ class MainViewModel @Inject constructor(
         }
     }
 }
+
+
+
+
+
+

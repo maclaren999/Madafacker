@@ -40,6 +40,7 @@ import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
 import com.bbuddies.madafaker.presentation.ui.main.MainTab
+import com.bbuddies.madafaker.presentation.ui.main.SendMessageStatus
 import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -274,7 +275,7 @@ private val previewMyPosts = listOf(
         authorName = "PreviewUser",
         ratingStats = RatingStats(),
         ownRating = null,
-        localState = MessageState.PENDING,
+        localState = MessageState.FAILED,
         localCreatedAt = System.currentTimeMillis(),
         tempId = null,
         needsSync = true,
@@ -305,6 +306,7 @@ private class PreviewMyPostsContract(
 ) : MainScreenContract {
     override val draftMessage: StateFlow<String> = MutableStateFlow("")
     override val isSending: StateFlow<Boolean> = MutableStateFlow(false)
+    override val sendStatus: StateFlow<SendMessageStatus> = MutableStateFlow(SendMessageStatus.Idle)
     override val incomingMessages: StateFlow<UiState<List<Message>>> =
         MutableStateFlow(UiState.Success(emptyList()))
     override val outcomingMessages: StateFlow<UiState<List<Message>>> =
@@ -342,3 +344,6 @@ private fun MyPostsTabPreview() {
         MyPostsTab(viewModel = PreviewMyPostsContract())
     }
 }
+
+
+

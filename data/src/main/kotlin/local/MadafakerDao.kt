@@ -49,6 +49,7 @@ interface MadafakerDao {
     @Query("DELETE FROM messages WHERE authorId != :currentUserId AND localState = 'SENT'")
     suspend fun deleteIncomingMessages(currentUserId: String)
 
+    @Deprecated("Postponed sending removed; pending/failed counts kept for legacy data.")
     @Query("SELECT COUNT(*) FROM messages WHERE localState IN ('PENDING', 'FAILED')")
     fun observePendingCount(): Flow<Int>
 
@@ -119,3 +120,4 @@ interface MadafakerDao {
     }
 
 }
+

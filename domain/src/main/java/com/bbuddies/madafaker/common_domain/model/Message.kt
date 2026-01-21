@@ -88,6 +88,7 @@ data class Message(
 // Separate client-only states
 @Serializable
 enum class MessageState {
+    @Deprecated("Postponed sending removed; pending state kept for legacy data.")
     PENDING,         // Queued for sending
     SENT,            // Confirmed sent
     FAILED           // Failed to send

@@ -70,6 +70,7 @@
     <!-- Message Actions -->
     <string name="message_sent_success">Message sent successfully!</string>
     <string name="message_send_failed">Failed to send message</string>
+    <string name="send_status_ok">OK!</string>
 
     <!-- Inbox Empty State -->
     <string name="inbox_empty_title">your inbox is quiet</string>
@@ -237,3 +238,4 @@
     <string name="privacy_policy">Privacy Policy</string>
     <string name="privacy_policy_url">https://bytebuddiesgroup.github.io/RandomBytes-policy/</string>
 </resources>
+

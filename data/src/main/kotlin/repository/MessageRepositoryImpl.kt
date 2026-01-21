@@ -1,16 +1,10 @@
 package repository
 
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
-import com.bbuddies.madafaker.common_domain.model.RatingStats
+import com.bbuddies.madafaker.common_domain.model.MessageSendException
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
@@ -19,21 +13,24 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.dto.toDomainModel
 import remote.api.request.CreateMessageRequest
 import remote.api.request.CreateReplyRequest
+import retrofit2.HttpException
 import timber.log.Timber
-import worker.SendMessageWorker
-import java.time.Instant
-import java.util.UUID
 import javax.inject.Inject
 
 class MessageRepositoryImpl @Inject constructor(
     private val webService: MadafakerApi,
     private val localDao: MadafakerDao,
-    private val workManager: WorkManager,
     private val preferenceManager: PreferenceManager,
     private val userRepository: UserRepository
 ) : MessageRepository {
@@ -67,45 +64,67 @@ class MessageRepositoryImpl @Inject constructor(
             }
     }
 
+    private val errorJson = Json { ignoreUnknownKeys = true }
+
+    private data class ApiErrorDetails(
+        val message: String? = null,
+        val code: String? = null
+    )
+
+    private fun parseErrorDetails(errorBody: String?): ApiErrorDetails {
+        if (errorBody.isNullOrBlank()) return ApiErrorDetails()
+
+        return try {
+            val element = errorJson.decodeFromString<JsonElement>(errorBody)
+            val obj = element.jsonObject
+            val message = obj["message"]?.jsonPrimitive?.contentOrNull
+                ?: obj["error"]?.jsonPrimitive?.contentOrNull
+                ?: obj["detail"]?.jsonPrimitive?.contentOrNull
+                ?: obj["details"]?.jsonPrimitive?.contentOrNull
+            val code = obj["code"]?.jsonPrimitive?.contentOrNull
+                ?: obj["errorCode"]?.jsonPrimitive?.contentOrNull
+                ?: obj["error_code"]?.jsonPrimitive?.contentOrNull
+
+            ApiErrorDetails(message = message, code = code)
+        } catch (e: Exception) {
+            ApiErrorDetails(message = errorBody.trim())
+        }
+    }
+
+    private fun mapSendMessageException(exception: Exception): MessageSendException {
+        return when (exception) {
+            is HttpException -> {
+                val statusCode = exception.code()
+                val details = parseErrorDetails(exception.response()?.errorBody()?.string())
+                val isClientError = statusCode in 400..499
+
+                MessageSendException(
+                    statusCode = statusCode,
+                    errorCode = if (isClientError) details.code else null,
+                    errorMessage = if (isClientError) details.message else null,
+                    cause = exception
+                )
+            }
+
+            else -> MessageSendException(
+                errorMessage = null,
+                cause = exception
+            )
+        }
+    }
+
     override suspend fun createMessage(body: String): Message {
-        // Use the new await function to get user safely
-        val user = userRepository.awaitCurrentUser()
+        userRepository.awaitCurrentUser()
             ?: throw IllegalStateException("No authenticated user available")
 
-        val tempId = "temp_${UUID.randomUUID()}"
         val currentMode = preferenceManager.currentMode.value
-        val nowMillis = System.currentTimeMillis()
-        val nowIso = Instant.ofEpochMilli(nowMillis).toString()
+        val trimmedBody = body.trim()
 
-        // Create local message immediately (pending state)
-        val localMessage = Message(
-            id = tempId,
-            body = body,
-            mode = currentMode.apiValue,
-            createdAt = nowIso,
-            authorId = user.id,
-            authorName = user.name,
-            ratingStats = RatingStats(),
-            ownRating = null,
-            localState = MessageState.PENDING,
-            localCreatedAt = nowMillis,
-            tempId = tempId,
-            needsSync = true,
-            isRead = true,
-            readAt = nowMillis,
-            replies = null
-        )
-
-        localDao.insertMessage(localMessage)
-
-        // Try immediate send
         try {
             val serverMessage = webService.createMessage(
-                CreateMessageRequest(body, currentMode.apiValue)
+                CreateMessageRequest(trimmedBody, currentMode.apiValue)
             ).toDomainModel()
 
-            // Replace temp message with server message
-            localDao.deleteMessage(tempId)
             localDao.insertMessage(
                 serverMessage.copy(
                     localState = MessageState.SENT,
@@ -117,9 +136,7 @@ class MessageRepositoryImpl @Inject constructor(
             return serverMessage
 
         } catch (exception: Exception) {
-            // Schedule background send
-            schedulePendingMessageSend(localMessage)
-            return localMessage
+            throw mapSendMessageException(exception)
         }
     }
 
@@ -129,8 +146,7 @@ class MessageRepositoryImpl @Inject constructor(
             val serverIncoming = webService.getIncomingMessages().map { it.toDomainModel() }
             val serverOutgoing = webService.getOutcomingMessages().map { it.toDomainModel() }
 
-            // Simple merge: replace all non-pending local messages
-            val pendingMessages = localDao.getMessagesByState(MessageState.PENDING)
+            // Replace local messages with the latest server snapshot
             val allServerMessages = (serverIncoming + serverOutgoing).map { serverMsg ->
                 serverMsg.copy(
                     localState = MessageState.SENT,
@@ -175,32 +191,9 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
+    @Deprecated("Postponed sending removed.")
     override suspend fun hasPendingMessages(): Boolean {
-        return localDao.getMessagesByState(MessageState.PENDING).isNotEmpty()
-    }
-
-    private fun schedulePendingMessageSend(message: Message) {
-        val workRequest = OneTimeWorkRequestBuilder<SendMessageWorker>()
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            )
-            .setInputData(
-                workDataOf(
-                    SendMessageWorker.KEY_MESSAGE_BODY to message.body,
-                    SendMessageWorker.KEY_MESSAGE_MODE to message.mode,
-                    SendMessageWorker.KEY_TEMP_MESSAGE_ID to message.id
-                )
-            )
-            .addTag("send_message_with_id_${message.id}")
-            .build()
-
-        workManager.enqueueUniqueWork(
-            "send_message_${message.id}",
-            ExistingWorkPolicy.REPLACE,
-            workRequest
-        )
+        return false
     }
 
     override suspend fun createReply(body: String, parentId: String, isPublic: Boolean): Reply {
@@ -323,3 +316,15 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+

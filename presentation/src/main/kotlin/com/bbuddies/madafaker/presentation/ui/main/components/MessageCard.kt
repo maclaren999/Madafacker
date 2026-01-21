@@ -405,18 +405,21 @@ private fun Mode.accentColor(): Color {
 
 // Extension functions
 private fun Message.toInboxMessage(): InboxMessage {
+    val likes = ratingStats?.likes ?: 0
+    val dislikes = ratingStats?.dislikes ?: 0
+    val superLikes = ratingStats?.superLikes ?: 0
+
     return InboxMessage(
         id = id,
         author = authorName,
         body = body,
         mode = mode,
-        up = ratingStats.likes.takeIf { it > 0 },
-        down = ratingStats.dislikes.takeIf { it > 0 },
-        hearts = ratingStats.superLikes.takeIf { it > 0 },
+        up = likes.takeIf { it > 0 },
+        down = dislikes.takeIf { it > 0 },
+        hearts = superLikes.takeIf { it > 0 },
         replies = replies
     )
 }
-
 fun List<Message>.toInboxMessages(): List<InboxMessage> {
     return map { it.toInboxMessage() }
 }
@@ -490,3 +493,4 @@ private fun MessageCardReplyingPreview() {
         )
     }
 }
+

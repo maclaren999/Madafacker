@@ -25,6 +25,7 @@ interface MessageRepository {
 
     // Updated methods for pending messages
 //    suspend fun retryPendingMessages()
+    @Deprecated("Postponed sending removed.")
     suspend fun hasPendingMessages(): Boolean
 
     // Read state management

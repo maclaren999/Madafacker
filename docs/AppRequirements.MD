@@ -92,9 +92,9 @@ Establish four primary tabs in the top navigation tabs to support the Write‑fo
 
 ### 4.4 Error & Informational States
 
-* **Offline send failure:** Silently display a small progress icon on the message and do the Background retry via WorkManager.
+* **Send rejection (moderation / rate limit):** Keep the draft in the TextField, disable input while sending, and show the server-provided error inline; no background retry/queue.
 * **Nickname already taken:** Inline field error prompting a new name.
-* **Moderation rejection (Shine):** Dialog suggests switching to Shadow mode if the user wants uncensored wording.
+* **Moderation rejection (Shine):** Inline message suggests switching to Shadow mode when wording is rejected.
 * **Push permission denied:** Snackbar outlining that pushes are essential to the experience and promising no spam, plus a button to open system settings.
 * **No messages yet:** Empty‑state copy: “No messages yet.”
 
@@ -135,7 +135,7 @@ To automatically moderate user-generated text in **Shine** mode with a lightweig
 **Recommended MVP Approach:**
 
 1. **Server-Side Enforcement:** For every Shine‑mode submission, call the **OpenAI Moderation API**. If any category (e.g., profanity, hate)
-   exceeds the threshold (e.g., 0.6), reject with a user-friendly error: “Please keep it positive or switch to Shadow mode!”
+   exceeds the threshold (e.g., 0.6), reject with an HTTP 4xx error that includes a user-facing message (and optional error code) so the client can show inline feedback.
 2. **Client-Side Quick Check:** Use **Firebase ML Kit Profanity Filter** in the Android app to flag disallowed words instantly, helping users self-correct before sending.
 3. **Custom Blocklist (Optional):** Maintain a small server-hosted JSON list of brand‑ or culture‑specific banned terms; screen messages against it post‑API check.
 
@@ -215,7 +215,7 @@ Below are the canonical endpoints as documented in Postman. Note that server cur
   • **Response** (201 Created, JSON):
   • `id` (string)
   • `public` (boolean, always true)
-  • `wasSent` (boolean, false if queued)
+  • `wasSent` (boolean, always true)
   • `body` (string)
   • `mode` (string)
   • `authorId` (string)
@@ -601,3 +601,7 @@ Integrated app theme directly with the Mode system, making dark/light theme auto
 - Consistent visual experience aligned with content filtering mode
 
 ---
+
+
+
+

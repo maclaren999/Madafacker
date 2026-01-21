@@ -37,6 +37,7 @@ import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
 import com.bbuddies.madafaker.presentation.ui.main.MainTab
+import com.bbuddies.madafaker.presentation.ui.main.SendMessageStatus
 import com.bbuddies.madafaker.presentation.ui.main.components.InboxMessage
 import com.bbuddies.madafaker.presentation.ui.main.components.MessageCard
 import com.bbuddies.madafaker.presentation.ui.main.components.toInboxMessages
@@ -266,6 +267,7 @@ private class PreviewInboxContract(
 ) : MainScreenContract {
     override val draftMessage: StateFlow<String> = MutableStateFlow("Staying curious.")
     override val isSending: StateFlow<Boolean> = MutableStateFlow(false)
+    override val sendStatus: StateFlow<SendMessageStatus> = MutableStateFlow(SendMessageStatus.Idle)
     override val incomingMessages: StateFlow<UiState<List<Message>>> =
         MutableStateFlow(UiState.Success(initialMessages))
     override val outcomingMessages: StateFlow<UiState<List<Message>>> =
@@ -314,3 +316,6 @@ private fun InboxTabEmptyPreview() {
         InboxEmptyState()
     }
 }
+
+
+

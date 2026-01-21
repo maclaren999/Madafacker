@@ -14,6 +14,7 @@ import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
 import com.bbuddies.madafaker.presentation.ui.main.MainTab
 import com.bbuddies.madafaker.presentation.ui.main.SendMessageView
+import com.bbuddies.madafaker.presentation.ui.main.SendMessageStatus
 import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +43,7 @@ private val previewOutgoingMessages = listOf(
         createdAt = "2024-04-02T10:00:00Z",
         authorId = "preview-user",
         authorName = "Preview User",
-        localState = MessageState.PENDING
+        localState = MessageState.FAILED
     )
 )
 
@@ -51,6 +52,7 @@ private class PreviewWriteContract(
 ) : MainScreenContract {
     override val draftMessage: StateFlow<String> = MutableStateFlow("Write something encouraging...")
     override val isSending: StateFlow<Boolean> = MutableStateFlow(false)
+    override val sendStatus: StateFlow<SendMessageStatus> = MutableStateFlow(SendMessageStatus.Idle)
     override val incomingMessages: StateFlow<UiState<List<Message>>> =
         MutableStateFlow(UiState.Success(emptyList()))
     override val outcomingMessages: StateFlow<UiState<List<Message>>> =
@@ -88,3 +90,9 @@ private fun WriteTabPreview() {
         WriteTab(viewModel = PreviewWriteContract())
     }
 }
+
+
+
+
+
+
