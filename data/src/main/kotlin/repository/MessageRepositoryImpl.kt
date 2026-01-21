@@ -217,7 +217,7 @@ class MessageRepositoryImpl @Inject constructor(
             )
 
             val replyDto = webService.createReply(request)
-            val reply = replyDto.toDomainModel(parentMessageId = parentId)
+            val reply = replyDto.toDomainModel()
 
             // Store locally
             localDao.insertReply(reply)
