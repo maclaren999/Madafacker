@@ -37,6 +37,7 @@ import com.bbuddies.madafaker.presentation.base.HandleState
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
 import com.bbuddies.madafaker.presentation.ui.main.MainTab
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMainScreenContract
 
 
 @Composable

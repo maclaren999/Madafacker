@@ -13,12 +13,14 @@
 9. [] Likes: impl dislike, like and superlike buttons(similar to Netflix). For 'my posts' they have to be small, with numbers, as they are
    non clickable. For 'inbox' they have to be bigger, clickable.
 10. [X] My posts: scroll glitch.
+11. [ ] Bug: after sending reply -> open Write tab -> inappropriate "reply send" snackbar is shown. Remove it.
 
 ## UI secondary issues
 
 51. [] Recent messages: hide section if no messages yet.
 52. [] Tabs swipe animation: titles slide horizontally, underline graphics stays in place.
 53. [] Improve button "Send reply" styling/states.
+54. [] Change error theme color
 
 ## Logic
 
@@ -28,7 +30,8 @@
      message to user.
     1) Client will wait for HTTP response from BE. If BE rejects the message, client shows appropriate error message to user.
     2) BE targets implementation of RFC 7807 (Problem Details for HTTP APIs) to give back a payload with error code and meaningful message.
-    3) [] Disable the offline sending queue for now. Because it adds too much complexity.
+     3) [X] Disable the offline sending queue for now. Because it adds too much complexity.
+     4) [pending] Handle BE error -> map to user-friendly message -> show under write TextField.
     
 ## Bugs
 
@@ -37,7 +40,7 @@
      choose new account.
 301. [X] Logged in user. No internet connection. User opens the app (cold start) the sees Welcome AuthScreen instead of MainScreen.
 302. [X] Messages arrangement by dates my be unstable. Messages mix up sometimes.
-303. [] Error on sending a reply. Ignore the response body. If 200 -> fetch whole list of replies.
+303. [] Replies are not shown under messages in Inbox. After sending a reply, it is not displayed under the message.
 304. [] Replies are not shown for incoming message. (check outcoming messages too)
 305. [X] The Auth state/navigation logic - FIXED with V2.1 Optimistic Auth.
      Note: Firebase Auth doesn't persist session across cold starts (known issue with Credential Manager flow).
@@ -46,5 +49,5 @@
 
 ## Docs
 
-900. Revise the AppRequirements and DevStatus
+900. [X] Revise the AppRequirements and DevStatus
 901. [X] Create a Privacy Policy document. Add To Welcome screen and Account tab.

@@ -37,6 +37,7 @@ import com.bbuddies.madafaker.presentation.ui.main.MainTab
 import com.bbuddies.madafaker.presentation.ui.main.components.InboxMessage
 import com.bbuddies.madafaker.presentation.ui.main.components.MessageCard
 import com.bbuddies.madafaker.presentation.ui.main.components.toInboxMessages
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMainScreenContract
 
 @Composable
 fun InboxTab(
