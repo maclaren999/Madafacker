@@ -1,6 +1,5 @@
 package com.bbuddies.madafaker.presentation.ui.main
 
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,22 +33,19 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.AppConfig
-import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
-import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import com.bbuddies.madafaker.presentation.design.components.MessageStateIndicator
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
-import com.bbuddies.madafaker.presentation.utils.SharedTextManager
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMainScreenContract
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMessages
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun SendMessageView(viewModel: MainScreenContract) {
@@ -139,6 +135,7 @@ private fun MessageCard(
         }
     }
 }
+
 @Composable
 private fun SunnyTextField(
     value: String,
@@ -178,7 +175,7 @@ private fun SendStatusIndicator(status: SendMessageStatus) {
         SendMessageStatus.Sending -> RetroDotsLoader()
         SendMessageStatus.Success -> Text(
             text = stringResource(R.string.send_status_ok),
-            color = Color(0xFF4CAF50),
+            color = MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -189,7 +186,7 @@ private fun SendStatusIndicator(status: SendMessageStatus) {
                 ?: stringResource(R.string.message_send_failed)
             Text(
                 text = message,
-                color = Color(0xFFE53935),
+                color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -248,6 +245,7 @@ private fun RecentMessagesCard(viewModel: MainScreenContract) {
         }
     }
 }
+
 @Composable
 private fun RecentMessagesLoading() {
     repeat(3) { index ->
@@ -337,89 +335,19 @@ private fun RecentMessageItem(
 
     }
 }
+
 @Preview(showBackground = true)
 @Composable
 private fun SendMessageViewPreview() {
     MadafakerTheme(mode = Mode.SHINE) {
-        SendMessageView(viewModel = PreviewMainScreenContract())
-    }
-}
-
-private class PreviewMainScreenContract : MainScreenContract {
-    private val sharedTextManagerImpl = SharedTextManager()
-
-    override val draftMessage = MutableStateFlow("Расскажи что-нибудь хорошее о сегодняшнем дне")
-    override val isSending = MutableStateFlow(false)
-    override val sendStatus = MutableStateFlow<SendMessageStatus>(SendMessageStatus.Idle)
-    override val incomingMessages: StateFlow<UiState<List<Message>>> =
-        MutableStateFlow(UiState.Success(emptyList()))
-    private val sampleMessages = listOf(
-        Message(
-            id = "1",
-            body = "Недавнее отправленное сообщение",
-            mode = Mode.SHINE.apiValue,
-            createdAt = "",
-            authorId = "me",
-            authorName = "Preview User",
-            localState = MessageState.SENT
-        ),
-        Message(
-            id = "2",
-            body = "Сообщение в очереди",
-            mode = Mode.SHINE.apiValue,
-            createdAt = "",
-            authorId = "me",
-            authorName = "Preview User",
-            localState = MessageState.FAILED
+        SendMessageView(
+            viewModel = PreviewMainScreenContract(
+                draftText = "Расскажи что-нибудь хорошее о сегодняшнем дне",
+                outgoingMessages = PreviewMessages.sampleOutgoing
+            )
         )
-    )
-    override val outcomingMessages: StateFlow<UiState<List<Message>>> =
-        MutableStateFlow(UiState.Success(sampleMessages))
-    override val currentMode = MutableStateFlow(Mode.SHINE)
-    override val currentTab = MutableStateFlow(MainTab.WRITE)
-    override val isReplySending = MutableStateFlow(false)
-    override val replyError = MutableStateFlow<String?>(null)
-    override val highlightedMessageId = MutableStateFlow<String?>(null)
-    override val replyingMessageId = MutableStateFlow<String?>(null)
-    override val userRepliesForMessage = MutableStateFlow<List<Reply>>(emptyList())
-    override val warningsFlow = MutableStateFlow<((Context) -> String?)?>(null)
-    override val sharedTextManager = sharedTextManagerImpl
-
-    override fun onSendMessage(message: String) {}
-    override fun onDraftMessageChanged(message: String) {
-        draftMessage.value = message
     }
-
-    override fun toggleMode() {
-        currentMode.value = when (currentMode.value) {
-            Mode.SHINE -> Mode.SHADOW
-            Mode.SHADOW -> Mode.SHINE
-        }
-    }
-
-    override fun refreshMessages() {}
-    override fun refreshUserData() {}
-    override fun clearDraft() {
-        draftMessage.value = ""
-    }
-
-    override fun selectTab(tab: MainTab) {
-        currentTab.value = tab
-    }
-
-    override fun onSendReply(messageId: String, replyText: String, isPublic: Boolean) {}
-    override fun clearReplyError() {
-        replyError.value = null
-    }
-
-    override fun onRateMessage(messageId: String, rating: MessageRating) {}
-    override fun onInboxViewed() {}
-    override fun markMessageAsRead(messageId: String) {}
-    override fun onMessageTapped(messageId: String) {}
-    override fun onMessageReplyingClosed() {}
 }
-
-
 
 
 

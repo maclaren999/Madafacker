@@ -25,6 +25,7 @@ import com.bbuddies.madafaker.presentation.utils.SharedTextManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
@@ -32,7 +33,9 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -60,11 +63,11 @@ class MainViewModel @Inject constructor(
     private val _outcomingMessages = MutableStateFlow<UiState<List<Message>>>(UiState.Loading)
     override val outcomingMessages: StateFlow<UiState<List<Message>>> = _outcomingMessages
 
-    private val _isSending = MutableStateFlow(false)
-    override val isSending: StateFlow<Boolean> = _isSending
-
     private val _sendStatus = MutableStateFlow<SendMessageStatus>(SendMessageStatus.Idle)
     override val sendStatus: StateFlow<SendMessageStatus> = _sendStatus
+
+    override val isSending: StateFlow<Boolean> = _sendStatus.map { it == SendMessageStatus.Sending }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     private val _isReplySending = MutableStateFlow(false)
     override val isReplySending: StateFlow<Boolean> = _isReplySending
@@ -223,14 +226,13 @@ class MainViewModel @Inject constructor(
     }
 
     override fun onSendMessage(message: String) {
-        if (message.isBlank() || _isSending.value) return
+        if (message.isBlank() || isSending.value) return
 
         viewModelScope.launch {
-            _isSending.value = true
             _sendStatus.value = SendMessageStatus.Sending
 
             val result = suspendUiStateOf {
-                messageRepository.createMessage(message.trim())
+                messageRepository.createMessage(message)
             }
 
             when (result) {
@@ -253,8 +255,6 @@ class MainViewModel @Inject constructor(
 
                 is UiState.Loading -> {} // Won't happen with suspendUiStateOf
             }
-
-            _isSending.value = false
         }
     }
 
@@ -527,8 +527,6 @@ class MainViewModel @Inject constructor(
         }
     }
 }
-
-
 
 
 

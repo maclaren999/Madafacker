@@ -1,6 +1,5 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +27,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
@@ -36,14 +34,9 @@ import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
-import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
 import com.bbuddies.madafaker.presentation.ui.main.MainTab
-import com.bbuddies.madafaker.presentation.ui.main.SendMessageStatus
-import com.bbuddies.madafaker.presentation.utils.SharedTextManager
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 
 
 @Composable
@@ -301,49 +294,17 @@ private val previewMyPosts = listOf(
         replies = emptyList()
     )
 )
-private class PreviewMyPostsContract(
-    initialMessages: List<Message> = previewMyPosts
-) : MainScreenContract {
-    override val draftMessage: StateFlow<String> = MutableStateFlow("")
-    override val isSending: StateFlow<Boolean> = MutableStateFlow(false)
-    override val sendStatus: StateFlow<SendMessageStatus> = MutableStateFlow(SendMessageStatus.Idle)
-    override val incomingMessages: StateFlow<UiState<List<Message>>> =
-        MutableStateFlow(UiState.Success(emptyList()))
-    override val outcomingMessages: StateFlow<UiState<List<Message>>> =
-        MutableStateFlow(UiState.Success(initialMessages))
-    override val currentMode: StateFlow<Mode> = MutableStateFlow(Mode.SHINE)
-    override val currentTab: StateFlow<MainTab> = MutableStateFlow(MainTab.MY_POSTS)
-    override val isReplySending: StateFlow<Boolean> = MutableStateFlow(false)
-    override val replyError: StateFlow<String?> = MutableStateFlow(null)
-    override val highlightedMessageId: StateFlow<String?> = MutableStateFlow(null)
-    override val replyingMessageId: StateFlow<String?> = MutableStateFlow(null)
-    override val userRepliesForMessage: StateFlow<List<Reply>> = MutableStateFlow(emptyList())
-    override val warningsFlow: StateFlow<((Context) -> String?)?> = MutableStateFlow(null)
-    override val sharedTextManager: SharedTextManager = SharedTextManager()
-
-    override fun onSendMessage(message: String) = Unit
-    override fun onDraftMessageChanged(message: String) = Unit
-    override fun toggleMode() = Unit
-    override fun refreshMessages() = Unit
-    override fun refreshUserData() = Unit
-    override fun clearDraft() = Unit
-    override fun selectTab(tab: MainTab) = Unit
-    override fun onSendReply(messageId: String, replyText: String, isPublic: Boolean) = Unit
-    override fun clearReplyError() = Unit
-    override fun onRateMessage(messageId: String, rating: MessageRating) = Unit
-    override fun onInboxViewed() = Unit
-    override fun markMessageAsRead(messageId: String) = Unit
-    override fun onMessageTapped(messageId: String) = Unit
-    override fun onMessageReplyingClosed() = Unit
-}
 
 @Preview(showBackground = true)
 @Composable
 private fun MyPostsTabPreview() {
     MadafakerTheme(mode = Mode.SHINE) {
-        MyPostsTab(viewModel = PreviewMyPostsContract())
+        MyPostsTab(
+            viewModel = PreviewMainScreenContract(
+                outgoingMessages = previewMyPosts,
+                currentTab = MainTab.MY_POSTS
+            )
+        )
     }
 }
-
-
 

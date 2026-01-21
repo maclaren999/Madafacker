@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
-import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
@@ -420,6 +419,7 @@ private fun Message.toInboxMessage(): InboxMessage {
         replies = replies
     )
 }
+
 fun List<Message>.toInboxMessages(): List<InboxMessage> {
     return map { it.toInboxMessage() }
 }

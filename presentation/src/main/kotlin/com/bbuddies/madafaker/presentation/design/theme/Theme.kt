@@ -31,7 +31,8 @@ private val DarkColorScheme = darkColorScheme(
     onTertiary = Black,
     onBackground = White,
     onSurface = White,
-    onSurfaceVariant = LightGray
+    onSurfaceVariant = LightGray,
+    error = ButtonOrangeEnd
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -47,7 +48,8 @@ private val LightColorScheme = lightColorScheme(
     onSurface = TextPrimary,
     onSurfaceVariant = DarkGray,
     outline = LightGray,
-    surfaceVariant = Color(0xFFF5F5F5)
+    surfaceVariant = Color(0xFFF5F5F5),
+    error = ButtonOrangeEnd
 )
 
 @Composable
