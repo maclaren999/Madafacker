@@ -4,7 +4,6 @@ import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
-import com.bbuddies.madafaker.common_domain.model.MessageSendException
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
@@ -13,18 +12,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import local.MadafakerDao
 import remote.api.MadafakerApi
+import remote.api.MessageErrorMapper
 import remote.api.dto.toDomainModel
 import remote.api.request.CreateMessageRequest
 import remote.api.request.CreateReplyRequest
-import retrofit2.HttpException
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -64,55 +57,6 @@ class MessageRepositoryImpl @Inject constructor(
             }
     }
 
-    private val errorJson = Json { ignoreUnknownKeys = true }
-
-    private data class ApiErrorDetails(
-        val message: String? = null,
-        val code: String? = null
-    )
-
-    private fun parseErrorDetails(errorBody: String?): ApiErrorDetails {
-        if (errorBody.isNullOrBlank()) return ApiErrorDetails()
-
-        return try {
-            val element = errorJson.decodeFromString<JsonElement>(errorBody)
-            val obj = element.jsonObject
-            val message = obj["message"]?.jsonPrimitive?.contentOrNull
-                ?: obj["error"]?.jsonPrimitive?.contentOrNull
-                ?: obj["detail"]?.jsonPrimitive?.contentOrNull
-                ?: obj["details"]?.jsonPrimitive?.contentOrNull
-            val code = obj["code"]?.jsonPrimitive?.contentOrNull
-                ?: obj["errorCode"]?.jsonPrimitive?.contentOrNull
-                ?: obj["error_code"]?.jsonPrimitive?.contentOrNull
-
-            ApiErrorDetails(message = message, code = code)
-        } catch (e: Exception) {
-            ApiErrorDetails(message = errorBody.trim())
-        }
-    }
-
-    private fun mapSendMessageException(exception: Exception): MessageSendException {
-        return when (exception) {
-            is HttpException -> {
-                val statusCode = exception.code()
-                val details = parseErrorDetails(exception.response()?.errorBody()?.string())
-                val isClientError = statusCode in 400..499
-
-                MessageSendException(
-                    statusCode = statusCode,
-                    errorCode = if (isClientError) details.code else null,
-                    errorMessage = if (isClientError) details.message else null,
-                    cause = exception
-                )
-            }
-
-            else -> MessageSendException(
-                errorMessage = null,
-                cause = exception
-            )
-        }
-    }
-
     override suspend fun createMessage(body: String): Message {
         userRepository.awaitCurrentUser()
             ?: throw IllegalStateException("No authenticated user available")
@@ -136,7 +80,7 @@ class MessageRepositoryImpl @Inject constructor(
             return serverMessage
 
         } catch (exception: Exception) {
-            throw mapSendMessageException(exception)
+            throw MessageErrorMapper.mapSendMessageException(exception)
         }
     }
 
@@ -189,11 +133,6 @@ class MessageRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Timber.w(e, "Failed to refresh incoming messages from server")
         }
-    }
-
-    @Deprecated("Postponed sending removed.")
-    override suspend fun hasPendingMessages(): Boolean {
-        return false
     }
 
     override suspend fun createReply(body: String, parentId: String, isPublic: Boolean): Reply {
