@@ -3,6 +3,9 @@
 ## General guidelines
 
 - you MUST build project after code changes to ensure nothing is broken
+- Main app **business** specifications document is /docs/AppRequirements.MD It has to be followed, referenced and updated as project
+  evolves. You can also divide it into smaller docs in /docs/ as needed.
+- If you have meaningfull questions to clarify of improve the task definition - ask them!
 
 ## Project Structure & Module Organization
 
