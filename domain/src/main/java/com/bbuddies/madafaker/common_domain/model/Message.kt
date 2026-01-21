@@ -32,7 +32,7 @@ data class Message(
     val authorName: String,
     // Rating stats (embedded for Room)
     @Embedded(prefix = "rating_")
-    val ratingStats: RatingStats = RatingStats(),
+    val ratingStats: RatingStats? = null,
     // Own rating (current user's rating on this message)
     val ownRating: String? = null,
     
@@ -72,7 +72,7 @@ data class Message(
         createdAt = createdAt,
         authorId = authorId,
         authorName = authorName,
-        ratingStats = ratingStats ?: RatingStats(),
+        ratingStats = ratingStats,
         ownRating = ownRating,
         localState = localState,
         localCreatedAt = localCreatedAt,
