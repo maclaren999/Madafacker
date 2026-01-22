@@ -3,9 +3,11 @@ package com.bbuddies.madafaker.presentation.ui.permission
 import android.app.Application
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
+import com.bbuddies.madafaker.notification_domain.repository.AnalyticsRepository
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import com.bbuddies.madafaker.presentation.utils.NotificationPermissionHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +28,8 @@ sealed class NotificationPermissionState {
 class NotificationPermissionViewModel @Inject constructor(
     private val application: Application,
     private val preferenceManager : PreferenceManager,
-    private val notificationPermissionHelper: NotificationPermissionHelper
+    private val notificationPermissionHelper: NotificationPermissionHelper,
+    private val analyticsRepository: AnalyticsRepository
 ) : BaseViewModel() {
 
     private val _permissionState = MutableStateFlow<NotificationPermissionState>(NotificationPermissionState.Initial)
@@ -40,24 +43,40 @@ class NotificationPermissionViewModel @Inject constructor(
 
 
     val currentMode = preferenceManager.currentMode
+    private var hasRequestedPermission = false
 
     init {
-        checkInitialPermissionState()
+        refreshPermissionState()
     }
 
-    private fun checkInitialPermissionState() {
+    fun refreshPermissionState() {
         viewModelScope.launch {
             if (notificationPermissionHelper.isNotificationPermissionGranted()) {
                 _permissionState.value = NotificationPermissionState.AlreadyGranted
                 _shouldNavigateToMain.value = true
+                _showSettingsPrompt.value = false
             } else {
-                _permissionState.value = NotificationPermissionState.Initial
+                if (_permissionState.value == NotificationPermissionState.AlreadyGranted ||
+                    _permissionState.value == NotificationPermissionState.Granted
+                ) {
+                    _permissionState.value = NotificationPermissionState.Initial
+                }
             }
         }
     }
 
-    fun requestPermission() {
-        _permissionState.value = NotificationPermissionState.ShouldRequest
+    fun requestPermission(shouldShowRationale: Boolean) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!shouldShowRationale && hasRequestedPermission) {
+                openSettingsFromEnableButton()
+                _showSettingsPrompt.value = true
+            } else {
+                hasRequestedPermission = true
+                _permissionState.value = NotificationPermissionState.ShouldRequest
+            }
+        } else {
+            openSettingsFromEnableButton()
+        }
     }
 
     fun onPermissionGranted() {
@@ -78,15 +97,32 @@ class NotificationPermissionViewModel @Inject constructor(
         viewModelScope.launch {
             // Log analytics event for skipped notification permission
             // You might want to set a flag to not show this again for a while
+            preferenceManager.setNotificationPermissionPromptDismissed(true)
             _shouldNavigateToMain.value = true
         }
     }
 
-    fun openSettings() {
+    fun openSettingsFromEnableButton() {
+        trackOpenSettings("enable_button")
+        openSettings()
+    }
+
+    fun openSettingsFromSnackbar() {
+        trackOpenSettings("snackbar")
+        openSettings()
+    }
+
+    private fun openSettings() {
         try {
-            val intent = Intent().apply {
-                action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                data = Uri.fromParts("package", application.packageName, null)
+            val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, application.packageName)
+                }
+            } else {
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.fromParts("package", application.packageName, null)
+                }
+            }.apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
             }
             application.startActivity(intent)
@@ -97,6 +133,14 @@ class NotificationPermissionViewModel @Inject constructor(
             }
             application.startActivity(intent)
         }
+    }
+
+    private fun trackOpenSettings(source: String) {
+        val parameters = mapOf(
+            "source" to source,
+            "sdk_int" to Build.VERSION.SDK_INT
+        )
+        analyticsRepository.trackCustomEvent("notification_settings_opened", parameters)
     }
 
     fun dismissSettingsPrompt() {

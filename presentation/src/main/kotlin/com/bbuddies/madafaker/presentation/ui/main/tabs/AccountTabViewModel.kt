@@ -4,10 +4,12 @@ import android.content.Context
 import android.content.Intent
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.model.User
+import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.UserRepository
 import com.bbuddies.madafaker.notification_domain.repository.AnalyticsRepository
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
+import com.bbuddies.madafaker.presentation.utils.NotificationPermissionHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +19,9 @@ import javax.inject.Inject
 @HiltViewModel
 class AccountTabViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val analyticsRepository: AnalyticsRepository
+    private val analyticsRepository: AnalyticsRepository,
+    private val preferenceManager: PreferenceManager,
+    private val notificationPermissionHelper: NotificationPermissionHelper
 ) : BaseViewModel() {
 
     private val _showDeleteAccountDialog = MutableStateFlow(false)
@@ -39,7 +43,20 @@ class AccountTabViewModel @Inject constructor(
     private val _isSubmittingFeedback = MutableStateFlow(false)
     val isSubmittingFeedback: StateFlow<Boolean> = _isSubmittingFeedback
 
+    private val _notificationsEnabled = MutableStateFlow(true)
+    val notificationsEnabled: StateFlow<Boolean> = _notificationsEnabled
+
+    val notificationPermissionPromptDismissed = preferenceManager.notificationPermissionPromptDismissed
+
     val currentUser = userRepository.currentUser
+
+    init {
+        refreshNotificationPermission()
+    }
+
+    fun refreshNotificationPermission() {
+        _notificationsEnabled.value = notificationPermissionHelper.isNotificationPermissionGranted()
+    }
 
     fun onDeleteAccountClick() {
         _showDeleteAccountDialog.value = true

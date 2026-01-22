@@ -23,10 +23,6 @@ interface MessageRepository {
     // Rating methods
     suspend fun rateMessage(messageId: String, rating: MessageRating)
 
-    // Updated methods for pending messages
-//    suspend fun retryPendingMessages()
-    suspend fun hasPendingMessages(): Boolean
-
     // Read state management
     suspend fun getMostRecentUnreadMessage(): Message?
     suspend fun markMessageAsRead(messageId: String)

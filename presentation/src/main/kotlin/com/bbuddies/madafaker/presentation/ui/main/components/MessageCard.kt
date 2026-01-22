@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
-import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
@@ -405,14 +404,18 @@ private fun Mode.accentColor(): Color {
 
 // Extension functions
 private fun Message.toInboxMessage(): InboxMessage {
+    val likes = ratingStats?.likes ?: 0
+    val dislikes = ratingStats?.dislikes ?: 0
+    val superLikes = ratingStats?.superLikes ?: 0
+
     return InboxMessage(
         id = id,
         author = authorName,
         body = body,
         mode = mode,
-        up = ratingStats.likes.takeIf { it > 0 },
-        down = ratingStats.dislikes.takeIf { it > 0 },
-        hearts = ratingStats.superLikes.takeIf { it > 0 },
+        up = likes.takeIf { it > 0 },
+        down = dislikes.takeIf { it > 0 },
+        hearts = superLikes.takeIf { it > 0 },
         replies = replies
     )
 }
@@ -490,3 +493,4 @@ private fun MessageCardReplyingPreview() {
         )
     }
 }
+

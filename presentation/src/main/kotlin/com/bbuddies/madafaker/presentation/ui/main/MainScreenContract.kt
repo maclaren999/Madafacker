@@ -22,6 +22,7 @@ interface MainScreenContract {
     // Message composition
     val draftMessage: StateFlow<String>
     val isSending: StateFlow<Boolean>
+    val sendStatus: StateFlow<SendMessageStatus>
 
     // Messages
     val incomingMessages: StateFlow<UiState<List<Message>>>
@@ -76,3 +77,4 @@ interface MainScreenContract {
     fun onMessageTapped(messageId: String)
     fun onMessageReplyingClosed()
 }
+

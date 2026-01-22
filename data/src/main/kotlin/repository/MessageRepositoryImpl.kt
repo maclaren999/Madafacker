@@ -1,16 +1,9 @@
 package repository
 
-import androidx.work.Constraints
-import androidx.work.ExistingWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
-import androidx.work.workDataOf
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
-import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
@@ -21,19 +14,16 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import local.MadafakerDao
 import remote.api.MadafakerApi
+import remote.api.MessageErrorMapper
 import remote.api.dto.toDomainModel
 import remote.api.request.CreateMessageRequest
 import remote.api.request.CreateReplyRequest
 import timber.log.Timber
-import worker.SendMessageWorker
-import java.time.Instant
-import java.util.UUID
 import javax.inject.Inject
 
 class MessageRepositoryImpl @Inject constructor(
     private val webService: MadafakerApi,
     private val localDao: MadafakerDao,
-    private val workManager: WorkManager,
     private val preferenceManager: PreferenceManager,
     private val userRepository: UserRepository
 ) : MessageRepository {
@@ -68,44 +58,17 @@ class MessageRepositoryImpl @Inject constructor(
     }
 
     override suspend fun createMessage(body: String): Message {
-        // Use the new await function to get user safely
-        val user = userRepository.awaitCurrentUser()
+        userRepository.awaitCurrentUser()
             ?: throw IllegalStateException("No authenticated user available")
 
-        val tempId = "temp_${UUID.randomUUID()}"
         val currentMode = preferenceManager.currentMode.value
-        val nowMillis = System.currentTimeMillis()
-        val nowIso = Instant.ofEpochMilli(nowMillis).toString()
+        val trimmedBody = body.trim()
 
-        // Create local message immediately (pending state)
-        val localMessage = Message(
-            id = tempId,
-            body = body,
-            mode = currentMode.apiValue,
-            createdAt = nowIso,
-            authorId = user.id,
-            authorName = user.name,
-            ratingStats = RatingStats(),
-            ownRating = null,
-            localState = MessageState.PENDING,
-            localCreatedAt = nowMillis,
-            tempId = tempId,
-            needsSync = true,
-            isRead = true,
-            readAt = nowMillis,
-            replies = null
-        )
-
-        localDao.insertMessage(localMessage)
-
-        // Try immediate send
         try {
             val serverMessage = webService.createMessage(
-                CreateMessageRequest(body, currentMode.apiValue)
+                CreateMessageRequest(trimmedBody, currentMode.apiValue)
             ).toDomainModel()
 
-            // Replace temp message with server message
-            localDao.deleteMessage(tempId)
             localDao.insertMessage(
                 serverMessage.copy(
                     localState = MessageState.SENT,
@@ -117,9 +80,7 @@ class MessageRepositoryImpl @Inject constructor(
             return serverMessage
 
         } catch (exception: Exception) {
-            // Schedule background send
-            schedulePendingMessageSend(localMessage)
-            return localMessage
+            throw MessageErrorMapper.mapSendMessageException(exception)
         }
     }
 
@@ -129,8 +90,7 @@ class MessageRepositoryImpl @Inject constructor(
             val serverIncoming = webService.getIncomingMessages().map { it.toDomainModel() }
             val serverOutgoing = webService.getOutcomingMessages().map { it.toDomainModel() }
 
-            // Simple merge: replace all non-pending local messages
-            val pendingMessages = localDao.getMessagesByState(MessageState.PENDING)
+            // Replace local messages with the latest server snapshot
             val allServerMessages = (serverIncoming + serverOutgoing).map { serverMsg ->
                 serverMsg.copy(
                     localState = MessageState.SENT,
@@ -175,34 +135,6 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun hasPendingMessages(): Boolean {
-        return localDao.getMessagesByState(MessageState.PENDING).isNotEmpty()
-    }
-
-    private fun schedulePendingMessageSend(message: Message) {
-        val workRequest = OneTimeWorkRequestBuilder<SendMessageWorker>()
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            )
-            .setInputData(
-                workDataOf(
-                    SendMessageWorker.KEY_MESSAGE_BODY to message.body,
-                    SendMessageWorker.KEY_MESSAGE_MODE to message.mode,
-                    SendMessageWorker.KEY_TEMP_MESSAGE_ID to message.id
-                )
-            )
-            .addTag("send_message_with_id_${message.id}")
-            .build()
-
-        workManager.enqueueUniqueWork(
-            "send_message_${message.id}",
-            ExistingWorkPolicy.REPLACE,
-            workRequest
-        )
-    }
-
     override suspend fun createReply(body: String, parentId: String, isPublic: Boolean): Reply {
         // Ensure user is authenticated
         val user = userRepository.awaitCurrentUser()
@@ -217,7 +149,7 @@ class MessageRepositoryImpl @Inject constructor(
             )
 
             val replyDto = webService.createReply(request)
-            val reply = replyDto.toDomainModel(parentMessageId = parentId)
+            val reply = replyDto.toDomainModel()
 
             // Store locally
             localDao.insertReply(reply)
@@ -323,3 +255,15 @@ class MessageRepositoryImpl @Inject constructor(
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+

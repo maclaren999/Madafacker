@@ -32,7 +32,7 @@ data class Message(
     val authorName: String,
     // Rating stats (embedded for Room)
     @Embedded(prefix = "rating_")
-    val ratingStats: RatingStats = RatingStats(),
+    val ratingStats: RatingStats? = null,
     // Own rating (current user's rating on this message)
     val ownRating: String? = null,
     
@@ -56,7 +56,7 @@ data class Message(
         createdAt: String,
         authorId: String,
         authorName: String,
-        ratingStats: RatingStats,
+        ratingStats: RatingStats?,
         ownRating: String?,
         localState: MessageState,
         localCreatedAt: Long,
@@ -88,6 +88,7 @@ data class Message(
 // Separate client-only states
 @Serializable
 enum class MessageState {
+    @Deprecated("Postponed sending removed; pending state kept for legacy data.")
     PENDING,         // Queued for sending
     SENT,            // Confirmed sent
     FAILED           // Failed to send

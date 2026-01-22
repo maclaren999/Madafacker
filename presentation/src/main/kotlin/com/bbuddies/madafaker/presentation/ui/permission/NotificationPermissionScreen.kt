@@ -1,6 +1,9 @@
 package com.bbuddies.madafaker.presentation.ui.permission
 
 import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +28,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -40,15 +44,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.presentation.R
-import com.bbuddies.madafaker.presentation.design.components.MovingSunEffect
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextButton
+import com.bbuddies.madafaker.presentation.design.components.MovingSunEffect
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.design.theme.ShadowSunGradient
 import com.bbuddies.madafaker.presentation.design.theme.ShineSunGradient
-import kotlinx.coroutines.flow.StateFlow
 
 @Composable
 fun NotificationPermissionScreen(
@@ -77,8 +84,9 @@ fun NotificationPermissionScreen(
         onSkip = viewModel::onSkip,
         onPermissionGranted = viewModel::onPermissionGranted,
         onPermissionDenied = viewModel::onPermissionDenied,
-        onOpenSettings = viewModel::openSettings,
+        onOpenSettingsFromSnackbar = viewModel::openSettingsFromSnackbar,
         onDismissSettingsPrompt = viewModel::dismissSettingsPrompt,
+        onRefreshPermissionState = viewModel::refreshPermissionState,
         modifier = modifier
     )
 }
@@ -88,16 +96,26 @@ fun NotificationPermissionScreen(
     permissionState: NotificationPermissionState,
     currentMode: Mode,
     showSettingsPrompt: Boolean,
-    onRequestPermission: () -> Unit,
+    onRequestPermission: (Boolean) -> Unit,
     onSkip: () -> Unit,
     onPermissionGranted: () -> Unit,
     onPermissionDenied: () -> Unit,
-    onOpenSettings: () -> Unit,
+    onOpenSettingsFromSnackbar: () -> Unit,
     onDismissSettingsPrompt: () -> Unit,
+    onRefreshPermissionState: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val activity = remember(context) { context.findActivity() }
+    val shouldShowRationale =
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                activity != null &&
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                    activity,
+                    Manifest.permission.POST_NOTIFICATIONS
+                )
 
     // Handle Android 13+ notification permission
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -116,9 +134,6 @@ fun NotificationPermissionScreen(
             is NotificationPermissionState.ShouldRequest -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                } else {
-                    // For older versions, notifications are enabled by default
-                    onPermissionGranted()
                 }
             }
 
@@ -128,6 +143,16 @@ fun NotificationPermissionScreen(
 
             else -> {}
         }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                onRefreshPermissionState()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     // Don't show the UI if permission is already granted
@@ -210,7 +235,9 @@ fun NotificationPermissionScreen(
                 // Enable Notifications Button
                 MadafakerSecondaryButton(
                     text = stringResource(R.string.notification_permission_enable),
-                    onClick = onRequestPermission,
+                    onClick = {
+                        onRequestPermission(shouldShowRationale)
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -234,7 +261,7 @@ fun NotificationPermissionScreen(
                         action = {
                             TextButton(
                                 onClick = {
-                                    onOpenSettings()
+                                    onOpenSettingsFromSnackbar()
                                     onDismissSettingsPrompt()
                                 }
                             ) {
@@ -269,12 +296,13 @@ private fun NotificationPermissionScreenPreview() {
             permissionState = NotificationPermissionState.Initial,
             currentMode = Mode.SHINE,
             showSettingsPrompt = false,
-            onRequestPermission = {},
+            onRequestPermission = { _ -> },
             onSkip = {},
             onPermissionGranted = {},
             onPermissionDenied = {},
-            onOpenSettings = {},
-            onDismissSettingsPrompt = {}
+            onOpenSettingsFromSnackbar = {},
+            onDismissSettingsPrompt = {},
+            onRefreshPermissionState = {}
         )
     }
 }
@@ -287,12 +315,19 @@ private fun NotificationPermissionScreenShadowPreview() {
             permissionState = NotificationPermissionState.Initial,
             currentMode = Mode.SHADOW,
             showSettingsPrompt = false,
-            onRequestPermission = {},
+            onRequestPermission = { _ -> },
             onSkip = {},
             onPermissionGranted = {},
             onPermissionDenied = {},
-            onOpenSettings = {},
-            onDismissSettingsPrompt = {}
+            onOpenSettingsFromSnackbar = {},
+            onDismissSettingsPrompt = {},
+            onRefreshPermissionState = {}
         )
     }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }

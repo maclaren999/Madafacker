@@ -14,7 +14,7 @@ data class MessageDto(
     val author: AuthorDto,
     val mode: String,
     val createdAt: String,
-    val ratingStats: RatingStatsDto? = null,
+    val ratingStats: RatingStats? = null,
     val ownRating: String? = null,
     val replies: List<ReplyDto>? = null
 )
@@ -30,13 +30,7 @@ fun MessageDto.toDomainModel(): Message {
         createdAt = createdAt,
         authorId = author.id,
         authorName = author.name,
-        ratingStats = ratingStats?.let {
-            RatingStats(
-                likes = it.likes,
-                dislikes = it.dislikes,
-                superLikes = it.superLikes
-            )
-        } ?: RatingStats(),
+        ratingStats = ratingStats,
         ownRating = ownRating,
         // Client-only fields get default values
         localState = MessageState.SENT,
@@ -45,6 +39,6 @@ fun MessageDto.toDomainModel(): Message {
         needsSync = false,
         isRead = false,
         readAt = null,
-        replies = replies?.map { it.toDomainModel(parentMessageId = id) }
+        replies = replies?.map { it.toDomainModel() }
     )
 }

@@ -5,8 +5,6 @@ import com.bbuddies.madafaker.presentation.NotificationPermissionRoute
 import com.bbuddies.madafaker.presentation.navigation.actions.NavigationAction
 import com.bbuddies.madafaker.presentation.navigation.actions.navigateToMainAndClearStack
 import com.bbuddies.madafaker.presentation.ui.main.MainTab
-import com.bbuddies.madafaker.presentation.ui.navigation.TopLevelDestination
-import com.bbuddies.madafaker.presentation.ui.navigation.navigateToTopLevelDestination
 import com.bbuddies.madafaker.presentation.ui.navigation.toTopLevelDestination
 import com.bbuddies.madafaker.presentation.utils.NotificationPermissionHelper
 
@@ -28,7 +26,8 @@ class AuthNavigationAction(
      */
     fun navigateAfterSuccessfulAuth(
         notificationPermissionHelper: NotificationPermissionHelper,
-        redirectRoute: String? = null
+        redirectRoute: String? = null,
+        isNotificationPermissionPromptDismissed: Boolean = false
     ) {
         when {
             // If there's a redirect route, navigate there
@@ -40,7 +39,9 @@ class AuthNavigationAction(
             }
 
             // Need to request notification permission
-            else -> navigateToNotificationPermissionAndClearStack()
+            !isNotificationPermissionPromptDismissed -> navigateToNotificationPermissionAndClearStack()
+
+            else -> navigateToMainAndClearStack()
         }
     }
 

@@ -1,6 +1,5 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
-import android.content.Context
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +24,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
@@ -33,16 +31,13 @@ import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
-import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
 import com.bbuddies.madafaker.presentation.ui.main.MainTab
 import com.bbuddies.madafaker.presentation.ui.main.components.InboxMessage
 import com.bbuddies.madafaker.presentation.ui.main.components.MessageCard
 import com.bbuddies.madafaker.presentation.ui.main.components.toInboxMessages
-import com.bbuddies.madafaker.presentation.utils.SharedTextManager
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMainScreenContract
 
 @Composable
 fun InboxTab(
@@ -261,48 +256,21 @@ private val previewInboxMessages = listOf(
     )
 )
 
-private class PreviewInboxContract(
-    initialMessages: List<Message> = previewInboxMessages
-) : MainScreenContract {
-    override val draftMessage: StateFlow<String> = MutableStateFlow("Staying curious.")
-    override val isSending: StateFlow<Boolean> = MutableStateFlow(false)
-    override val incomingMessages: StateFlow<UiState<List<Message>>> =
-        MutableStateFlow(UiState.Success(initialMessages))
-    override val outcomingMessages: StateFlow<UiState<List<Message>>> =
-        MutableStateFlow(UiState.Success(emptyList()))
-    override val currentMode: StateFlow<Mode> = MutableStateFlow(Mode.SHINE)
-    override val currentTab: StateFlow<MainTab> = MutableStateFlow(MainTab.INBOX)
-    override val isReplySending: StateFlow<Boolean> = MutableStateFlow(false)
-    override val replyError: StateFlow<String?> = MutableStateFlow(null)
-    override val highlightedMessageId: StateFlow<String?> = MutableStateFlow(initialMessages.firstOrNull()?.id)
-    override val replyingMessageId: StateFlow<String?> = MutableStateFlow(initialMessages.firstOrNull()?.id)
-    override val userRepliesForMessage: StateFlow<List<Reply>> = MutableStateFlow(previewInboxReplies)
-    override val warningsFlow: StateFlow<((Context) -> String?)?> = MutableStateFlow(null)
-    override val sharedTextManager: SharedTextManager = SharedTextManager()
-
-    override fun onSendMessage(message: String) = Unit
-    override fun onDraftMessageChanged(message: String) = Unit
-    override fun toggleMode() = Unit
-    override fun refreshMessages() = Unit
-    override fun refreshUserData() = Unit
-    override fun clearDraft() = Unit
-    override fun selectTab(tab: MainTab) = Unit
-    override fun onSendReply(messageId: String, replyText: String, isPublic: Boolean) = Unit
-    override fun clearReplyError() = Unit
-    override fun onRateMessage(messageId: String, rating: MessageRating) = Unit
-    override fun onInboxViewed() = Unit
-    override fun markMessageAsRead(messageId: String) = Unit
-    override fun onMessageTapped(messageId: String) = Unit
-    override fun onMessageReplyingClosed() = Unit
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun InboxTabPreview() {
+    val firstMessage = previewInboxMessages.first()
     MadafakerTheme(mode = Mode.SHINE) {
         InboxTab(
-            viewModel = PreviewInboxContract(),
-            highlightedMessageId = previewInboxMessages.first().id
+            viewModel = PreviewMainScreenContract(
+                draftText = "Staying curious.",
+                incomingMessages = previewInboxMessages,
+                currentTab = MainTab.INBOX,
+                highlightedMessageId = firstMessage.id,
+                replyingMessageId = firstMessage.id,
+                userReplies = previewInboxReplies
+            ),
+            highlightedMessageId = firstMessage.id
         )
     }
 }
@@ -314,3 +282,4 @@ private fun InboxTabEmptyPreview() {
         InboxEmptyState()
     }
 }
+

@@ -14,6 +14,7 @@ interface PreferenceManager {
     val googleUserId: StateFlow<String?>
     val firebaseUid: StateFlow<String?>
     val currentMode: StateFlow<Mode>
+    val notificationPermissionPromptDismissed: StateFlow<Boolean>
     val hasSeenModeToggleTip: StateFlow<Boolean>
 
     suspend fun updateAuthToken(googleIdToken: String)
@@ -29,5 +30,6 @@ interface PreferenceManager {
     suspend fun updateCurrentMode(mode: Mode)
     suspend fun updateMode(mode: Mode)
     suspend fun setHasSeenModeToggleTip(seen: Boolean)
+    suspend fun setNotificationPermissionPromptDismissed(dismissed: Boolean)
     suspend fun clearUserData()
 }

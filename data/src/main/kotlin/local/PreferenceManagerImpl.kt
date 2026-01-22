@@ -39,6 +39,8 @@ class PreferenceManagerImpl @Inject constructor(
             object UnsentDraftTimestamp : PreferenceKey<Long>(longPreferencesKey("unsent_draft_timestamp"))
             object HasSeenModeToggleTip :
                 PreferenceKey<Boolean>(booleanPreferencesKey("has_seen_mode_toggle_tip"))
+            object NotificationPermissionPromptDismissed :
+                PreferenceKey<Boolean>(booleanPreferencesKey("notification_permission_prompt_dismissed"))
         }
     }
 
@@ -91,6 +93,15 @@ class PreferenceManagerImpl @Inject constructor(
             initialValue = null
         )
 
+    override val notificationPermissionPromptDismissed: StateFlow<Boolean> =
+        dataStore.get<Boolean>(PreferenceKey.NotificationPermissionPromptDismissed)
+            .map { it ?: false }
+            .stateIn(
+                scope = CoroutineScope(Dispatchers.IO),
+                started = SharingStarted.Eagerly,
+                initialValue = false
+            )
+
     override suspend fun updateAuthToken(googleIdToken: String) {
         dataStore.set(PreferenceKey.AuthToken, googleIdToken)
     }
@@ -136,6 +147,10 @@ class PreferenceManagerImpl @Inject constructor(
 
     override suspend fun setHasSeenModeToggleTip(seen: Boolean) {
         dataStore.set(PreferenceKey.HasSeenModeToggleTip, seen)
+    }
+
+    override suspend fun setNotificationPermissionPromptDismissed(dismissed: Boolean) {
+        dataStore.set(PreferenceKey.NotificationPermissionPromptDismissed, dismissed)
     }
 }
 

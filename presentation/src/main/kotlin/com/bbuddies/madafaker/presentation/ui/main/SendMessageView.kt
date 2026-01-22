@@ -1,6 +1,5 @@
 package com.bbuddies.madafaker.presentation.ui.main
 
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,8 +15,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,30 +28,31 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.AppConfig
-import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
-import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import com.bbuddies.madafaker.presentation.design.components.MessageStateIndicator
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
-import com.bbuddies.madafaker.presentation.utils.SharedTextManager
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMainScreenContract
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMessages
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 
 @Composable
 fun SendMessageView(viewModel: MainScreenContract) {
     val draftMessage by viewModel.draftMessage.collectAsState()
     val currentMode by viewModel.currentMode.collectAsState()
     val isSending by viewModel.isSending.collectAsState()
+    val sendStatus by viewModel.sendStatus.collectAsState()
 
     Column(
         modifier = Modifier
@@ -60,6 +64,7 @@ fun SendMessageView(viewModel: MainScreenContract) {
         MessageCard(
             draftMessage = draftMessage,
             isSending = isSending,
+            sendStatus = sendStatus,
             currentMode = currentMode,
             onMessageChange = viewModel::onDraftMessageChanged,
             onSend = { viewModel.onSendMessage(draftMessage) }
@@ -73,66 +78,76 @@ fun SendMessageView(viewModel: MainScreenContract) {
 private fun MessageCard(
     draftMessage: String,
     isSending: Boolean,
+    sendStatus: SendMessageStatus,
     currentMode: Mode,
     onMessageChange: (String) -> Unit,
     onSend: () -> Unit
 ) {
+    Column {
+        Text(
+            text = when (currentMode) {
+                Mode.SHINE -> stringResource(R.string.express_positivity)
+                Mode.SHADOW -> stringResource(R.string.express_freely)
+            },
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            style = MaterialTheme.typography.headlineMedium,
+        )
 
-        Column {
+        SunnyTextField(
+            value = draftMessage,
+            onValueChange = onMessageChange,
+            onSend = onSend,
+            enabled = !isSending,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Send button and character count
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = when (currentMode) {
-                    Mode.SHINE -> stringResource(R.string.express_positivity)
-                    Mode.SHADOW -> stringResource(R.string.express_freely)
+                text = "${draftMessage.length}/${AppConfig.MAX_MESSAGE_LENGTH}",
+                color = if (draftMessage.length > AppConfig.MAX_MESSAGE_LENGTH) {
+                    Color(0xFFE53935)
+                } else {
+                    MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 },
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.bodyMedium
             )
 
-            SunnyTextField(
-                value = draftMessage,
-                onValueChange = onMessageChange,
-                onSend = onSend,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Send button and character count
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "${draftMessage.length}/${AppConfig.MAX_MESSAGE_LENGTH}",
-                    color = if (draftMessage.length > AppConfig.MAX_MESSAGE_LENGTH) {
-                        Color(0xFFE53935)
-                    } else {
-                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                    },
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                MadafakerSecondaryButton(
-                    enabled = draftMessage.isNotBlank() && draftMessage.length <= AppConfig.MAX_MESSAGE_LENGTH && !isSending,
-                    onClick = onSend,
-                    text = "Send"
-                )
+                SendStatusIndicator(status = sendStatus)
             }
+
+            MadafakerSecondaryButton(
+                enabled = draftMessage.isNotBlank() &&
+                    draftMessage.length <= AppConfig.MAX_MESSAGE_LENGTH &&
+                    !isSending,
+                onClick = onSend,
+                text = stringResource(R.string.button_send)
+            )
         }
     }
-
+}
 
 @Composable
 private fun SunnyTextField(
     value: String,
     onValueChange: (String) -> Unit,
     onSend: () -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     MadafakerTextField(
         value = value,
         onValueChange = onValueChange,
+        enabled = enabled,
         singleLine = false,
         modifier = modifier.padding(16.dp),
         textStyle = MaterialTheme.typography.bodyLarge.copy(
@@ -154,37 +169,82 @@ private fun SunnyTextField(
 }
 
 @Composable
-private fun RecentMessagesCard(viewModel: MainScreenContract) {
-    val outcomingMessages by viewModel.outcomingMessages.collectAsState()
-        Column {
+private fun SendStatusIndicator(status: SendMessageStatus) {
+    when (status) {
+        SendMessageStatus.Idle -> Unit
+        SendMessageStatus.Sending -> RetroDotsLoader()
+        SendMessageStatus.Success -> Text(
+            text = stringResource(R.string.send_status_ok),
+            color = MaterialTheme.colorScheme.onBackground,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
+        )
+        is SendMessageStatus.Error -> {
+            val message = status.message?.takeIf { it.isNotBlank() }
+                ?: stringResource(R.string.message_send_failed)
             Text(
-                text = stringResource(R.string.recent_messages_title),
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 12.dp)
+                text = message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center
             )
+        }
+    }
+}
 
-            when (val state = outcomingMessages) {
-                UiState.Loading -> RecentMessagesLoading()
+@Composable
+private fun RetroDotsLoader() {
+    var dotCount by remember { mutableStateOf(1) }
 
-                is UiState.Success -> {
-                    val recentMessages = state.data.take(3)
-                    if (recentMessages.isEmpty()) {
-                        RecentMessagesEmpty()
-                    } else {
-                        RecentMessagesList(recentMessages)
-                    }
-                }
-
-                is UiState.Error -> RecentMessagesError(
-                    message = state.message
-                        ?: state.exception.localizedMessage
-                        ?: stringResource(R.string.error_generic)
-                )
-            }
+    LaunchedEffect(Unit) {
+        while (isActive) {
+            dotCount = if (dotCount == 3) 1 else dotCount + 1
+            delay(350)
         }
     }
 
+    Text(
+        text = ".".repeat(dotCount),
+        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
+    )
+}
+
+@Composable
+private fun RecentMessagesCard(viewModel: MainScreenContract) {
+    val outcomingMessages by viewModel.outcomingMessages.collectAsState()
+    Column {
+        Text(
+            text = stringResource(R.string.recent_messages_title),
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+
+        when (val state = outcomingMessages) {
+            UiState.Loading -> RecentMessagesLoading()
+
+            is UiState.Success -> {
+                val recentMessages = state.data.take(3)
+                if (recentMessages.isEmpty()) {
+                    RecentMessagesEmpty()
+                } else {
+                    RecentMessagesList(recentMessages)
+                }
+            }
+
+            is UiState.Error -> RecentMessagesError(
+                message = state.message
+                    ?: state.exception.localizedMessage
+                    ?: stringResource(R.string.error_generic)
+            )
+        }
+    }
+}
 
 @Composable
 private fun RecentMessagesLoading() {
@@ -280,81 +340,32 @@ private fun RecentMessageItem(
 @Composable
 private fun SendMessageViewPreview() {
     MadafakerTheme(mode = Mode.SHINE) {
-        SendMessageView(viewModel = PreviewMainScreenContract())
-    }
-}
-
-private class PreviewMainScreenContract : MainScreenContract {
-    private val sharedTextManagerImpl = SharedTextManager()
-
-    override val draftMessage = MutableStateFlow("Расскажи что-нибудь хорошее о сегодняшнем дне")
-    override val isSending = MutableStateFlow(false)
-    override val incomingMessages: StateFlow<UiState<List<Message>>> =
-        MutableStateFlow(UiState.Success(emptyList()))
-    private val sampleMessages = listOf(
-        Message(
-            id = "1",
-            body = "Недавнее отправленное сообщение",
-            mode = Mode.SHINE.apiValue,
-            createdAt = "",
-            authorId = "me",
-            authorName = "Preview User",
-            localState = MessageState.SENT
-        ),
-        Message(
-            id = "2",
-            body = "Сообщение в очереди",
-            mode = Mode.SHINE.apiValue,
-            createdAt = "",
-            authorId = "me",
-            authorName = "Preview User",
-            localState = MessageState.PENDING
+        SendMessageView(
+            viewModel = PreviewMainScreenContract(
+                draftText = "Расскажи что-нибудь хорошее о сегодняшнем дне",
+                outgoingMessages = PreviewMessages.sampleOutgoing
+            )
         )
-    )
-    override val outcomingMessages: StateFlow<UiState<List<Message>>> =
-        MutableStateFlow(UiState.Success(sampleMessages))
-    override val currentMode = MutableStateFlow(Mode.SHINE)
-    override val currentTab = MutableStateFlow(MainTab.WRITE)
-    override val isReplySending = MutableStateFlow(false)
-    override val replyError = MutableStateFlow<String?>(null)
-    override val highlightedMessageId = MutableStateFlow<String?>(null)
-    override val replyingMessageId = MutableStateFlow<String?>(null)
-    override val userRepliesForMessage = MutableStateFlow<List<Reply>>(emptyList())
-    override val warningsFlow = MutableStateFlow<((Context) -> String?)?>(null)
-    override val sharedTextManager = sharedTextManagerImpl
-
-    override fun onSendMessage(message: String) {}
-    override fun onDraftMessageChanged(message: String) {
-        draftMessage.value = message
     }
-
-    override fun toggleMode() {
-        currentMode.value = when (currentMode.value) {
-            Mode.SHINE -> Mode.SHADOW
-            Mode.SHADOW -> Mode.SHINE
-        }
-    }
-
-    override fun refreshMessages() {}
-    override fun refreshUserData() {}
-    override fun clearDraft() {
-        draftMessage.value = ""
-    }
-
-    override fun selectTab(tab: MainTab) {
-        currentTab.value = tab
-    }
-
-    override fun onSendReply(messageId: String, replyText: String, isPublic: Boolean) {}
-    override fun clearReplyError() {
-        replyError.value = null
-    }
-
-    override fun onRateMessage(messageId: String, rating: MessageRating) {}
-    override fun onInboxViewed() {}
-    override fun markMessageAsRead(messageId: String) {}
-    override fun onMessageTapped(messageId: String) {}
-    override fun onMessageReplyingClosed() {}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

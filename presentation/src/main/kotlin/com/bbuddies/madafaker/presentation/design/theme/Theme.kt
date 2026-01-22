@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
@@ -29,7 +31,8 @@ private val DarkColorScheme = darkColorScheme(
     onTertiary = Black,
     onBackground = White,
     onSurface = White,
-    onSurfaceVariant = LightGray
+    onSurfaceVariant = LightGray,
+    error = ButtonOrangeEnd
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -45,7 +48,8 @@ private val LightColorScheme = lightColorScheme(
     onSurface = TextPrimary,
     onSurfaceVariant = DarkGray,
     outline = LightGray,
-    surfaceVariant = Color(0xFFF5F5F5)
+    surfaceVariant = Color(0xFFF5F5F5),
+    error = ButtonOrangeEnd
 )
 
 @Composable
@@ -77,11 +81,17 @@ fun MadafakerTheme(
         SideEffect {
             val window = (view.context as Activity).window
 
+            window.navigationBarColor = Color.Transparent.toArgb()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
+            }
+            val useDarkNavBarIcons = colorScheme.onSurface.luminance() < 0.5f
+
             // Set status bar icons appearance
             // Light icons for dark theme, dark icons for light theme
             val insetsController = WindowCompat.getInsetsController(window, view)
             insetsController.isAppearanceLightStatusBars = !darkTheme
-            insetsController.isAppearanceLightNavigationBars = !darkTheme
+            insetsController.isAppearanceLightNavigationBars = false
         }
     }
     ModeBackground(

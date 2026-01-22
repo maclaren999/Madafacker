@@ -47,6 +47,7 @@ class AuthViewModel @Inject constructor(
     val isSigningIn: StateFlow<Boolean> = _isSigningIn
 
     val currentMode = preferenceManager.currentMode
+    val notificationPermissionPromptDismissed = preferenceManager.notificationPermissionPromptDismissed
 
     private val draftValidator = NicknameDraftValidator(userRepository, viewModelScope)
     val nicknameDraftValidationResult = draftValidator.validationResult
