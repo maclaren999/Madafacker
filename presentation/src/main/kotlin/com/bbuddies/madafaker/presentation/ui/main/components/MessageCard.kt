@@ -1,7 +1,5 @@
 package com.bbuddies.madafaker.presentation.ui.main.components
 
-import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,17 +15,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.KeyboardArrowDown
-import androidx.compose.material.icons.outlined.ThumbUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,7 +29,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,6 +40,8 @@ import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.Reply
+import com.bbuddies.madafaker.presentation.R
+import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
 
@@ -67,15 +62,12 @@ fun MessageCard(
 ) {
     var replyText by remember { mutableStateOf("") }
 
-    val mode = Mode.fromApiValue(message.mode)
-    val accentColor = mode.accentColor()
     val replies = userReplies.takeIf { it.isNotEmpty() } ?: message.replies.orEmpty()
 
     if (isReplying) {
         ReplyingMessageCard(
             message = message,
             replies = replies,
-            accentColor = accentColor,
             modifier = modifier,
             replyText = replyText,
             onReplyTextChange = { replyText = it },
@@ -88,11 +80,9 @@ fun MessageCard(
     } else {
         CollapsedMessageCard(
             message = message,
-            replies = replies,
-            accentColor = accentColor,
             modifier = modifier,
             onMessageTapped = onMessageTapped,
-            currentUserId = currentUserId
+            onRateMessage = onRateMessage,
         )
     }
 }
@@ -101,7 +91,6 @@ fun MessageCard(
 private fun ReplyingMessageCard(
     message: InboxMessage,
     replies: List<Reply>,
-    accentColor: Color,
     modifier: Modifier = Modifier,
     replyText: String,
     onReplyTextChange: (String) -> Unit,
@@ -114,7 +103,7 @@ private fun ReplyingMessageCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .animateContentSize(),
+            .clickable { onReplyingClosed?.invoke() },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.Transparent
@@ -122,7 +111,8 @@ private fun ReplyingMessageCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .padding(16.dp)
         ) {
             MessageAuthor(author = message.author)
             MessageBody(
@@ -158,42 +148,37 @@ private fun ReplyingMessageCard(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val canSend = replyText.isNotBlank() && !isReplySending && onSendReply != null
-                Button(
+                MadafakerSecondaryButton(
+                    text = if (isReplySending) "" else "Send Reply",
                     onClick = {
                         onSendReply?.invoke(message.id, replyText.trim(), true)
                         onReplyTextChange("")
                     },
                     enabled = canSend,
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = accentColor
-                    )
-                ) {
-                    if (isReplySending) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            text = "Send Reply",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
+                    leadingIcon = if (isReplySending) {
+                        {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    } else null
+                )
+
+                MadafakerSecondaryButton(
+                    text = "",
+                    onClick = { onReplyingClosed?.invoke() },
+                    modifier = Modifier.weight(0.3f),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close Reply",
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
-                }
-
-                OutlinedButton(
-                    onClick = { onReplyingClosed?.invoke() },
-                    modifier = Modifier.weight(0.3f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close Reply",
-                        tint = MaterialTheme.colorScheme.onBackground
-                    )
-                }
+                )
             }
 
             replyError?.let { error ->
@@ -211,11 +196,9 @@ private fun ReplyingMessageCard(
 @Composable
 private fun CollapsedMessageCard(
     message: InboxMessage,
-    replies: List<Reply>,
-    accentColor: Color,
     modifier: Modifier = Modifier,
     onMessageTapped: (() -> Unit)?,
-    currentUserId: String?
+    onRateMessage: ((messageId: String, rating: MessageRating) -> Unit)?,
 ) {
     Row(
         modifier = modifier
@@ -226,7 +209,6 @@ private fun CollapsedMessageCard(
             modifier = Modifier
                 .width(4.dp)
                 .fillMaxHeight()
-                .background(accentColor)
         )
 
         Column(
@@ -241,33 +223,43 @@ private fun CollapsedMessageCard(
                 maxLines = 6,
                 overflow = TextOverflow.Ellipsis
             )
-
-            RepliesSection(
-                replies = replies,
-                currentUserId = currentUserId,
-                maxVisible = 3
-            )
-
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(24.dp)
+                horizontalArrangement = Arrangement.Absolute.SpaceBetween
             ) {
-                message.up?.let {
-                    Reaction(
-                        Icons.Outlined.ThumbUp,
-                        it,
-                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                ReplySummaryRow(
+                    count = message.replies?.size ?: 0,
+                )
+                Row(
+                    modifier = Modifier,
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    ReactionWithDrawable(
+                        drawableRes = R.drawable.ic_dislike,
+                        count = message.dislikes ?: 0,
+                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                        onRate = {
+                            onRateMessage?.invoke(message.id, MessageRating.DISLIKE)
+                        }
                     )
-                }
-                message.down?.let {
-                    Reaction(
-                        Icons.Outlined.KeyboardArrowDown,
-                        it,
-                        MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                    ReactionWithDrawable(
+                        drawableRes = R.drawable.ic_like,
+                        count = message.likes ?: 0,
+                        tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+                        onRate = {
+                            onRateMessage?.invoke(message.id, MessageRating.LIKE)
+                        }
                     )
-                }
-                message.hearts?.let {
-                    Reaction(Icons.Outlined.FavoriteBorder, it, Color.Red)
+                    ReactionWithDrawable(
+                        drawableRes = R.drawable.ic_superlike,
+                        count = message.superLikes ?: 0,
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                        onRate = {
+                            onRateMessage?.invoke(message.id, MessageRating.SUPERLIKE)
+                        }
+                    )
                 }
             }
         }
@@ -313,6 +305,7 @@ private fun RepliesSection(
         Text(
             text = "Replies (${replies.size}):",
             style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onBackground,
             fontWeight = FontWeight.Medium,
         )
 
@@ -372,19 +365,40 @@ private fun ReplyCard(
         }
     }
 }
+@Composable
+private fun ReplySummaryRow(count: Int, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.replies_count, count),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+        )
+    }
+}
+
 
 @Composable
-private fun Reaction(
-    icon: ImageVector,
+private fun ReactionWithDrawable(
+    drawableRes: Int,
     count: Int,
-    tint: Color
+    tint: Color,
+    onRate: (() -> Unit)? = null
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .clickable(enabled = onRate != null) { onRate?.invoke() }
+            .padding(4.dp)
+    ) {
         Icon(
-            imageVector = icon,
+            painter = painterResource(drawableRes),
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(20.dp)
+            modifier = Modifier.size(24.dp)
         )
         Spacer(Modifier.width(4.dp))
         Text(
@@ -395,27 +409,18 @@ private fun Reaction(
     }
 }
 
-private fun Mode.accentColor(): Color {
-    return when (this) {
-        Mode.SHINE -> Color.Yellow
-        Mode.SHADOW -> Color.Magenta
-    }
-}
 
 // Extension functions
 private fun Message.toInboxMessage(): InboxMessage {
-    val likes = ratingStats?.likes ?: 0
-    val dislikes = ratingStats?.dislikes ?: 0
-    val superLikes = ratingStats?.superLikes ?: 0
 
     return InboxMessage(
         id = id,
         author = authorName,
         body = body,
         mode = mode,
-        up = likes.takeIf { it > 0 },
-        down = dislikes.takeIf { it > 0 },
-        hearts = superLikes.takeIf { it > 0 },
+        likes = ratingStats?.likes?.takeIf { it > 0 },
+        dislikes = ratingStats?.dislikes?.takeIf { it > 0 },
+        superLikes = ratingStats?.superLikes?.takeIf { it > 0 },
         replies = replies
     )
 }
@@ -430,9 +435,9 @@ data class InboxMessage(
     val author: String,
     val body: String,
     val mode: String,
-    val up: Int?,
-    val down: Int?,
-    val hearts: Int?,
+    val likes: Int?,
+    val dislikes: Int?,
+    val superLikes: Int?,
     val replies: List<Reply>? = null
 )
 
@@ -462,9 +467,9 @@ private val previewInboxMessage = InboxMessage(
     author = "user_12345678",
     body = "Keep shining! This space is all about honest thoughts and bright vibes.",
     mode = Mode.SHINE.apiValue,
-    up = 24,
-    down = 2,
-    hearts = 6,
+    likes = 24,
+    dislikes = 2,
+    superLikes = 6,
     replies = previewReplies
 )
 
@@ -473,7 +478,8 @@ private val previewInboxMessage = InboxMessage(
 private fun MessageCardPreview() {
     MadafakerTheme(mode = Mode.SHINE) {
         MessageCard(
-            message = previewInboxMessage
+            message = previewInboxMessage,
+            onRateMessage = { _, _ -> }
         )
     }
 }
