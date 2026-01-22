@@ -13,7 +13,8 @@
 9. [] Likes: impl dislike, like and superlike buttons(similar to Netflix). For 'my posts' they have to be small, with numbers, as they are
    non clickable. For 'inbox' they have to be bigger, clickable.
 10. [X] My posts: scroll glitch.
-11. [ ] Bug: after sending reply -> open Write tab -> inappropriate "reply send" snackbar is shown. Remove it.
+11. [X] Bug: after sending reply -> open Write tab -> inappropriate "reply send" snackbar is shown.
+    Fixed: moved reply success snackbar to InboxTab only.
 
 ## UI secondary issues
 

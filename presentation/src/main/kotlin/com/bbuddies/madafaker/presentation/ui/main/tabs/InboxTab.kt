@@ -1,10 +1,8 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs
 
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,11 +11,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -49,24 +51,47 @@ fun InboxTab(
     val replyError by viewModel.replyError.collectAsState()
     val replyingMessageId by viewModel.replyingMessageId.collectAsState()
     val userRepliesForMessage by viewModel.userRepliesForMessage.collectAsState()
+    val inboxSnackbarMessage by viewModel.inboxSnackbarMessage.collectAsState()
 
     val currentUser = if (viewModel is com.bbuddies.madafaker.presentation.ui.main.MainViewModel) {
         viewModel.currentUser.collectAsState().value
     } else null
 
-    incomingMessages.HandleState(
-        onRetry = viewModel::refreshMessages
-    ) { messages ->
-        InboxMessageList(
-            messages = messages.toInboxMessages(),
-            highlightedMessageId = highlightedMessageId,
-            replyingMessageId = replyingMessageId,
-            userRepliesForMessage = userRepliesForMessage,
-            viewModel = viewModel,
-            isReplySending = isReplySending,
-            replyError = replyError,
-            currentUserId = currentUser?.id
-        )
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Show snackbar for inbox-specific messages (reply success, rating, etc.)
+    LaunchedEffect(inboxSnackbarMessage) {
+        inboxSnackbarMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearInboxSnackbar()
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        incomingMessages.HandleState(
+            onRetry = viewModel::refreshMessages
+        ) { messages ->
+            InboxMessageList(
+                messages = messages.toInboxMessages(),
+                highlightedMessageId = highlightedMessageId,
+                replyingMessageId = replyingMessageId,
+                userRepliesForMessage = userRepliesForMessage,
+                viewModel = viewModel,
+                isReplySending = isReplySending,
+                replyError = replyError,
+                currentUserId = currentUser?.id
+            )
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        ) { snackbarData ->
+            Snackbar(
+                snackbarData = snackbarData,
+                modifier = Modifier.padding(16.dp)
+            )
+        }
     }
 }
 
@@ -163,21 +188,6 @@ private fun InboxEmptyState() {
                 lineHeight = MaterialTheme.typography.bodySmall.lineHeight
             )
         }
-    }
-}
-
-@Composable
-private fun ReplySummaryRow(count: Int, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        Text(
-            text = stringResource(R.string.replies_count, count),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-        )
     }
 }
 

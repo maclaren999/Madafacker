@@ -75,6 +75,10 @@ class MainViewModel @Inject constructor(
     private val _replyError = MutableStateFlow<String?>(null)
     override val replyError: StateFlow<String?> = _replyError
 
+    // Inbox-specific snackbar messages
+    private val _inboxSnackbarMessage = MutableStateFlow<String?>(null)
+    override val inboxSnackbarMessage: StateFlow<String?> = _inboxSnackbarMessage
+
     private val _highlightedMessageId = MutableStateFlow<String?>(null)
     override val highlightedMessageId: StateFlow<String?> = _highlightedMessageId
 
@@ -369,7 +373,7 @@ class MainViewModel @Inject constructor(
             try {
                 messageRepository.refreshMessages()
             } catch (e: Exception) {
-                showError("Failed to refresh messages: ${e.message}")
+                showInboxSnackbar("Failed to refresh messages: ${e.message}")
             }
         }
     }
@@ -397,6 +401,14 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private fun showInboxSnackbar(message: String) {
+        _inboxSnackbarMessage.value = message
+    }
+
+    override fun clearInboxSnackbar() {
+        _inboxSnackbarMessage.value = null
+    }
+
     override fun onSendReply(messageId: String, replyText: String, isPublic: Boolean) {
         viewModelScope.launch {
             _isReplySending.value = true
@@ -411,7 +423,7 @@ class MainViewModel @Inject constructor(
 
                 result.fold(
                     onSuccess = { reply ->
-                        showSuccess("Reply sent successfully!")
+                        showInboxSnackbar("Reply sent successfully!")
 
                         // Track reply analytics
                         viewModelScope.launch {
@@ -445,6 +457,7 @@ class MainViewModel @Inject constructor(
     override fun clearReplyError() {
         _replyError.value = null
     }
+
 
     override fun onInboxViewed() {
         viewModelScope.launch {
@@ -530,14 +543,14 @@ class MainViewModel @Inject constructor(
 
                 result.fold(
                     onSuccess = {
-                        showSuccess("Message rated successfully!")
+                        showInboxSnackbar("Message rated successfully!")
                     },
                     onFailure = { error ->
-                        showError("Failed to rate message: ${error.message}")
+                        showInboxSnackbar("Failed to rate message: ${error.message}")
                     }
                 )
             } catch (e: Exception) {
-                showError("Failed to rate message: ${e.message}")
+                showInboxSnackbar("Failed to rate message: ${e.message}")
             }
         }
     }

@@ -48,6 +48,9 @@ interface MainScreenContract {
     // Warnings (from BaseViewModel)
     val warningsFlow: StateFlow<((context: Context) -> String?)?>
 
+    // Inbox-specific snackbar messages (reply success, rating errors, etc.)
+    val inboxSnackbarMessage: StateFlow<String?>
+
     // Shared text manager for external text sharing
     val sharedTextManager: SharedTextManager
 
@@ -65,6 +68,7 @@ interface MainScreenContract {
     // Reply actions
     fun onSendReply(messageId: String, replyText: String, isPublic: Boolean = true)
     fun clearReplyError()
+    fun clearInboxSnackbar()
 
     // Rating actions
     fun onRateMessage(messageId: String, rating: MessageRating)

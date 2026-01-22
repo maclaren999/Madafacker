@@ -46,6 +46,7 @@ class PreviewMainScreenContract(
     override val replyingMessageId = MutableStateFlow(replyingMessageId)
     override val userRepliesForMessage = MutableStateFlow(userReplies)
     override val warningsFlow = MutableStateFlow<((Context) -> String?)?>(null)
+    override val inboxSnackbarMessage = MutableStateFlow<String?>(null)
     override val sharedTextManager = sharedTextManagerImpl
 
     override fun onSendMessage(message: String) {}
@@ -73,6 +74,9 @@ class PreviewMainScreenContract(
     override fun onSendReply(messageId: String, replyText: String, isPublic: Boolean) {}
     override fun clearReplyError() {
         replyError.value = null
+    }
+    override fun clearInboxSnackbar() {
+        inboxSnackbarMessage.value = null
     }
 
     override fun onRateMessage(messageId: String, rating: MessageRating) {}
