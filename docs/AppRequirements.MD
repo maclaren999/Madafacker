@@ -602,6 +602,14 @@ Integrated app theme directly with the Mode system, making dark/light theme auto
 
 ---
 
+### 15.3 Mode Toggle Tip Behavior (v1.2)
+
+- The tooltip for switching Shine/Shadow now appears only on the first app launch after a user signs
+  in.
+- Logout clears the hint flag so the next successful login surfaces the tip once, then it stays
+  hidden until the next login.
+- Preference reset happens alongside auth token storage to guarantee the hint for each new session.
+
 
 
 

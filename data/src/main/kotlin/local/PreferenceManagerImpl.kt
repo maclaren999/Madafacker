@@ -103,7 +103,15 @@ class PreferenceManagerImpl @Inject constructor(
             )
 
     override suspend fun updateAuthToken(googleIdToken: String) {
-        dataStore.set(PreferenceKey.AuthToken, googleIdToken)
+        dataStore.edit { preferences ->
+            val previousToken = preferences[PreferenceKey.AuthToken.key]
+            preferences[PreferenceKey.AuthToken.key] = googleIdToken
+
+            // Only reset the tip flag if this is a first-time login (no previous token)
+            if (previousToken == null) {
+                preferences[PreferenceKey.HasSeenModeToggleTip.key] = false
+            }
+        }
     }
 
     override suspend fun updateFirebaseIdToken(firebaseIdToken: String) {
@@ -125,19 +133,23 @@ class PreferenceManagerImpl @Inject constructor(
         firebaseUid: String
     ) {
         dataStore.edit { preferences ->
+            val previousToken = preferences[PreferenceKey.AuthToken.key]
+
             preferences[PreferenceKey.AuthToken.key] = googleIdToken
             preferences[PreferenceKey.GoogleUserId.key] = googleUserId
             preferences[PreferenceKey.FirebaseIdToken.key] = firebaseIdToken
             preferences[PreferenceKey.FirebaseUid.key] = firebaseUid
+
+            // Only reset the tip flag if this is a first-time login (no previous token)
+            if (previousToken == null) {
+                preferences[PreferenceKey.HasSeenModeToggleTip.key] = false
+            }
         }
     }
 
     override suspend fun clearUserData() {
         dataStore.edit { preferences ->
-            val preserveModeTip = preferences[PreferenceKey.HasSeenModeToggleTip.key]
             preferences.clear()
-            // Keep UX education flag across logouts so it only shows on first install
-            preserveModeTip?.let { preferences[PreferenceKey.HasSeenModeToggleTip.key] = it }
         }
     }
 

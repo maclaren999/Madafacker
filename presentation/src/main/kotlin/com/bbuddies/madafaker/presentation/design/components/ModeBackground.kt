@@ -11,19 +11,21 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -32,12 +34,19 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.PopupPositionProvider
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.design.theme.ShadowBackgroundGradient
@@ -61,13 +70,16 @@ import com.bbuddies.madafaker.presentation.design.theme.ShineSunGradient
  * - Animated alpha for handwriting overlay (400ms)
  * - Animated decorative elements (500ms)
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModeBackground(
     mode: Mode,
     showDecorative: Boolean = false,
     showModeTip: Boolean = false,
-    onModeTipDismiss: () -> Unit = {},
     onModeToggle: () -> Unit = {},
+    onTooltipDismissed: () -> Unit = {},
+    tooltipAlignment: Alignment = Alignment.TopStart,
+    tooltipPadding: PaddingValues = PaddingValues(16.dp),
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
@@ -81,8 +93,21 @@ fun ModeBackground(
         label = "handwriting_alpha"
     )
 
-    var isModeTipVisible by rememberSaveable(showDecorative, showModeTip) {
-        mutableStateOf(showDecorative && showModeTip)
+    val tooltipState = rememberTooltipState(isPersistent = false)
+    val tooltipPositionProvider = rememberAboveTooltipPositionProvider()
+
+    LaunchedEffect(showDecorative, showModeTip) {
+        if (showDecorative && showModeTip) {
+            tooltipState.show()
+            // Auto-dismiss tooltip after 5 seconds
+            kotlinx.coroutines.delay(5000)
+            if (tooltipState.isVisible) {
+                tooltipState.dismiss()
+                onTooltipDismissed()
+            }
+        } else {
+            tooltipState.dismiss()
+        }
     }
 
     Box(modifier = modifier.fillMaxSize()) {
@@ -157,17 +182,26 @@ fun ModeBackground(
         // Content on top of all background layers
         content()
 
-        if (showDecorative && isModeTipVisible) {
-            ModeToggleTip(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .padding(start = 22.dp, top = 44.dp)
-            )
-        }
-
-        // Transparent hitbox above everything to ensure taps reach the sun area
         if (showDecorative) {
-            Box(modifier = Modifier.fillMaxSize()) {
+            TooltipBox(
+                positionProvider = tooltipPositionProvider,
+                state = tooltipState,
+                tooltip = {
+                    PlainTooltip(
+                        modifier = Modifier.padding(top = 16.dp, start = 16.dp),
+                        contentColor = MaterialTheme.colorScheme.background.copy(alpha = 0.5f),
+                        containerColor = MaterialTheme.colorScheme.background.copy(alpha = 0.3f)
+                    ) {
+                        Text(
+                            text = "Tap the sun to switch modes",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                },
+
+                ) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
@@ -180,13 +214,42 @@ fun ModeBackground(
                             indication = null
                         ) {
                             Log.i("ModeBackground", "Decorative sun tapped")
-                            if (isModeTipVisible) {
-                                isModeTipVisible = false
-                                onModeTipDismiss()
+                            if (tooltipState.isVisible) {
+                                tooltipState.dismiss()
+                                onTooltipDismissed()
                             }
                             onModeToggle()
                         }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun rememberAboveTooltipPositionProvider(
+    spacingBetweenTooltipAndAnchor: Dp = 4.dp
+): PopupPositionProvider {
+    val spacingPx = with(LocalDensity.current) { spacingBetweenTooltipAndAnchor.roundToPx() }
+
+    return remember(spacingPx) {
+        object : PopupPositionProvider {
+            override fun calculatePosition(
+                anchorBounds: IntRect,
+                windowSize: IntSize,
+                layoutDirection: LayoutDirection,
+                popupContentSize: IntSize
+            ): IntOffset {
+                val centeredX =
+                    anchorBounds.left + (anchorBounds.width - popupContentSize.width) / 2
+                val clampedX = centeredX.coerceIn(
+                    0,
+                    (windowSize.width - popupContentSize.width).coerceAtLeast(0)
+                )
+
+                val y = (anchorBounds.top - popupContentSize.height - spacingPx).coerceAtLeast(0)
+
+                return IntOffset(clampedX, y)
             }
         }
     }
@@ -244,26 +307,6 @@ private fun DrawScope.drawRepeatingPattern(
         }
     }
 }
-
-@Composable
-private fun ModeToggleTip(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .background(
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                shape = RoundedCornerShape(12.dp)
-            )
-            .padding(horizontal = 24.dp)
-    ) {
-        Text(
-            text = "Tip: Tap the sun to switch modes",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color(0xFF1C1C1C)
-        )
-    }
-}
-
 
 @Preview(name = "Shine Mode", showBackground = true)
 @Composable

@@ -178,8 +178,8 @@ fun AppNavHost(
         mode = currentMode,
         showDecorative = shouldShowNavigation,
         showModeTip = shouldShowNavigation && !hasSeenModeToggleTip,
-        onModeTipDismiss = { mainViewModel.markModeToggleTipSeen() },
-        onModeToggle = { mainViewModel.toggleMode() }
+        onModeToggle = { mainViewModel.toggleMode() },
+        onTooltipDismissed = { mainViewModel.onModeToggleTipDismissed() }
     ) {
         Box(
             modifier = modifier

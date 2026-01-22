@@ -298,9 +298,22 @@ class MainViewModel @Inject constructor(
             }
             preferenceManager.updateMode(newMode)
 
+            // Mark that user has seen the mode toggle tip
+            if (!hasSeenModeToggleTip.value) {
+                preferenceManager.setHasSeenModeToggleTip(true)
+            }
+
             // Save draft with new mode if there's content
             if (_draftMessage.value.isNotBlank()) {
                 saveDraft(_draftMessage.value)
+            }
+        }
+    }
+
+    fun onModeToggleTipDismissed() {
+        viewModelScope.launch {
+            if (!hasSeenModeToggleTip.value) {
+                preferenceManager.setHasSeenModeToggleTip(true)
             }
         }
     }
@@ -525,16 +538,6 @@ class MainViewModel @Inject constructor(
                 )
             } catch (e: Exception) {
                 showError("Failed to rate message: ${e.message}")
-            }
-        }
-    }
-
-    fun markModeToggleTipSeen() {
-        viewModelScope.launch {
-            try {
-                preferenceManager.setHasSeenModeToggleTip(true)
-            } catch (_: Exception) {
-                // Non-critical; ignore errors
             }
         }
     }
