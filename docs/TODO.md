@@ -42,7 +42,7 @@
      choose new account.
 301. [X] Logged in user. No internet connection. User opens the app (cold start) the sees Welcome AuthScreen instead of MainScreen.
 302. [X] Messages arrangement by dates my be unstable. Messages mix up sometimes.
-303. [] Replies are not shown under messages in Inbox. After sending a reply, it is not displayed under the message.
+303. [X] Replies are not shown under messages in Inbox. After sending a reply, it is not displayed under the message.
 304. [] Replies are not shown for incoming message. (check outcoming messages too)
 305. [X] The Auth state/navigation logic - FIXED with V2.1 Optimistic Auth.
      Note: Firebase Auth doesn't persist session across cold starts (known issue with Credential Manager flow).
