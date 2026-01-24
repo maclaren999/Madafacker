@@ -425,6 +425,13 @@ class MainViewModel @Inject constructor(
                     onSuccess = { reply ->
                         showInboxSnackbar("Reply sent successfully!")
 
+                        if (_replyingMessageId.value == messageId) {
+                            val updatedReplies = (_userRepliesForMessage.value + reply)
+                                .distinctBy { it.id }
+                                .sortedBy { it.createdAt }
+                            _userRepliesForMessage.value = updatedReplies
+                        }
+
                         // Track reply analytics
                         viewModelScope.launch {
                             try {

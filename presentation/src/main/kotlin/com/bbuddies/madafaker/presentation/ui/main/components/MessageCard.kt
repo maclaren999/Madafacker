@@ -80,9 +80,11 @@ fun MessageCard(
     } else {
         CollapsedMessageCard(
             message = message,
+            replies = replies,
             modifier = modifier,
             onMessageTapped = onMessageTapped,
             onRateMessage = onRateMessage,
+            currentUserId = currentUserId
         )
     }
 }
@@ -196,9 +198,11 @@ private fun ReplyingMessageCard(
 @Composable
 private fun CollapsedMessageCard(
     message: InboxMessage,
+    replies: List<Reply>,
     modifier: Modifier = Modifier,
     onMessageTapped: (() -> Unit)?,
     onRateMessage: ((messageId: String, rating: MessageRating) -> Unit)?,
+    currentUserId: String?
 ) {
     Row(
         modifier = modifier
@@ -229,7 +233,7 @@ private fun CollapsedMessageCard(
                 horizontalArrangement = Arrangement.Absolute.SpaceBetween
             ) {
                 ReplySummaryRow(
-                    count = message.replies?.size ?: 0,
+                    count = replies.size,
                 )
                 Row(
                     modifier = Modifier,
@@ -262,6 +266,13 @@ private fun CollapsedMessageCard(
                     )
                 }
             }
+
+            RepliesSection(
+                replies = replies,
+                currentUserId = currentUserId,
+                maxVisible = 2,
+                modifier = Modifier.padding(top = 8.dp)
+            )
         }
     }
 }

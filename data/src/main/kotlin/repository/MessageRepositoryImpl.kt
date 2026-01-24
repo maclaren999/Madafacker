@@ -12,6 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.MessageErrorMapper
@@ -35,7 +36,12 @@ class MessageRepositoryImpl @Inject constructor(
             .flatMapLatest { authState ->
                 when (authState) {
                     is AuthenticationState.Authenticated -> {
-                        localDao.observeIncomingMessages(authState.user.id)
+                        localDao.observeIncomingMessagesWithReplies(authState.user.id)
+                            .map { messagesWithReplies ->
+                                messagesWithReplies.map { item ->
+                                    item.message.apply { replies = item.replies }
+                                }
+                            }
                     }
 
                     else -> emptyFlow()
@@ -49,7 +55,12 @@ class MessageRepositoryImpl @Inject constructor(
             .flatMapLatest { authState ->
                 when (authState) {
                     is AuthenticationState.Authenticated -> {
-                        localDao.observeOutgoingMessages(authState.user.id)
+                        localDao.observeOutgoingMessagesWithReplies(authState.user.id)
+                            .map { messagesWithReplies ->
+                                messagesWithReplies.map { item ->
+                                    item.message.apply { replies = item.replies }
+                                }
+                            }
                     }
 
                     else -> emptyFlow()
@@ -103,6 +114,12 @@ class MessageRepositoryImpl @Inject constructor(
             localDao.deleteMessagesByState(MessageState.SENT)
             localDao.insertMessages(allServerMessages)
 
+            val allServerReplies = (serverIncoming + serverOutgoing)
+                .flatMap { it.replies.orEmpty() }
+            if (allServerReplies.isNotEmpty()) {
+                localDao.insertReplies(allServerReplies)
+            }
+
         } catch (e: Exception) {
             Timber.w(e, "Failed to refresh from server")
         }
@@ -128,6 +145,12 @@ class MessageRepositoryImpl @Inject constructor(
             // Remove existing incoming messages (not authored by current user) and insert fresh data
             localDao.deleteIncomingMessages(user.id)
             localDao.insertMessages(incomingMessages)
+
+            val incomingReplies = serverIncoming
+                .flatMap { it.replies.orEmpty() }
+            if (incomingReplies.isNotEmpty()) {
+                localDao.insertReplies(incomingReplies)
+            }
 
             Timber.d("Refreshed ${incomingMessages.size} incoming messages")
         } catch (e: Exception) {
