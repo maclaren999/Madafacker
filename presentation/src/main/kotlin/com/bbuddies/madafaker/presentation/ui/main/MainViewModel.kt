@@ -5,8 +5,8 @@ import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
-import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageSendException
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.model.UnsentDraft
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
@@ -57,11 +57,11 @@ class MainViewModel @Inject constructor(
     private val _draftMessage = MutableStateFlow("")
     override val draftMessage: StateFlow<String> = _draftMessage
 
-    private val _incomingMessages = MutableStateFlow<UiState<List<Message>>>(UiState.Loading)
-    override val incomingMessages: StateFlow<UiState<List<Message>>> = _incomingMessages
+    private val _incomingMessages = MutableStateFlow<UiState<List<MessageWithReplies>>>(UiState.Loading)
+    override val incomingMessages: StateFlow<UiState<List<MessageWithReplies>>> = _incomingMessages
 
-    private val _outcomingMessages = MutableStateFlow<UiState<List<Message>>>(UiState.Loading)
-    override val outcomingMessages: StateFlow<UiState<List<Message>>> = _outcomingMessages
+    private val _outcomingMessages = MutableStateFlow<UiState<List<MessageWithReplies>>>(UiState.Loading)
+    override val outcomingMessages: StateFlow<UiState<List<MessageWithReplies>>> = _outcomingMessages
 
     private val _sendStatus = MutableStateFlow<SendMessageStatus>(SendMessageStatus.Idle)
     override val sendStatus: StateFlow<SendMessageStatus> = _sendStatus
@@ -364,8 +364,8 @@ class MainViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun filterMessagesByMode(messages: List<Message>, mode: Mode): List<Message> {
-        return messages.filter { Mode.fromApiValue(it.mode) == mode }
+    private fun filterMessagesByMode(messages: List<MessageWithReplies>, mode: Mode): List<MessageWithReplies> {
+        return messages.filter { Mode.fromApiValue(it.message.mode) == mode }
     }
 
     override fun refreshMessages() {

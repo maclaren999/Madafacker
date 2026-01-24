@@ -3,7 +3,7 @@ package com.bbuddies.madafaker.presentation.ui.main
 import android.content.Context
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.UiState
@@ -25,8 +25,8 @@ interface MainScreenContract {
     val sendStatus: StateFlow<SendMessageStatus>
 
     // Messages
-    val incomingMessages: StateFlow<UiState<List<Message>>>
-    val outcomingMessages: StateFlow<UiState<List<Message>>>
+    val incomingMessages: StateFlow<UiState<List<MessageWithReplies>>>
+    val outcomingMessages: StateFlow<UiState<List<MessageWithReplies>>>
 
     // Mode
     val currentMode: StateFlow<Mode>

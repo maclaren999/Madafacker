@@ -5,6 +5,7 @@ import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
@@ -20,8 +21,8 @@ import kotlinx.coroutines.flow.StateFlow
  */
 class PreviewMainScreenContract(
     draftText: String = "",
-    outgoingMessages: List<Message> = emptyList(),
-    incomingMessages: List<Message> = emptyList(),
+    outgoingMessages: List<MessageWithReplies> = emptyList(),
+    incomingMessages: List<MessageWithReplies> = emptyList(),
     currentMode: Mode = Mode.SHINE,
     currentTab: MainTab = MainTab.WRITE,
     sendStatus: SendMessageStatus = SendMessageStatus.Idle,
@@ -34,9 +35,9 @@ class PreviewMainScreenContract(
     override val draftMessage = MutableStateFlow(draftText)
     override val isSending = MutableStateFlow(false)
     override val sendStatus = MutableStateFlow(sendStatus)
-    override val incomingMessages: StateFlow<UiState<List<Message>>> =
+    override val incomingMessages: StateFlow<UiState<List<MessageWithReplies>>> =
         MutableStateFlow(UiState.Success(incomingMessages))
-    override val outcomingMessages: StateFlow<UiState<List<Message>>> =
+    override val outcomingMessages: StateFlow<UiState<List<MessageWithReplies>>> =
         MutableStateFlow(UiState.Success(outgoingMessages))
     override val currentMode = MutableStateFlow(currentMode)
     override val currentTab = MutableStateFlow(currentTab)
@@ -110,5 +111,8 @@ object PreviewMessages {
         localState = MessageState.FAILED
     )
 
-    val sampleOutgoing = listOf(sentMessage, failedMessage)
+    val sampleOutgoing = listOf(
+        MessageWithReplies(sentMessage, emptyList()),
+        MessageWithReplies(failedMessage, emptyList())
+    )
 }

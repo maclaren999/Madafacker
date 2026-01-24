@@ -4,6 +4,7 @@ import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
@@ -31,15 +32,18 @@ class MessageRepositoryImpl @Inject constructor(
 
     // Single source of truth - local database
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeIncomingMessages(): Flow<List<Message>> {
+    override fun observeIncomingMessages(): Flow<List<MessageWithReplies>> {
         return userRepository.authenticationState
             .flatMapLatest { authState ->
                 when (authState) {
                     is AuthenticationState.Authenticated -> {
                         localDao.observeIncomingMessagesWithReplies(authState.user.id)
-                            .map { messagesWithReplies ->
-                                messagesWithReplies.map { item ->
-                                    item.message.apply { replies = item.replies }
+                            .map { localMessagesWithReplies ->
+                                localMessagesWithReplies.map { item ->
+                                    MessageWithReplies(
+                                        message = item.message,
+                                        replies = item.replies
+                                    )
                                 }
                             }
                     }
@@ -50,15 +54,18 @@ class MessageRepositoryImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeOutgoingMessages(): Flow<List<Message>> {
+    override fun observeOutgoingMessages(): Flow<List<MessageWithReplies>> {
         return userRepository.authenticationState
             .flatMapLatest { authState ->
                 when (authState) {
                     is AuthenticationState.Authenticated -> {
                         localDao.observeOutgoingMessagesWithReplies(authState.user.id)
-                            .map { messagesWithReplies ->
-                                messagesWithReplies.map { item ->
-                                    item.message.apply { replies = item.replies }
+                            .map { localMessagesWithReplies ->
+                                localMessagesWithReplies.map { item ->
+                                    MessageWithReplies(
+                                        message = item.message,
+                                        replies = item.replies
+                                    )
                                 }
                             }
                     }

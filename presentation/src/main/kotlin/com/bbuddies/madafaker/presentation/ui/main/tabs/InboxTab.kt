@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
@@ -213,55 +214,61 @@ private val previewInboxReplies = listOf(
 )
 
 private val previewInboxMessages = listOf(
-    Message(
-        id = "message-1",
-        body = "What helps you reset after a long week?",
-        mode = Mode.SHINE.apiValue,
-        createdAt = "2024-02-01T09:00:00Z",
-        authorId = "user-1",
-        authorName = "User1",
-        ratingStats = RatingStats(likes = 5, dislikes = 1, superLikes = 2),
-        ownRating = null,
-        localState = MessageState.SENT,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = false,
-        isRead = false,
-        readAt = null,
+    MessageWithReplies(
+        message = Message(
+            id = "message-1",
+            body = "What helps you reset after a long week?",
+            mode = Mode.SHINE.apiValue,
+            createdAt = "2024-02-01T09:00:00Z",
+            authorId = "user-1",
+            authorName = "User1",
+            ratingStats = RatingStats(likes = 5, dislikes = 1, superLikes = 2),
+            ownRating = null,
+            localState = MessageState.SENT,
+            localCreatedAt = System.currentTimeMillis(),
+            tempId = null,
+            needsSync = false,
+            isRead = false,
+            readAt = null
+        ),
         replies = previewInboxReplies
     ),
-    Message(
-        id = "message-2",
-        body = "Share a small win you had today.",
-        mode = Mode.SHADOW.apiValue,
-        createdAt = "2024-02-02T14:00:00Z",
-        authorId = "user-2",
-        authorName = "User2",
-        ratingStats = RatingStats(likes = 3, dislikes = 0, superLikes = 1),
-        ownRating = null,
-        localState = MessageState.SENT,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = false,
-        isRead = false,
-        readAt = null,
+    MessageWithReplies(
+        message = Message(
+            id = "message-2",
+            body = "Share a small win you had today.",
+            mode = Mode.SHADOW.apiValue,
+            createdAt = "2024-02-02T14:00:00Z",
+            authorId = "user-2",
+            authorName = "User2",
+            ratingStats = RatingStats(likes = 3, dislikes = 0, superLikes = 1),
+            ownRating = null,
+            localState = MessageState.SENT,
+            localCreatedAt = System.currentTimeMillis(),
+            tempId = null,
+            needsSync = false,
+            isRead = false,
+            readAt = null
+        ),
         replies = emptyList()
     ),
-    Message(
-        id = "message-3",
-        body = "Share a small win you had today.",
-        mode = Mode.SHADOW.apiValue,
-        createdAt = "2024-02-02T14:00:00Z",
-        authorId = "user-2",
-        authorName = "User2",
-        ratingStats = RatingStats(likes = 8, dislikes = 2, superLikes = 3),
-        ownRating = null,
-        localState = MessageState.SENT,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = false,
-        isRead = false,
-        readAt = null,
+    MessageWithReplies(
+        message = Message(
+            id = "message-3",
+            body = "Share a small win you had today.",
+            mode = Mode.SHADOW.apiValue,
+            createdAt = "2024-02-02T14:00:00Z",
+            authorId = "user-2",
+            authorName = "User2",
+            ratingStats = RatingStats(likes = 8, dislikes = 2, superLikes = 3),
+            ownRating = null,
+            localState = MessageState.SENT,
+            localCreatedAt = System.currentTimeMillis(),
+            tempId = null,
+            needsSync = false,
+            isRead = false,
+            readAt = null
+        ),
         replies = previewInboxReplies
     )
 )
@@ -276,11 +283,11 @@ private fun InboxTabPreview() {
                 draftText = "Staying curious.",
                 incomingMessages = previewInboxMessages,
                 currentTab = MainTab.INBOX,
-                highlightedMessageId = firstMessage.id,
-                replyingMessageId = firstMessage.id,
+                highlightedMessageId = firstMessage.message.id,
+                replyingMessageId = firstMessage.message.id,
                 userReplies = previewInboxReplies
             ),
-            highlightedMessageId = firstMessage.id
+            highlightedMessageId = firstMessage.message.id
         )
     }
 }

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
@@ -43,17 +44,18 @@ import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMainScreenCont
 @Composable
 fun MyPostsTab(viewModel: MainScreenContract) {
     val outcomingMessages by viewModel.outcomingMessages.collectAsState()
+    val currentMode by viewModel.currentMode.collectAsState()
 
     outcomingMessages.HandleState(
         onRetry = viewModel::refreshMessages
     ) { messages ->
-        MyPostsList(messages, mode = viewModel.currentMode.value)
+        MyPostsList(messages, mode = currentMode)
     }
 }
 
 @Composable
-private fun MyPostsList(messages: List<Message>, mode: Mode) {
-    if (messages.isEmpty()) {
+private fun MyPostsList(messagesWithReplies: List<MessageWithReplies>, mode: Mode) {
+    if (messagesWithReplies.isEmpty()) {
         EmptyStateView(
             title = stringResource(R.string.no_posts_yet_title),
             subtitle = stringResource(R.string.no_posts_yet_subtitle)
@@ -67,10 +69,10 @@ private fun MyPostsList(messages: List<Message>, mode: Mode) {
             .padding(bottom = 16.dp),
     ) {
         items(
-            items = messages,
-            key = { message -> message.id }
-        ) { message ->
-            MyPostCard(message, mode)
+            items = messagesWithReplies,
+            key = { item -> item.message.id }
+        ) { item ->
+            MyPostCard(item.message, mode)
         }
     }
 }
@@ -243,55 +245,61 @@ private val previewRepliesForMyPosts = listOf(
 )
 
 private val previewMyPosts = listOf(
-    Message(
-        id = "my-post-1",
-        body = "Just shared a thought with the community about staying motivated.",
-        mode = Mode.SHINE.apiValue,
-        createdAt = "2024-03-01T10:00:00Z",
-        authorId = "preview-user",
-        authorName = "PreviewUser",
-        ratingStats = RatingStats(likes = 5, dislikes = 1, superLikes = 2),
-        ownRating = null,
-        localState = MessageState.SENT,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = false,
-        isRead = true,
-        readAt = null,
+    MessageWithReplies(
+        message = Message(
+            id = "my-post-1",
+            body = "Just shared a thought with the community about staying motivated.",
+            mode = Mode.SHINE.apiValue,
+            createdAt = "2024-03-01T10:00:00Z",
+            authorId = "preview-user",
+            authorName = "PreviewUser",
+            ratingStats = RatingStats(likes = 5, dislikes = 1, superLikes = 2),
+            ownRating = null,
+            localState = MessageState.SENT,
+            localCreatedAt = System.currentTimeMillis(),
+            tempId = null,
+            needsSync = false,
+            isRead = true,
+            readAt = null
+        ),
         replies = previewRepliesForMyPosts
     ),
-    Message(
-        id = "my-post-2",
-        body = "Working on a longer story about focus and balance.",
-        mode = Mode.SHADOW.apiValue,
-        createdAt = "2024-03-02T09:00:00Z",
-        authorId = "preview-user",
-        authorName = "PreviewUser",
-        ratingStats = RatingStats(),
-        ownRating = null,
-        localState = MessageState.FAILED,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = true,
-        isRead = true,
-        readAt = null,
+    MessageWithReplies(
+        message = Message(
+            id = "my-post-2",
+            body = "Working on a longer story about focus and balance.",
+            mode = Mode.SHADOW.apiValue,
+            createdAt = "2024-03-02T09:00:00Z",
+            authorId = "preview-user",
+            authorName = "PreviewUser",
+            ratingStats = RatingStats(),
+            ownRating = null,
+            localState = MessageState.FAILED,
+            localCreatedAt = System.currentTimeMillis(),
+            tempId = null,
+            needsSync = true,
+            isRead = true,
+            readAt = null
+        ),
         replies = emptyList()
     ),
-    Message(
-        id = "my-post-3",
-        body = "Draft failed to send, needs another try.",
-        mode = Mode.SHADOW.apiValue,
-        createdAt = "2024-03-02T09:00:00Z",
-        authorId = "preview-user",
-        authorName = "PreviewUser",
-        ratingStats = RatingStats(),
-        ownRating = null,
-        localState = MessageState.FAILED,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = true,
-        isRead = true,
-        readAt = null,
+    MessageWithReplies(
+        message = Message(
+            id = "my-post-3",
+            body = "Draft failed to send, needs another try.",
+            mode = Mode.SHADOW.apiValue,
+            createdAt = "2024-03-02T09:00:00Z",
+            authorId = "preview-user",
+            authorName = "PreviewUser",
+            ratingStats = RatingStats(),
+            ownRating = null,
+            localState = MessageState.FAILED,
+            localCreatedAt = System.currentTimeMillis(),
+            tempId = null,
+            needsSync = true,
+            isRead = true,
+            readAt = null
+        ),
         replies = emptyList()
     )
 )

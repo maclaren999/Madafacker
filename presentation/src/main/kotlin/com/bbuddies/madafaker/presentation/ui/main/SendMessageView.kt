@@ -34,8 +34,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
@@ -257,13 +257,13 @@ private fun RecentMessagesLoading() {
 }
 
 @Composable
-private fun RecentMessagesList(messages: List<Message>) {
-    messages.forEachIndexed { index, message ->
+private fun RecentMessagesList(messagesWithReplies: List<MessageWithReplies>) {
+    messagesWithReplies.forEachIndexed { index, item ->
         RecentMessageItem(
-            message = message.body,
-            messageState = message.localState
+            message = item.message.body,
+            messageState = item.message.localState
         )
-        if (index < messages.size - 1) {
+        if (index < messagesWithReplies.size - 1) {
             Spacer(modifier = Modifier.height(8.dp))
         }
     }

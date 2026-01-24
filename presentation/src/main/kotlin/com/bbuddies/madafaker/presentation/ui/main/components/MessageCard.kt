@@ -38,7 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
@@ -422,21 +422,20 @@ private fun ReactionWithDrawable(
 
 
 // Extension functions
-private fun Message.toInboxMessage(): InboxMessage {
-
+private fun MessageWithReplies.toInboxMessage(): InboxMessage {
     return InboxMessage(
-        id = id,
-        author = authorName,
-        body = body,
-        mode = mode,
-        likes = ratingStats?.likes?.takeIf { it > 0 },
-        dislikes = ratingStats?.dislikes?.takeIf { it > 0 },
-        superLikes = ratingStats?.superLikes?.takeIf { it > 0 },
+        id = message.id,
+        author = message.authorName,
+        body = message.body,
+        mode = message.mode,
+        likes = message.ratingStats?.likes?.takeIf { it > 0 },
+        dislikes = message.ratingStats?.dislikes?.takeIf { it > 0 },
+        superLikes = message.ratingStats?.superLikes?.takeIf { it > 0 },
         replies = replies
     )
 }
 
-fun List<Message>.toInboxMessages(): List<InboxMessage> {
+fun List<MessageWithReplies>.toInboxMessages(): List<InboxMessage> {
     return map { it.toInboxMessage() }
 }
 
