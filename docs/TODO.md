@@ -18,10 +18,11 @@
 
 ## UI secondary issues
 
-51. [] Recent messages: hide section if no messages yet.
+51. [X] Recent messages: hide section if no messages yet.
 52. [] Tabs swipe animation: titles slide horizontally, underline graphics stays in place.
 53. [] Improve button "Send reply" styling/states.
 54. [] Change error theme color
+55. [X] Lock portrait orientation only in activities.
 
 ## Logic
 

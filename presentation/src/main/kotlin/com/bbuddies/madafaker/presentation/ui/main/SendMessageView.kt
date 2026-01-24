@@ -84,14 +84,15 @@ private fun MessageCard(
     onSend: () -> Unit
 ) {
     Column {
-        Text(
-            text = when (currentMode) {
-                Mode.SHINE -> stringResource(R.string.express_positivity)
-                Mode.SHADOW -> stringResource(R.string.express_freely)
-            },
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-            style = MaterialTheme.typography.headlineMedium,
-        )
+        // Action-prompting copy
+//        Text(
+//            text = when (currentMode) {
+//                Mode.SHINE -> stringResource(R.string.express_positivity)
+//                Mode.SHADOW -> stringResource(R.string.express_freely)
+//            },
+//            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+//            style = MaterialTheme.typography.headlineMedium,
+//        )
 
         SunnyTextField(
             value = draftMessage,
@@ -217,6 +218,11 @@ private fun RetroDotsLoader() {
 @Composable
 private fun RecentMessagesCard(viewModel: MainScreenContract) {
     val outcomingMessages by viewModel.outcomingMessages.collectAsState()
+    val state = outcomingMessages
+    if (state is UiState.Success && state.data.isEmpty()) {
+        return
+    }
+
     Column {
         Text(
             text = stringResource(R.string.recent_messages_title),
@@ -225,16 +231,12 @@ private fun RecentMessagesCard(viewModel: MainScreenContract) {
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        when (val state = outcomingMessages) {
+        when (state) {
             UiState.Loading -> RecentMessagesLoading()
 
             is UiState.Success -> {
                 val recentMessages = state.data.take(3)
-                if (recentMessages.isEmpty()) {
-                    RecentMessagesEmpty()
-                } else {
-                    RecentMessagesList(recentMessages)
-                }
+                RecentMessagesList(recentMessages)
             }
 
             is UiState.Error -> RecentMessagesError(
@@ -252,15 +254,6 @@ private fun RecentMessagesLoading() {
         RecentMessageSkeleton()
         if (index < 2) Spacer(modifier = Modifier.height(8.dp))
     }
-}
-
-@Composable
-private fun RecentMessagesEmpty() {
-    Text(
-        text = stringResource(R.string.no_messages_sent),
-        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-        style = MaterialTheme.typography.bodySmall
-    )
 }
 
 @Composable
