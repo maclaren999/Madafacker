@@ -610,6 +610,19 @@ Integrated app theme directly with the Mode system, making dark/light theme auto
   hidden until the next login.
 - Preference reset happens alongside auth token storage to guarantee the hint for each new session.
 
+### 15.4 Main Screen ViewModel Split (v1.3)
+
+- `MainViewModel` now only handles shared app state (mode toggle tip, current mode, current tab,
+  shared text entry point).
+- Tab responsibilities moved into dedicated ViewModels and contracts:
+    - `WriteTabViewModel` (+ `WriteTabContract/State`) for drafts, sending, shared text, recent
+      outgoing messages.
+    - `MyPostsTabViewModel` (+ `MyPostsTabContract/State`) for sent messages filtered by mode.
+    - `InboxTabViewModel` (+ `InboxTabContract/State`) for incoming messages, replies, ratings,
+      highlighting, and inbox snackbars.
+- `MainScreenContract` was removed; previews replaced by per-tab preview contracts under
+  `presentation/ui/main/preview`.
+
 
 
 

@@ -12,7 +12,10 @@ import com.bbuddies.madafaker.presentation.base.BaseViewModel
 import com.bbuddies.madafaker.presentation.utils.NotificationPermissionHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -49,6 +52,49 @@ class AccountTabViewModel @Inject constructor(
     val notificationPermissionPromptDismissed = preferenceManager.notificationPermissionPromptDismissed
 
     val currentUser = userRepository.currentUser
+
+    /**
+     * Consolidated UI state combining all individual states.
+     * Use this in UI instead of collecting each flow separately.
+     */
+    val state: StateFlow<AccountTabUiState> = combine(
+        currentUser,
+        _notificationsEnabled,
+        notificationPermissionPromptDismissed,
+        _showDeleteAccountDialog,
+        _showLogoutDialog,
+        _showFeedbackDialog,
+        _feedbackText,
+        _selectedRating,
+        _isSubmittingFeedback
+    ) { values ->
+        @Suppress("UNCHECKED_CAST")
+        AccountTabUiState(
+            currentUser = values[0] as User?,
+            notificationsEnabled = values[1] as Boolean,
+            notificationPermissionPromptDismissed = values[2] as Boolean,
+            showDeleteDialog = values[3] as Boolean,
+            showLogoutDialog = values[4] as Boolean,
+            showFeedbackDialog = values[5] as Boolean,
+            feedbackText = values[6] as String,
+            selectedRating = values[7] as Int?,
+            isSubmittingFeedback = values[8] as Boolean
+        )
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = AccountTabUiState(
+            currentUser = currentUser.value,
+            notificationsEnabled = true,
+            notificationPermissionPromptDismissed = false,
+            showDeleteDialog = false,
+            showLogoutDialog = false,
+            showFeedbackDialog = false,
+            feedbackText = "",
+            selectedRating = null,
+            isSubmittingFeedback = false
+        )
+    )
 
     init {
         refreshNotificationPermission()

@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.presentation.ui.main.tabs
+package com.bbuddies.madafaker.presentation.ui.main.tabs.inbox
 
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Box
@@ -17,8 +17,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,60 +24,63 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.Message
-import com.bbuddies.madafaker.common_domain.model.MessageState
-import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
-import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
-import com.bbuddies.madafaker.presentation.ui.main.MainTab
 import com.bbuddies.madafaker.presentation.ui.main.components.InboxMessage
 import com.bbuddies.madafaker.presentation.ui.main.components.MessageCard
 import com.bbuddies.madafaker.presentation.ui.main.components.toInboxMessages
-import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMainScreenContract
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewInboxTabContract
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMessages
 
 @Composable
 fun InboxTab(
-    viewModel: MainScreenContract,
-    highlightedMessageId: String? = null
+    state: InboxTabState,
+    highlightedMessageId: String? = null,
+    onInboxViewed: () -> Unit,
+    onRefreshMessages: () -> Unit,
+    onSendReply: (String, String, Boolean) -> Unit,
+    onReplyingClosed: () -> Unit,
+    onRateMessage: (String, MessageRating) -> Unit,
+    onMessageTapped: (String) -> Unit,
+    onMarkMessageRead: (String) -> Unit,
+    onSnackbarConsumed: () -> Unit
 ) {
-    val incomingMessages by viewModel.incomingMessages.collectAsState()
-    val isReplySending by viewModel.isReplySending.collectAsState()
-    val replyError by viewModel.replyError.collectAsState()
-    val replyingMessageId by viewModel.replyingMessageId.collectAsState()
-    val userRepliesForMessage by viewModel.userRepliesForMessage.collectAsState()
-    val inboxSnackbarMessage by viewModel.inboxSnackbarMessage.collectAsState()
-
-    val currentUser = if (viewModel is com.bbuddies.madafaker.presentation.ui.main.MainViewModel) {
-        viewModel.currentUser.collectAsState().value
-    } else null
-
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Show snackbar for inbox-specific messages (reply success, rating, etc.)
-    LaunchedEffect(inboxSnackbarMessage) {
-        inboxSnackbarMessage?.let { message ->
+    val highlightId = state.highlightedMessageId ?: highlightedMessageId
+
+    LaunchedEffect(Unit) {
+        onInboxViewed()
+    }
+
+    LaunchedEffect(state.snackbarMessage) {
+        state.snackbarMessage?.let { message ->
             snackbarHostState.showSnackbar(message)
-            viewModel.clearInboxSnackbar()
+            onSnackbarConsumed()
         }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        incomingMessages.HandleState(
-            onRetry = viewModel::refreshMessages
+        state.incomingMessages.HandleState(
+            onRetry = onRefreshMessages
         ) { messages ->
             InboxMessageList(
                 messages = messages.toInboxMessages(),
-                highlightedMessageId = highlightedMessageId,
-                replyingMessageId = replyingMessageId,
-                userRepliesForMessage = userRepliesForMessage,
-                viewModel = viewModel,
-                isReplySending = isReplySending,
-                replyError = replyError,
-                currentUserId = currentUser?.id
+                highlightedMessageId = highlightId,
+                replyingMessageId = state.replyingMessageId,
+                userRepliesForMessage = state.userRepliesForMessage,
+                onMessageTapped = onMessageTapped,
+                onSendReply = onSendReply,
+                onReplyingClosed = onReplyingClosed,
+                onRateMessage = onRateMessage,
+                isReplySending = state.isReplySending,
+                replyError = state.replyError,
+                currentUserId = state.currentUserId,
+                onMarkMessageRead = onMarkMessageRead
             )
         }
 
@@ -101,10 +102,14 @@ private fun InboxMessageList(
     highlightedMessageId: String? = null,
     replyingMessageId: String? = null,
     userRepliesForMessage: List<Reply>,
-    viewModel: MainScreenContract,
+    onMessageTapped: (String) -> Unit,
+    onSendReply: (String, String, Boolean) -> Unit,
+    onReplyingClosed: () -> Unit,
+    onRateMessage: (String, MessageRating) -> Unit,
     isReplySending: Boolean,
     replyError: String?,
-    currentUserId: String? = null
+    currentUserId: String? = null,
+    onMarkMessageRead: (String) -> Unit
 ) {
     if (messages.isEmpty()) {
         InboxEmptyState()
@@ -129,16 +134,16 @@ private fun InboxMessageList(
                 isReplying = isReplying,
                 userReplies = if (isReplying) userRepliesForMessage else emptyList(),
                 onMessageTapped = {
-                    viewModel.onMessageTapped(msg.id)
+                    onMessageTapped(msg.id)
                 },
                 onSendReply = { messageId, replyText, isPublic ->
-                    viewModel.onSendReply(messageId, replyText, isPublic)
+                    onSendReply(messageId, replyText, isPublic)
                 },
                 onReplyingClosed = {
-                    viewModel.onMessageReplyingClosed()
+                    onReplyingClosed()
                 },
                 onRateMessage = { messageId, rating ->
-                    viewModel.onRateMessage(messageId, rating)
+                    onRateMessage(messageId, rating)
                 },
                 isReplySending = isReplySending,
                 replyError = replyError,
@@ -147,7 +152,7 @@ private fun InboxMessageList(
 
             if (isHighlighted) {
                 LaunchedEffect(msg.id) {
-                    viewModel.markMessageAsRead(msg.id)
+                    onMarkMessageRead(msg.id)
                 }
             }
         }
@@ -191,96 +196,27 @@ private fun InboxEmptyState() {
     }
 }
 
-private val previewInboxReplies = listOf(
-    Reply(
-        id = "reply-1",
-        body = "Appreciate the positive energy here.",
-        mode = Mode.SHINE.apiValue,
-        createdAt = "2024-02-01T10:00:00Z",
-        authorId = "user-reply-1",
-        authorName = "ReplyUser1",
-        parentMessageId = "message-1"
-    ),
-    Reply(
-        id = "reply-2",
-        body = "Thanks for sharing this perspective.",
-        mode = Mode.SHADOW.apiValue,
-        createdAt = "2024-02-02T09:30:00Z",
-        authorId = "user-reply-2",
-        authorName = "ReplyUser2",
-        parentMessageId = "message-1"
-    )
-)
-
-private val previewInboxMessages = listOf(
-    Message(
-        id = "message-1",
-        body = "What helps you reset after a long week?",
-        mode = Mode.SHINE.apiValue,
-        createdAt = "2024-02-01T09:00:00Z",
-        authorId = "user-1",
-        authorName = "User1",
-        ratingStats = RatingStats(likes = 5, dislikes = 1, superLikes = 2),
-        ownRating = null,
-        localState = MessageState.SENT,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = false,
-        isRead = false,
-        readAt = null,
-        replies = previewInboxReplies
-    ),
-    Message(
-        id = "message-2",
-        body = "Share a small win you had today.",
-        mode = Mode.SHADOW.apiValue,
-        createdAt = "2024-02-02T14:00:00Z",
-        authorId = "user-2",
-        authorName = "User2",
-        ratingStats = RatingStats(likes = 3, dislikes = 0, superLikes = 1),
-        ownRating = null,
-        localState = MessageState.SENT,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = false,
-        isRead = false,
-        readAt = null,
-        replies = emptyList()
-    ),
-    Message(
-        id = "message-3",
-        body = "Share a small win you had today.",
-        mode = Mode.SHADOW.apiValue,
-        createdAt = "2024-02-02T14:00:00Z",
-        authorId = "user-2",
-        authorName = "User2",
-        ratingStats = RatingStats(likes = 8, dislikes = 2, superLikes = 3),
-        ownRating = null,
-        localState = MessageState.SENT,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = false,
-        isRead = false,
-        readAt = null,
-        replies = previewInboxReplies
-    )
-)
-
 @Preview(showBackground = true)
 @Composable
 private fun InboxTabPreview() {
-    val firstMessage = previewInboxMessages.first()
-    MadafakerTheme(mode = Mode.SHINE) {
+    val firstMessage = PreviewMessages.sampleIncoming.first()
+    MadafakerTheme(mode = firstMessage.mode.let { Mode.fromApiValue(it) }) {
         InboxTab(
-            viewModel = PreviewMainScreenContract(
-                draftText = "Staying curious.",
-                incomingMessages = previewInboxMessages,
-                currentTab = MainTab.INBOX,
+            state = PreviewInboxTabContract(
+                incomingMessages = PreviewMessages.sampleIncoming,
                 highlightedMessageId = firstMessage.id,
                 replyingMessageId = firstMessage.id,
-                userReplies = previewInboxReplies
-            ),
-            highlightedMessageId = firstMessage.id
+                userReplies = PreviewMessages.sampleReplies
+            ).state.value,
+            highlightedMessageId = firstMessage.id,
+            onInboxViewed = {},
+            onRefreshMessages = {},
+            onSendReply = { _, _, _ -> },
+            onReplyingClosed = {},
+            onRateMessage = { _, _ -> },
+            onMessageTapped = {},
+            onMarkMessageRead = {},
+            onSnackbarConsumed = {}
         )
     }
 }
@@ -292,4 +228,3 @@ private fun InboxTabEmptyPreview() {
         InboxEmptyState()
     }
 }
-

@@ -112,6 +112,16 @@ interface MadafakerDao {
     @Query("DELETE FROM users")
     suspend fun clearUsers()
 
+    /**
+     * Replace all messages with localState SENT in a single transaction to avoid
+     * intermediate empty emissions on Flows.
+     */
+    @Transaction
+    suspend fun replaceSentMessages(messages: List<Message>) {
+        deleteMessagesByState(MessageState.SENT)
+        insertMessages(messages)
+    }
+
     @Transaction
     suspend fun clearAllData() {
         clearMessages()

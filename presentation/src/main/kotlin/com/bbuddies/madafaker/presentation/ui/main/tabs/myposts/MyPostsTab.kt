@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.presentation.ui.main.tabs
+package com.bbuddies.madafaker.presentation.ui.main.tabs.myposts
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -11,8 +11,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
@@ -29,25 +27,22 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
-import com.bbuddies.madafaker.common_domain.model.MessageState
-import com.bbuddies.madafaker.common_domain.model.RatingStats
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
-import com.bbuddies.madafaker.presentation.ui.main.MainScreenContract
-import com.bbuddies.madafaker.presentation.ui.main.MainTab
-import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMainScreenContract
-
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMessages
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMyPostsTabContract
 
 @Composable
-fun MyPostsTab(viewModel: MainScreenContract) {
-    val outcomingMessages by viewModel.outcomingMessages.collectAsState()
-
-    outcomingMessages.HandleState(
-        onRetry = viewModel::refreshMessages
+fun MyPostsTab(
+    state: MyPostsTabState,
+    onRefreshMessages: () -> Unit
+) {
+    state.outcomingMessages.HandleState(
+        onRetry = onRefreshMessages
     ) { messages ->
-        MyPostsList(messages, mode = viewModel.currentMode.value)
+        MyPostsList(messages, mode = state.currentMode)
     }
 }
 
@@ -221,91 +216,15 @@ private fun LatestReplyHighlight(reply: Reply) {
     }
 }
 
-private val previewRepliesForMyPosts = listOf(
-    Reply(
-        id = "my-post-1-reply-1",
-        body = "Thanks for sharing this - it resonated with me today.",
-        mode = Mode.SHINE.apiValue,
-        createdAt = "2024-03-01T10:30:00Z",
-        authorId = "replying-user-1",
-        authorName = "ReplyingUser1",
-        parentMessageId = "my-post-1"
-    ),
-    Reply(
-        id = "my-post-1-reply-2",
-        body = "Loved this reminder. Keep posting more!",
-        mode = Mode.SHINE.apiValue,
-        createdAt = "2024-03-01T11:00:00Z",
-        authorId = "replying-user-2",
-        authorName = "ReplyingUser2",
-        parentMessageId = "my-post-1"
-    )
-)
-
-private val previewMyPosts = listOf(
-    Message(
-        id = "my-post-1",
-        body = "Just shared a thought with the community about staying motivated.",
-        mode = Mode.SHINE.apiValue,
-        createdAt = "2024-03-01T10:00:00Z",
-        authorId = "preview-user",
-        authorName = "PreviewUser",
-        ratingStats = RatingStats(likes = 5, dislikes = 1, superLikes = 2),
-        ownRating = null,
-        localState = MessageState.SENT,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = false,
-        isRead = true,
-        readAt = null,
-        replies = previewRepliesForMyPosts
-    ),
-    Message(
-        id = "my-post-2",
-        body = "Working on a longer story about focus and balance.",
-        mode = Mode.SHADOW.apiValue,
-        createdAt = "2024-03-02T09:00:00Z",
-        authorId = "preview-user",
-        authorName = "PreviewUser",
-        ratingStats = RatingStats(),
-        ownRating = null,
-        localState = MessageState.FAILED,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = true,
-        isRead = true,
-        readAt = null,
-        replies = emptyList()
-    ),
-    Message(
-        id = "my-post-3",
-        body = "Draft failed to send, needs another try.",
-        mode = Mode.SHADOW.apiValue,
-        createdAt = "2024-03-02T09:00:00Z",
-        authorId = "preview-user",
-        authorName = "PreviewUser",
-        ratingStats = RatingStats(),
-        ownRating = null,
-        localState = MessageState.FAILED,
-        localCreatedAt = System.currentTimeMillis(),
-        tempId = null,
-        needsSync = true,
-        isRead = true,
-        readAt = null,
-        replies = emptyList()
-    )
-)
-
 @Preview(showBackground = true)
 @Composable
 private fun MyPostsTabPreview() {
     MadafakerTheme(mode = Mode.SHINE) {
         MyPostsTab(
-            viewModel = PreviewMainScreenContract(
-                outgoingMessages = previewMyPosts,
-                currentTab = MainTab.MY_POSTS
-            )
+            state = PreviewMyPostsTabContract(
+                outgoingMessages = PreviewMessages.sampleOutgoing
+            ).state.value,
+            onRefreshMessages = {}
         )
     }
 }
-

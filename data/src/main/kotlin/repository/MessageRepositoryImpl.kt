@@ -99,9 +99,9 @@ class MessageRepositoryImpl @Inject constructor(
                 )
             }
 
-            // Clear synced messages and insert fresh server data
-            localDao.deleteMessagesByState(MessageState.SENT)
-            localDao.insertMessages(allServerMessages)
+            // Clear synced messages and insert fresh server data atomically to prevent
+            // transient empty emissions on Flows observed by UI.
+            localDao.replaceSentMessages(allServerMessages)
 
         } catch (e: Exception) {
             Timber.w(e, "Failed to refresh from server")
@@ -137,7 +137,7 @@ class MessageRepositoryImpl @Inject constructor(
 
     override suspend fun createReply(body: String, parentId: String, isPublic: Boolean): Reply {
         // Ensure user is authenticated
-        val user = userRepository.awaitCurrentUser()
+        userRepository.awaitCurrentUser()
             ?: throw IllegalStateException("No authenticated user available")
 
         try {
@@ -212,7 +212,7 @@ class MessageRepositoryImpl @Inject constructor(
     override suspend fun rateMessage(messageId: String, rating: MessageRating) {
         try {
             // Ensure user is authenticated
-            val user = userRepository.awaitCurrentUser()
+            userRepository.awaitCurrentUser()
                 ?: throw IllegalStateException("No authenticated user available")
 
             // Rate message via API

@@ -1,4 +1,4 @@
-package com.bbuddies.madafaker.presentation.ui.main
+package com.bbuddies.madafaker.presentation.ui.main.tabs.write
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,17 +41,22 @@ import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryB
 import com.bbuddies.madafaker.presentation.design.components.MadafakerTextField
 import com.bbuddies.madafaker.presentation.design.components.MessageStateIndicator
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
-import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMainScreenContract
+import com.bbuddies.madafaker.presentation.ui.main.SendMessageStatus
 import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewMessages
+import com.bbuddies.madafaker.presentation.ui.main.preview.PreviewWriteTabContract
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
 @Composable
-fun SendMessageView(viewModel: MainScreenContract) {
-    val draftMessage by viewModel.draftMessage.collectAsState()
-    val currentMode by viewModel.currentMode.collectAsState()
-    val isSending by viewModel.isSending.collectAsState()
-    val sendStatus by viewModel.sendStatus.collectAsState()
+fun SendMessageView(
+    state: WriteTabState,
+    onDraftMessageChanged: (String) -> Unit,
+    onSendMessage: (String) -> Unit
+) {
+    val draftMessage = state.draftMessage
+    val currentMode = state.currentMode
+    val isSending = state.isSending
+    val sendStatus = state.sendStatus
 
     Column(
         modifier = Modifier
@@ -66,11 +70,11 @@ fun SendMessageView(viewModel: MainScreenContract) {
             isSending = isSending,
             sendStatus = sendStatus,
             currentMode = currentMode,
-            onMessageChange = viewModel::onDraftMessageChanged,
-            onSend = { viewModel.onSendMessage(draftMessage) }
+            onMessageChange = onDraftMessageChanged,
+            onSend = { onSendMessage(draftMessage) }
         )
 
-        RecentMessagesCard(viewModel)
+        RecentMessagesCard(state.outcomingMessages)
     }
 }
 
@@ -215,8 +219,7 @@ private fun RetroDotsLoader() {
 }
 
 @Composable
-private fun RecentMessagesCard(viewModel: MainScreenContract) {
-    val outcomingMessages by viewModel.outcomingMessages.collectAsState()
+private fun RecentMessagesCard(outcomingMessages: UiState<List<Message>>) {
     Column {
         Text(
             text = stringResource(R.string.recent_messages_title),
@@ -341,31 +344,12 @@ private fun RecentMessageItem(
 private fun SendMessageViewPreview() {
     MadafakerTheme(mode = Mode.SHINE) {
         SendMessageView(
-            viewModel = PreviewMainScreenContract(
-                draftText = "Расскажи что-нибудь хорошее о сегодняшнем дне",
+            state = PreviewWriteTabContract(
+                draftText = "Write something encouraging...",
                 outgoingMessages = PreviewMessages.sampleOutgoing
-            )
+            ).state.value,
+            onDraftMessageChanged = {},
+            onSendMessage = {}
         )
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

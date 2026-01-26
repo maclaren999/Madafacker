@@ -35,9 +35,12 @@ import com.bbuddies.madafaker.presentation.ui.main.MainTab
 import com.bbuddies.madafaker.presentation.ui.main.MainViewModel
 import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTab
 import com.bbuddies.madafaker.presentation.ui.main.tabs.AccountTabViewModel
-import com.bbuddies.madafaker.presentation.ui.main.tabs.InboxTab
-import com.bbuddies.madafaker.presentation.ui.main.tabs.MyPostsTab
-import com.bbuddies.madafaker.presentation.ui.main.tabs.WriteTab
+import com.bbuddies.madafaker.presentation.ui.main.tabs.inbox.InboxTab
+import com.bbuddies.madafaker.presentation.ui.main.tabs.inbox.InboxTabViewModel
+import com.bbuddies.madafaker.presentation.ui.main.tabs.myposts.MyPostsTab
+import com.bbuddies.madafaker.presentation.ui.main.tabs.myposts.MyPostsTabViewModel
+import com.bbuddies.madafaker.presentation.ui.main.tabs.write.WriteTab
+import com.bbuddies.madafaker.presentation.ui.main.tabs.write.WriteTabViewModel
 import com.bbuddies.madafaker.presentation.ui.navigation.NavigationVisibility
 import com.bbuddies.madafaker.presentation.ui.navigation.TopLevelDestination
 import com.bbuddies.madafaker.presentation.ui.navigation.TopNavigationBar
@@ -129,7 +132,6 @@ fun AppNavHost(
     startDestination: Any = SplashRoute,
     deepLinkData: DeepLinkData? = null
 ) {
-    // Shared MainViewModel for all tabs
     val mainViewModel: MainViewModel = hiltViewModel()
 
     // Handle deep link navigation
@@ -290,44 +292,95 @@ fun AppNavHost(
 
                         // Write Tab
                         composable<WriteTabRoute> {
+                            val writeTabViewModel: WriteTabViewModel = hiltViewModel()
+                            val writeTabState by writeTabViewModel.state.collectAsState()
                             WriteTab(
-                                viewModel = mainViewModel,
+                                state = writeTabState,
+                                warningsFlow = writeTabViewModel.warningsFlow,
+                                onDraftMessageChanged = writeTabViewModel::onDraftMessageChanged,
+                                onSendMessage = writeTabViewModel::onSendMessage
                             )
                         }
 
                         // My Posts Tab
                         composable<MyPostsTabRoute> {
+                            val myPostsTabViewModel: MyPostsTabViewModel = hiltViewModel()
+                            val myPostsState by myPostsTabViewModel.state.collectAsState()
                             MyPostsTab(
-                                viewModel = mainViewModel,
+                                state = myPostsState,
+                                onRefreshMessages = myPostsTabViewModel::refreshMessages
                             )
                         }
 
                         // Inbox Tab
                         composable<InboxTabRoute> {
+                            val inboxTabViewModel: InboxTabViewModel = hiltViewModel()
+                            val inboxState by inboxTabViewModel.state.collectAsState()
                             InboxTab(
-                                viewModel = mainViewModel,
+                                state = inboxState,
                                 highlightedMessageId = null,
+                                onInboxViewed = inboxTabViewModel::onInboxViewed,
+                                onRefreshMessages = inboxTabViewModel::refreshMessages,
+                                onSendReply = inboxTabViewModel::onSendReply,
+                                onReplyingClosed = inboxTabViewModel::onMessageReplyingClosed,
+                                onRateMessage = inboxTabViewModel::onRateMessage,
+                                onMessageTapped = inboxTabViewModel::onMessageTapped,
+                                onMarkMessageRead = inboxTabViewModel::markMessageAsRead,
+                                onSnackbarConsumed = inboxTabViewModel::clearInboxSnackbar
                             )
                         }
 
-                        // Inbox Tab with Deep Link
+                        // Inbox Tab with Deep Link - shares ViewModel with regular InboxTab via navigation graph
                         composable<InboxTabWithDeepLinkRoute> { backStackEntry ->
                             val route = backStackEntry.toRoute<InboxTabWithDeepLinkRoute>()
+                            val inboxTabViewModel: InboxTabViewModel = hiltViewModel()
+                            val inboxState by inboxTabViewModel.state.collectAsState()
+
+                            // Set highlighted message from deep link
+                            LaunchedEffect(route.messageId) {
+                                inboxTabViewModel.setHighlightedMessage(route.messageId)
+                            }
+
                             InboxTab(
-                                viewModel = mainViewModel,
+                                state = inboxState,
                                 highlightedMessageId = route.messageId,
+                                onInboxViewed = inboxTabViewModel::onInboxViewed,
+                                onRefreshMessages = inboxTabViewModel::refreshMessages,
+                                onSendReply = inboxTabViewModel::onSendReply,
+                                onReplyingClosed = inboxTabViewModel::onMessageReplyingClosed,
+                                onRateMessage = inboxTabViewModel::onRateMessage,
+                                onMessageTapped = inboxTabViewModel::onMessageTapped,
+                                onMarkMessageRead = inboxTabViewModel::markMessageAsRead,
+                                onSnackbarConsumed = inboxTabViewModel::clearInboxSnackbar
                             )
                         }
 
                         // Account Tab
                         composable<AccountTabRoute> {
+                            val accountViewModel: AccountTabViewModel = hiltViewModel()
+                            val accountState by accountViewModel.state.collectAsState()
+
                             AccountTab(
-                                viewModel = hiltViewModel<AccountTabViewModel>(),
-                                onNavigateToAuth = {
-                                    navController.navigate(AuthRoute) {
-                                        popUpTo(WriteTabRoute) { inclusive = true }
+                                state = accountState,
+                                warningsFlow = accountViewModel.warningsFlow,
+                                onRefreshNotificationPermission = accountViewModel::refreshNotificationPermission,
+                                onDeleteAccountClick = accountViewModel::onDeleteAccountClick,
+                                onLogoutClick = accountViewModel::onLogoutClick,
+                                onFeedbackClick = accountViewModel::onFeedbackClick,
+                                onSendDeleteAccountEmail = accountViewModel::sendDeleteAccountEmail,
+                                onPerformLogout = {
+                                    accountViewModel.performLogout {
+                                        navController.navigate(AuthRoute) {
+                                            popUpTo(WriteTabRoute) { inclusive = true }
+                                        }
                                     }
                                 },
+                                onDismissDeleteAccountDialog = accountViewModel::dismissDeleteAccountDialog,
+                                onDismissLogoutDialog = accountViewModel::dismissLogoutDialog,
+                                onFeedbackTextChange = accountViewModel::onFeedbackTextChange,
+                                onRatingChange = accountViewModel::onRatingChange,
+                                onSubmitFeedback = accountViewModel::submitFeedback,
+                                onDismissFeedbackDialog = accountViewModel::dismissFeedbackDialog
                             )
                         }
                     }

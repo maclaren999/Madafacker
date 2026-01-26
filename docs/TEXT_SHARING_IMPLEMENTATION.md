@@ -34,12 +34,12 @@ A centralized manager that:
 - Provides methods to consume or clear shared text
 - Handles edge cases like empty/null text
 
-### 4. MainViewModel Integration
+### 4. MainViewModel / WriteTabViewModel Integration
 
-- Observes shared text changes
-- Automatically pre-populates the draft message
-- Respects existing user content (won't overwrite substantial drafts)
-- Truncates text if it exceeds the app's message length limit
+- `MainViewModel` still observes `SharedTextManager.hasUnconsumedSharedText` to navigate the user to
+  the Write tab when text arrives.
+- `WriteTabViewModel` now performs the draft pre-population logic (respecting existing draft content
+  and truncation to `AppConfig.MAX_MESSAGE_LENGTH`).
 
 ### 5. UI Navigation
 

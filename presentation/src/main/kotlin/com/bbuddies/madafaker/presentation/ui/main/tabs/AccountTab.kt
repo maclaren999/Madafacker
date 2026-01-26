@@ -40,8 +40,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -67,6 +65,7 @@ import com.bbuddies.madafaker.presentation.base.ScreenWithWarnings
 import com.bbuddies.madafaker.presentation.design.components.MadafakerPrimaryButton
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
 import com.bbuddies.madafaker.presentation.design.theme.MadafakerTheme
+import kotlinx.coroutines.flow.StateFlow
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -74,36 +73,50 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
+data class AccountTabUiState(
+    val currentUser: User?,
+    val notificationsEnabled: Boolean,
+    val notificationPermissionPromptDismissed: Boolean,
+    val showDeleteDialog: Boolean,
+    val showLogoutDialog: Boolean,
+    val showFeedbackDialog: Boolean,
+    val feedbackText: String,
+    val selectedRating: Int?,
+    val isSubmittingFeedback: Boolean
+)
 
 @Composable
 fun AccountTab(
-    viewModel: AccountTabViewModel,
-    onNavigateToAuth: () -> Unit
+    state: AccountTabUiState,
+    warningsFlow: StateFlow<((context: android.content.Context) -> String?)?>,
+    onRefreshNotificationPermission: () -> Unit,
+    onDeleteAccountClick: () -> Unit,
+    onLogoutClick: () -> Unit,
+    onFeedbackClick: () -> Unit,
+    onSendDeleteAccountEmail: (android.content.Context, User?) -> Unit,
+    onPerformLogout: () -> Unit,
+    onDismissDeleteAccountDialog: () -> Unit,
+    onDismissLogoutDialog: () -> Unit,
+    onFeedbackTextChange: (String) -> Unit,
+    onRatingChange: (Int?) -> Unit,
+    onSubmitFeedback: () -> Unit,
+    onDismissFeedbackDialog: () -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val currentUser by viewModel.currentUser.collectAsState()
-    val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
-    val notificationPermissionPromptDismissed by viewModel.notificationPermissionPromptDismissed.collectAsState()
-    val showDeleteDialog by viewModel.showDeleteAccountDialog.collectAsState()
-    val showLogoutDialog by viewModel.showLogoutDialog.collectAsState()
-    val showFeedbackDialog by viewModel.showFeedbackDialog.collectAsState()
-    val feedbackText by viewModel.feedbackText.collectAsState()
-    val selectedRating by viewModel.selectedRating.collectAsState()
-    val isSubmittingFeedback by viewModel.isSubmittingFeedback.collectAsState()
     val activity = remember(context) { context.findActivity() }
     val hasRequestedPermission = rememberSaveable { mutableStateOf(false) }
 
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { _ ->
-        viewModel.refreshNotificationPermission()
+        onRefreshNotificationPermission()
     }
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.refreshNotificationPermission()
+                onRefreshNotificationPermission()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -111,105 +124,100 @@ fun AccountTab(
     }
 
     ScreenWithWarnings(
-        warningsFlow = viewModel.warningsFlow
+        warningsFlow = warningsFlow
     ) {
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
             ) {
-                Spacer(modifier = Modifier.height(32.dp))
+                ProfileSection(
+                    user = state.currentUser,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                    contentAlignment = Alignment.Center
-                ) {
-                    // Profile Section
-                    ProfileSection(
-                        user = currentUser,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                // Account Actions
-                AccountActionsSection(
-                    onDeleteAccountClick = viewModel::onDeleteAccountClick,
-                    onLogoutClick = viewModel::onLogoutClick,
-                    onFeedbackClick = viewModel::onFeedbackClick,
-                    showNotificationsDisabled = !notificationsEnabled && notificationPermissionPromptDismissed,
-                    onEnableNotificationsClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            val shouldShowRationale = activity != null &&
-                                    ActivityCompat.shouldShowRequestPermissionRationale(
-                                        activity,
-                                        Manifest.permission.POST_NOTIFICATIONS
-                                    )
-                            if (!shouldShowRationale && hasRequestedPermission.value) {
-                                openNotificationSettings(context)
-                            } else if (activity != null) {
-                                hasRequestedPermission.value = true
-                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                            } else {
-                                openNotificationSettings(context)
-                            }
+            AccountActionsSection(
+                onDeleteAccountClick = onDeleteAccountClick,
+                onLogoutClick = onLogoutClick,
+                onFeedbackClick = onFeedbackClick,
+                showNotificationsDisabled = !state.notificationsEnabled && state.notificationPermissionPromptDismissed,
+                onEnableNotificationsClick = {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val shouldShowRationale = activity != null &&
+                                ActivityCompat.shouldShowRequestPermissionRationale(
+                                    activity,
+                                    Manifest.permission.POST_NOTIFICATIONS
+                                )
+                        if (!shouldShowRationale && hasRequestedPermission.value) {
+                            openNotificationSettings(context)
+                        } else if (activity != null) {
+                            hasRequestedPermission.value = true
+                            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                         } else {
                             openNotificationSettings(context)
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(100.dp))
-
-                // Privacy Policy Link
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(R.string.privacy_policy),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.clickable {
-                        val intent =
-                            Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.privacy_policy_url)))
-                        context.startActivity(intent)
+                    } else {
+                        openNotificationSettings(context)
                     }
-                )
-            }
-        }
-
-        // Delete Account Dialog
-        if (showDeleteDialog) {
-            DeleteAccountDialog(
-                onConfirm = {
-                    viewModel.sendDeleteAccountEmail(context, currentUser)
                 },
-                onDismiss = viewModel::dismissDeleteAccountDialog
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(100.dp))
+
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = stringResource(R.string.privacy_policy),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.clickable {
+                    val intent =
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse(context.getString(R.string.privacy_policy_url))
+                        )
+                    context.startActivity(intent)
+                }
             )
         }
+    }
 
-        // Logout Confirmation Dialog
-        if (showLogoutDialog) {
-            LogoutConfirmationDialog(
-                onConfirm = {
-                    viewModel.performLogout(onNavigateToAuth)
-                },
-                onDismiss = viewModel::dismissLogoutDialog
-            )
-        }
+    if (state.showDeleteDialog) {
+        DeleteAccountDialog(
+            onConfirm = {
+                onSendDeleteAccountEmail(context, state.currentUser)
+            },
+            onDismiss = onDismissDeleteAccountDialog
+        )
+    }
 
-        // Feedback Dialog
-        if (showFeedbackDialog) {
-            FeedbackDialog(
-                feedbackText = feedbackText,
-                selectedRating = selectedRating,
-                isSubmitting = isSubmittingFeedback,
-                onFeedbackTextChange = viewModel::onFeedbackTextChange,
-                onRatingChange = viewModel::onRatingChange,
-                onSubmit = viewModel::submitFeedback,
-                onDismiss = viewModel::dismissFeedbackDialog
-            )
+    if (state.showLogoutDialog) {
+        LogoutConfirmationDialog(
+            onConfirm = onPerformLogout,
+            onDismiss = onDismissLogoutDialog
+        )
+    }
+
+    if (state.showFeedbackDialog) {
+        FeedbackDialog(
+            feedbackText = state.feedbackText,
+            selectedRating = state.selectedRating,
+            isSubmitting = state.isSubmittingFeedback,
+            onFeedbackTextChange = onFeedbackTextChange,
+            onRatingChange = onRatingChange,
+            onSubmit = onSubmitFeedback,
+            onDismiss = onDismissFeedbackDialog
+        )
     }
 }
 
@@ -235,7 +243,6 @@ private fun ProfileSection(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // User Name - Using H2 style
             Text(
                 text = user?.name ?: stringResource(R.string.account_unknown_user),
                 style = MaterialTheme.typography.headlineMedium,
@@ -244,7 +251,6 @@ private fun ProfileSection(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // User ID
             Text(
                 text = stringResource(R.string.account_user_id_prefix) + displayId,
                 style = MaterialTheme.typography.bodyMedium,
@@ -258,7 +264,6 @@ private fun ProfileSection(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Member since
             Text(
                 text = stringResource(R.string.account_member_since_prefix).trimEnd() +
                         " " +
@@ -390,7 +395,6 @@ private fun AccountActionsSection(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         if (showNotificationsDisabled) {
-            //TODO: polish styling
             Text(
                 text = stringResource(R.string.account_notifications_disabled),
                 style = MaterialTheme.typography.bodyMedium,
@@ -401,7 +405,6 @@ private fun AccountActionsSection(
             )
         }
 
-        // Logout Button
         MadafakerPrimaryButton(
             text = stringResource(R.string.account_logout_button),
             onClick = onLogoutClick,
@@ -417,7 +420,6 @@ private fun AccountActionsSection(
             }
         )
 
-        // Send Feedback Button
         MadafakerSecondaryButton(
             text = stringResource(R.string.feedback_title),
             onClick = onFeedbackClick,
@@ -433,7 +435,6 @@ private fun AccountActionsSection(
             }
         )
 
-        // Delete Account Button
         MadafakerSecondaryButton(
             text = stringResource(R.string.account_delete_button),
             onClick = onDeleteAccountClick,
@@ -579,7 +580,6 @@ private fun FeedbackDialog(
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Star Rating
                 Text(
                     text = "Rate your experience (optional):",
                     style = MaterialTheme.typography.bodyMedium,
@@ -592,7 +592,6 @@ private fun FeedbackDialog(
                     enabled = !isSubmitting
                 )
 
-                // Feedback Text Input
                 Text(
                     text = "Tell us about your experience (optional):",
                     style = MaterialTheme.typography.bodyMedium,
@@ -677,7 +676,7 @@ private fun StarRating(
                     imageVector = Icons.Default.Star,
                     contentDescription = "Star $i",
                     tint = if (rating != null && i <= rating) {
-                        Color(0xFFFFD700) // Gold color for filled stars
+                        Color(0xFFFFD700)
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
                     },
@@ -709,18 +708,16 @@ private tailrec fun android.content.Context.findActivity(): Activity? = when (th
 
 private fun openNotificationSettings(context: android.content.Context) {
     val intent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-        android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+        Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
             putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
         }
     } else {
-        android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-            data = android.net.Uri.fromParts("package", context.packageName, null)
+        Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
         }
     }.apply {
-        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
     context.startActivity(intent)
 }
-
-
 
