@@ -39,6 +39,6 @@ fun MessageDto.toDomainModel(): Message {
         needsSync = false,
         isRead = false,
         readAt = null,
-        replies = replies?.map { it.toDomainModel() }
+        replies = replies?.map { it.toDomainModel(parentMessageId = id) }
     )
 }

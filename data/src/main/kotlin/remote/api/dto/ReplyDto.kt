@@ -12,15 +12,16 @@ data class ReplyDto(
     val author: AuthorDto,
     val mode: String,
     val createdAt: String,
-    val parentId: String,
-    val public: Boolean
+    val parentId: String? = null,
+    val public: Boolean? = null
 )
 
 /**
  * Maps ReplyDto to domain model.
  * @param parentMessageId The ID of the parent message (for client-side tracking)
  */
-fun ReplyDto.toDomainModel(): Reply {
+fun ReplyDto.toDomainModel(parentMessageId: String? = null): Reply {
+    val resolvedParentId = parentMessageId ?: parentId
     return Reply(
         id = id,
         body = body,
@@ -28,6 +29,6 @@ fun ReplyDto.toDomainModel(): Reply {
         createdAt = createdAt,
         authorId = author.id,
         authorName = author.name,
-        parentMessageId = parentId
+        parentMessageId = resolvedParentId
     )
 }

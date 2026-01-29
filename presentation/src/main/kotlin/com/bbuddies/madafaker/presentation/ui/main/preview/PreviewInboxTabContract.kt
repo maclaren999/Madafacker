@@ -3,7 +3,7 @@ package com.bbuddies.madafaker.presentation.ui.main.preview
 import android.content.Context
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.ui.main.tabs.inbox.InboxTabContract
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class PreviewInboxTabContract(
-    incomingMessages: List<Message> = emptyList(),
+    incomingMessages: List<MessageWithReplies> = emptyList(),
     currentMode: Mode = Mode.SHINE,
     highlightedMessageId: String? = null,
     replyingMessageId: String? = null,

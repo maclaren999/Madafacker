@@ -1,12 +1,12 @@
 package com.bbuddies.madafaker.presentation.ui.main.tabs.inbox
 
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.base.UiState
 
 data class InboxTabState(
-    val incomingMessages: UiState<List<Message>> = UiState.Loading,
+    val incomingMessages: UiState<List<MessageWithReplies>> = UiState.Loading,
     val currentMode: Mode = Mode.SHINE,
     val highlightedMessageId: String? = null,
     val replyingMessageId: String? = null,

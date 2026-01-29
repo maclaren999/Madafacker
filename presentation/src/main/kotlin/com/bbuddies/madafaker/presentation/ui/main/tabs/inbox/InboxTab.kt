@@ -200,15 +200,15 @@ private fun InboxEmptyState() {
 @Composable
 private fun InboxTabPreview() {
     val firstMessage = PreviewMessages.sampleIncoming.first()
-    MadafakerTheme(mode = firstMessage.mode.let { Mode.fromApiValue(it) }) {
+    MadafakerTheme(mode = firstMessage.message.mode.let { Mode.fromApiValue(it) }) {
         InboxTab(
             state = PreviewInboxTabContract(
                 incomingMessages = PreviewMessages.sampleIncoming,
-                highlightedMessageId = firstMessage.id,
-                replyingMessageId = firstMessage.id,
+                highlightedMessageId = firstMessage.message.id,
+                replyingMessageId = firstMessage.message.id,
                 userReplies = PreviewMessages.sampleReplies
             ).state.value,
-            highlightedMessageId = firstMessage.id,
+            highlightedMessageId = firstMessage.message.id,
             onInboxViewed = {},
             onRefreshMessages = {},
             onSendReply = { _, _, _ -> },

@@ -18,10 +18,11 @@
 
 ## UI secondary issues
 
-51. [] Recent messages: hide section if no messages yet.
+51. [X] Recent messages: hide section if no messages yet.
 52. [] Tabs swipe animation: titles slide horizontally, underline graphics stays in place.
 53. [] Improve button "Send reply" styling/states.
 54. [] Change error theme color
+55. [X] Lock portrait orientation only in activities.
 
 ## Logic
 
@@ -41,7 +42,8 @@
      choose new account.
 301. [X] Logged in user. No internet connection. User opens the app (cold start) the sees Welcome AuthScreen instead of MainScreen.
 302. [X] Messages arrangement by dates my be unstable. Messages mix up sometimes.
-303. [] Replies are not shown under messages in Inbox. After sending a reply, it is not displayed under the message.
+303. [X] Replies are not shown under messages in Inbox. After sending a reply, it is not displayed
+     under the message.
 304. [] Replies are not shown for incoming message. (check outcoming messages too)
 305. [X] The Auth state/navigation logic - FIXED with V2.1 Optimistic Auth.
      Note: Firebase Auth doesn't persist session across cold starts (known issue with Credential Manager flow).

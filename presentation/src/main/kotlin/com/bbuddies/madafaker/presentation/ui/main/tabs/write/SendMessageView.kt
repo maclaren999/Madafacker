@@ -33,8 +33,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.design.components.MadafakerSecondaryButton
@@ -88,15 +88,6 @@ private fun MessageCard(
     onSend: () -> Unit
 ) {
     Column {
-        Text(
-            text = when (currentMode) {
-                Mode.SHINE -> stringResource(R.string.express_positivity)
-                Mode.SHADOW -> stringResource(R.string.express_freely)
-            },
-            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-            style = MaterialTheme.typography.headlineMedium,
-        )
-
         SunnyTextField(
             value = draftMessage,
             onValueChange = onMessageChange,
@@ -107,7 +98,6 @@ private fun MessageCard(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Send button and character count
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -219,7 +209,12 @@ private fun RetroDotsLoader() {
 }
 
 @Composable
-private fun RecentMessagesCard(outcomingMessages: UiState<List<Message>>) {
+private fun RecentMessagesCard(outcomingMessages: UiState<List<MessageWithReplies>>) {
+    val state = outcomingMessages
+    if (state is UiState.Success && state.data.isEmpty()) {
+        return
+    }
+
     Column {
         Text(
             text = stringResource(R.string.recent_messages_title),
@@ -228,16 +223,12 @@ private fun RecentMessagesCard(outcomingMessages: UiState<List<Message>>) {
             modifier = Modifier.padding(bottom = 12.dp)
         )
 
-        when (val state = outcomingMessages) {
+        when (state) {
             UiState.Loading -> RecentMessagesLoading()
 
             is UiState.Success -> {
                 val recentMessages = state.data.take(3)
-                if (recentMessages.isEmpty()) {
-                    RecentMessagesEmpty()
-                } else {
-                    RecentMessagesList(recentMessages)
-                }
+                RecentMessagesList(recentMessages)
             }
 
             is UiState.Error -> RecentMessagesError(
@@ -258,22 +249,13 @@ private fun RecentMessagesLoading() {
 }
 
 @Composable
-private fun RecentMessagesEmpty() {
-    Text(
-        text = stringResource(R.string.no_messages_sent),
-        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-        style = MaterialTheme.typography.bodySmall
-    )
-}
-
-@Composable
-private fun RecentMessagesList(messages: List<Message>) {
-    messages.forEachIndexed { index, message ->
+private fun RecentMessagesList(messagesWithReplies: List<MessageWithReplies>) {
+    messagesWithReplies.forEachIndexed { index, item ->
         RecentMessageItem(
-            message = message.body,
-            messageState = message.localState
+            message = item.message.body,
+            messageState = item.message.localState
         )
-        if (index < messages.size - 1) {
+        if (index < messagesWithReplies.size - 1) {
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
@@ -335,7 +317,6 @@ private fun RecentMessageItem(
         Spacer(modifier = Modifier.width(8.dp))
 
         MessageStateIndicator(messageState)
-
     }
 }
 

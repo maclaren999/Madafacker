@@ -2,7 +2,7 @@ package com.bbuddies.madafaker.presentation.ui.main.preview
 
 import android.content.Context
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.presentation.base.UiState
 import com.bbuddies.madafaker.presentation.ui.main.tabs.myposts.MyPostsTabContract
 import com.bbuddies.madafaker.presentation.ui.main.tabs.myposts.MyPostsTabState
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 class PreviewMyPostsTabContract(
-    outgoingMessages: List<Message> = emptyList(),
+    outgoingMessages: List<MessageWithReplies> = emptyList(),
     currentMode: Mode = Mode.SHINE
 ) : MyPostsTabContract {
 

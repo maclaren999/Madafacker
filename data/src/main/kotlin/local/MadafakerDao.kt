@@ -37,8 +37,16 @@ interface MadafakerDao {
     @Query("SELECT * FROM messages WHERE authorId != :currentUserId ORDER BY createdAt DESC")
     fun observeIncomingMessages(currentUserId: String): Flow<List<Message>>
 
+    @Transaction
+    @Query("SELECT * FROM messages WHERE authorId != :currentUserId ORDER BY createdAt DESC")
+    fun observeIncomingMessagesWithReplies(currentUserId: String): Flow<List<MessageWithReplies>>
+
     @Query("SELECT * FROM messages WHERE authorId = :currentUserId ORDER BY createdAt DESC")
     fun observeOutgoingMessages(currentUserId: String): Flow<List<Message>>
+
+    @Transaction
+    @Query("SELECT * FROM messages WHERE authorId = :currentUserId ORDER BY createdAt DESC")
+    fun observeOutgoingMessagesWithReplies(currentUserId: String): Flow<List<MessageWithReplies>>
 
     @Query("SELECT * FROM messages WHERE localState = :state")
     suspend fun getMessagesByState(state: MessageState): List<Message>

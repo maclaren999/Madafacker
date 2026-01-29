@@ -4,6 +4,7 @@ import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.model.AuthenticationState
 import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageState
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
@@ -12,6 +13,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import local.MadafakerDao
 import remote.api.MadafakerApi
 import remote.api.MessageErrorMapper
@@ -30,12 +32,20 @@ class MessageRepositoryImpl @Inject constructor(
 
     // Single source of truth - local database
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeIncomingMessages(): Flow<List<Message>> {
+    override fun observeIncomingMessages(): Flow<List<MessageWithReplies>> {
         return userRepository.authenticationState
             .flatMapLatest { authState ->
                 when (authState) {
                     is AuthenticationState.Authenticated -> {
-                        localDao.observeIncomingMessages(authState.user.id)
+                        localDao.observeIncomingMessagesWithReplies(authState.user.id)
+                            .map { localMessagesWithReplies ->
+                                localMessagesWithReplies.map { item ->
+                                    MessageWithReplies(
+                                        message = item.message,
+                                        replies = item.replies
+                                    )
+                                }
+                            }
                     }
 
                     else -> emptyFlow()
@@ -44,12 +54,20 @@ class MessageRepositoryImpl @Inject constructor(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun observeOutgoingMessages(): Flow<List<Message>> {
+    override fun observeOutgoingMessages(): Flow<List<MessageWithReplies>> {
         return userRepository.authenticationState
             .flatMapLatest { authState ->
                 when (authState) {
                     is AuthenticationState.Authenticated -> {
-                        localDao.observeOutgoingMessages(authState.user.id)
+                        localDao.observeOutgoingMessagesWithReplies(authState.user.id)
+                            .map { localMessagesWithReplies ->
+                                localMessagesWithReplies.map { item ->
+                                    MessageWithReplies(
+                                        message = item.message,
+                                        replies = item.replies
+                                    )
+                                }
+                            }
                     }
 
                     else -> emptyFlow()
@@ -103,6 +121,12 @@ class MessageRepositoryImpl @Inject constructor(
             // transient empty emissions on Flows observed by UI.
             localDao.replaceSentMessages(allServerMessages)
 
+            val allServerReplies = (serverIncoming + serverOutgoing)
+                .flatMap { it.replies.orEmpty() }
+            if (allServerReplies.isNotEmpty()) {
+                localDao.insertReplies(allServerReplies)
+            }
+
         } catch (e: Exception) {
             Timber.w(e, "Failed to refresh from server")
         }
@@ -128,6 +152,12 @@ class MessageRepositoryImpl @Inject constructor(
             // Remove existing incoming messages (not authored by current user) and insert fresh data
             localDao.deleteIncomingMessages(user.id)
             localDao.insertMessages(incomingMessages)
+
+            val incomingReplies = serverIncoming
+                .flatMap { it.replies.orEmpty() }
+            if (incomingReplies.isNotEmpty()) {
+                localDao.insertReplies(incomingReplies)
+            }
 
             Timber.d("Refreshed ${incomingMessages.size} incoming messages")
         } catch (e: Exception) {

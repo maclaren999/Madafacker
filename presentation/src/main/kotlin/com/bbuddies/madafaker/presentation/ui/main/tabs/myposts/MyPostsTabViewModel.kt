@@ -2,7 +2,7 @@ package com.bbuddies.madafaker.presentation.ui.main.tabs.myposts
 
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.MessageRepository
 import com.bbuddies.madafaker.presentation.base.BaseViewModel
@@ -68,7 +68,10 @@ class MyPostsTabViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun filterMessagesByMode(messages: List<Message>, mode: Mode): List<Message> {
-        return messages.filter { Mode.fromApiValue(it.mode) == mode }
+    private fun filterMessagesByMode(
+        messages: List<MessageWithReplies>,
+        mode: Mode
+    ): List<MessageWithReplies> {
+        return messages.filter { Mode.fromApiValue(it.message.mode) == mode }
     }
 }

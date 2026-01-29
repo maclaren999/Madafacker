@@ -3,8 +3,8 @@ package com.bbuddies.madafaker.presentation.ui.main.tabs.write
 import androidx.lifecycle.viewModelScope
 import com.bbuddies.madafaker.common_domain.AppConfig
 import com.bbuddies.madafaker.common_domain.enums.Mode
-import com.bbuddies.madafaker.common_domain.model.Message
 import com.bbuddies.madafaker.common_domain.model.MessageSendException
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.UnsentDraft
 import com.bbuddies.madafaker.common_domain.preference.PreferenceManager
 import com.bbuddies.madafaker.common_domain.repository.DraftRepository
@@ -138,8 +138,11 @@ class WriteTabViewModel @Inject constructor(
             .launchIn(viewModelScope)
     }
 
-    private fun filterMessagesByMode(messages: List<Message>, mode: Mode): List<Message> {
-        return messages.filter { Mode.fromApiValue(it.mode) == mode }
+    private fun filterMessagesByMode(
+        messages: List<MessageWithReplies>,
+        mode: Mode
+    ): List<MessageWithReplies> {
+        return messages.filter { Mode.fromApiValue(it.message.mode) == mode }
     }
 
     private fun restoreDraft() {

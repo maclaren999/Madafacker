@@ -2,13 +2,14 @@ package com.bbuddies.madafaker.common_domain.repository
 
 import com.bbuddies.madafaker.common_domain.enums.MessageRating
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.Reply
 import kotlinx.coroutines.flow.Flow
 
 interface MessageRepository {
 
-    fun observeIncomingMessages(): Flow<List<Message>>
-    fun observeOutgoingMessages(): Flow<List<Message>>
+    fun observeIncomingMessages(): Flow<List<MessageWithReplies>>
+    fun observeOutgoingMessages(): Flow<List<MessageWithReplies>>
     suspend fun refreshMessages()
     suspend fun refreshIncomingMessages()
 

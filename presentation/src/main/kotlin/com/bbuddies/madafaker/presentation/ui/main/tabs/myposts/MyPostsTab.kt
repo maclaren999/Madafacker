@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.bbuddies.madafaker.common_domain.enums.Mode
 import com.bbuddies.madafaker.common_domain.model.Message
+import com.bbuddies.madafaker.common_domain.model.MessageWithReplies
 import com.bbuddies.madafaker.common_domain.model.Reply
 import com.bbuddies.madafaker.presentation.R
 import com.bbuddies.madafaker.presentation.base.HandleState
@@ -47,8 +48,8 @@ fun MyPostsTab(
 }
 
 @Composable
-private fun MyPostsList(messages: List<Message>, mode: Mode) {
-    if (messages.isEmpty()) {
+private fun MyPostsList(messagesWithReplies: List<MessageWithReplies>, mode: Mode) {
+    if (messagesWithReplies.isEmpty()) {
         EmptyStateView(
             title = stringResource(R.string.no_posts_yet_title),
             subtitle = stringResource(R.string.no_posts_yet_subtitle)
@@ -62,10 +63,10 @@ private fun MyPostsList(messages: List<Message>, mode: Mode) {
             .padding(bottom = 16.dp),
     ) {
         items(
-            items = messages,
-            key = { message -> message.id }
-        ) { message ->
-            MyPostCard(message, mode)
+            items = messagesWithReplies,
+            key = { item -> item.message.id }
+        ) { item ->
+            MyPostCard(item.message, mode)
         }
     }
 }
@@ -136,7 +137,6 @@ private fun MyPostCard(message: Message, mode: Mode) {
             style = MaterialTheme.typography.labelSmall
         )
 
-
         latestReply?.let { reply ->
             LatestReplyHighlight(reply = reply)
         }
@@ -182,36 +182,36 @@ private fun MyPostCardLayout(
             )
         )
 
-        val layoutWidth = indicatorPlaceable.width + spacerWidthPx + contentPlaceable.width
+        val layoutWidth = indicatorWidthPx + spacerWidthPx + contentPlaceable.width
         val layoutHeight = contentPlaceable.height
 
         layout(layoutWidth, layoutHeight) {
             indicatorPlaceable.placeRelative(0, 0)
-            contentPlaceable.placeRelative(indicatorPlaceable.width + spacerWidthPx, 0)
+            contentPlaceable.placeRelative(indicatorWidthPx + spacerWidthPx, 0)
         }
     }
 }
-
 
 @Composable
 private fun LatestReplyHighlight(reply: Reply) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp)
+            .padding(top = 12.dp)
     ) {
         Text(
-            text = "@${reply.authorName}",
-            style = MaterialTheme.typography.bodySmall.copy(fontStyle = FontStyle.Italic),
-            color = MaterialTheme.colorScheme.onBackground
+            text = "Latest reply",
+            style = MaterialTheme.typography.labelSmall.copy(fontStyle = FontStyle.Italic),
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
         )
+
         Text(
-            text = reply.body,
-            style = MaterialTheme.typography.bodySmall,
+            text = "\"${reply.body}\"",
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onBackground,
-            maxLines = 4,
+            maxLines = 3,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(bottom = 6.dp)
+            modifier = Modifier.padding(top = 4.dp)
         )
     }
 }
